@@ -21,7 +21,7 @@ import { useLocation } from '../../context/LocationContext';
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const { language, setLanguage, languages, t } = useLanguage();
-  const { cities, selectedCity, setSelectedCity } = useLocation();
+  const { cities, selectedCity, setSelectedCity, activeFestival, setActiveFestival } = useLocation();
   const routerLocation = useRouterLocation();
   const navigate = useNavigate();
 
@@ -108,9 +108,40 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Right Controls: City Selector, Language Selector, User Profile */}
-          <div className="flex items-center gap-2">
+          {/* Right Controls: Festival Context, City Selector, Language Selector, User Profile */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             
+            {/* Festival Context Selector */}
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-ghost btn-sm rounded-lg px-2 gap-1 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20" aria-label="Select Festival Context">
+                <span>{activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '🎄'}</span>
+                <span className="hidden sm:inline">{activeFestival}</span>
+              </div>
+              <ul tabIndex={0} className="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-56 max-h-72 overflow-y-auto border border-base-300 text-xs">
+                <li className="menu-title text-base-content/60 font-bold px-2 py-1">Active Cultural Context</li>
+                {[
+                  { name: 'Diwali', icon: '🪔', theme: 'Festival of Lights' },
+                  { name: 'Pongal', icon: '🌾', theme: 'Harvest Thanksgiving' },
+                  { name: 'Onam', icon: '🌸', theme: 'Grand Harvest Feast' },
+                  { name: 'Durga Puja', icon: '🌺', theme: 'Navratri & Sharad Utsav' },
+                  { name: 'Eid', icon: '🌙', theme: 'Blessings & Gifting' },
+                  { name: 'Christmas', icon: '🎄', theme: 'Winter Joy & Hampers' }
+                ].map(fest => (
+                  <li key={fest.name}>
+                    <button 
+                      onClick={() => setActiveFestival(fest.name)}
+                      className={`flex justify-between py-2 ${activeFestival === fest.name ? 'active font-bold' : ''}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span>{fest.icon}</span> <strong>{fest.name}</strong>
+                      </span>
+                      <span className="text-[10px] text-base-content/50">{fest.theme}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* City Selector */}
             <div className="dropdown dropdown-end">
               <div tabIndex={0} role="button" className="btn btn-ghost btn-sm rounded-lg px-2 gap-1 text-xs font-semibold" aria-label="Select City">
