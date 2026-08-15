@@ -503,3 +503,104 @@ async def seed_initial_data():
             await services_col.insert_one(s)
         logger.info("Successfully seeded managed services.")
 
+    # 6. Seed Community Posts & Collaborations
+    posts_col = db_manager.get_collection("community_posts")
+    post_count = await posts_col.count_documents({})
+    if post_count == 0:
+        posts = [
+            {
+                "_id": "post_need_telugu_01",
+                "user_id": ananya_id,
+                "author_name": "Ananya Sharma",
+                "author_role": "customer",
+                "is_age_verified": False,
+                "title": "Need: Spoken Telugu & Math tutor for 5th grade student in Adyar",
+                "content": "Looking for an experienced, patient teacher who can take 1-on-1 online evening classes for conversational Telugu and basic arithmetic. Preferably 3 days a week.",
+                "type": "need",
+                "tags": ["Telugu", "Tuition", "Maths", "Adyar"],
+                "locality": "Adyar",
+                "city": "Chennai",
+                "comments_count": 2,
+                "likes_count": 5,
+                "demand_signal_generated": True,
+                "matched_skills": ["Telugu", "Language Tuition", "Mentoring"],
+                "created_at": now
+            },
+            {
+                "_id": "post_need_sweets_02",
+                "user_id": techlocal_id,
+                "author_name": "TechLocal Solutions Pvt Ltd",
+                "author_role": "company",
+                "is_age_verified": False,
+                "title": "Need: Authentic Handmade Diwali Sweets for 35 Employee Gift Hampers",
+                "content": "We want to support local senior homemakers rather than commercial factory sweets. Looking for Mysore Pak, Ribbon Pakoda and Mixture prepared hygienically in small batches in Chennai.",
+                "type": "need",
+                "tags": ["Diwali", "Sweets", "Bulk Order", "Mylapore"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "comments_count": 3,
+                "likes_count": 12,
+                "demand_signal_generated": True,
+                "matched_skills": ["Traditional Cooking", "Diwali Sweets", "Pickles & Preserves"],
+                "created_at": now
+            },
+            {
+                "_id": "post_collab_food_03",
+                "user_id": lakshmi_id,
+                "author_name": "Lakshmi Venkatesh",
+                "author_role": "senior",
+                "is_age_verified": True,
+                "title": "Collaboration: Seeking partner for festival sweets & organic snacks venture",
+                "content": "I prepare traditional Thanjavur recipes and festival sweets. Looking for someone with business, accounting, or packaging coordination skills to help scale our deliveries across Chennai!",
+                "type": "collaboration",
+                "tags": ["Collaboration", "Food Business", "Traditional Recipes"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "comments_count": 4,
+                "likes_count": 18,
+                "demand_signal_generated": False,
+                "matched_skills": ["Accounting", "Bookkeeping", "Small Business Support"],
+                "created_at": now
+            },
+            {
+                "_id": "post_event_gardening_04",
+                "user_id": ramesh_id,
+                "author_name": "Ramesh Krishnan",
+                "author_role": "senior",
+                "is_age_verified": True,
+                "title": "Workshop: Terrace Organic Gardening & Kitchen Waste Composting (Free Entry)",
+                "content": "Hosting a community sharing session at Gandhi Nagar park this Sunday morning at 8 AM. Learn how to grow organic tomatoes and mint on your balcony without chemicals.",
+                "type": "event",
+                "tags": ["Workshop", "Organic Gardening", "Community", "Adyar"],
+                "locality": "Adyar",
+                "city": "Chennai",
+                "comments_count": 6,
+                "likes_count": 24,
+                "demand_signal_generated": False,
+                "matched_skills": ["Gardening", "Composting"],
+                "created_at": now
+            }
+        ]
+        for p in posts:
+            await posts_col.insert_one(p)
+
+        # Seed Collaborations
+        collabs_col = db_manager.get_collection("collaborations")
+        await collabs_col.insert_one({
+            "_id": "collab_ramesh_lakshmi_01",
+            "senior_a_id": ramesh_id,
+            "senior_a_name": "Ramesh Krishnan",
+            "senior_a_skills": ["Accounting", "Bookkeeping", "GST Basics", "Excel"],
+            "senior_b_id": lakshmi_id,
+            "senior_b_name": "Lakshmi Venkatesh",
+            "senior_b_skills": ["Traditional Cooking", "Pickles & Preserves", "Diwali Sweets"],
+            "city": "Chennai",
+            "locality": "Mylapore / Adyar",
+            "venture_title": "Heritage Taste & Home-Delivery Kitchen",
+            "ai_synergy_reason": "Lakshmi brings 40 years of culinary mastery and authentic traditional recipes, while Ramesh brings 35 years of accounting, cash reconciliation, and GST compliance to handle budgeting and vendor payments.",
+            "status": "suggested",
+            "created_at": now
+        })
+
+        logger.info("Successfully seeded community posts and collaborations.")
+
