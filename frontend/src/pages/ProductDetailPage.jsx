@@ -215,6 +215,55 @@ export default function ProductDetailPage() {
 
       </div>
 
+      {/* Customer Ratings & Reviews Section */}
+      <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-base-200">
+          <div>
+            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
+              <Star className="w-5 h-5 text-warning fill-warning" /> Customer Reviews & Ratings
+            </h2>
+            <p className="text-xs text-base-content/60 mt-0.5">
+              Verified feedback from local neighborhood food lovers & customers.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 px-4 py-2 rounded-2xl">
+            <span className="text-2xl font-black text-warning flex items-center gap-1">
+              <Star className="w-6 h-6 fill-warning" /> {product.rating || 4.9}
+            </span>
+            <div className="text-left">
+              <span className="text-xs font-bold text-base-content block">Average Rating</span>
+              <span className="text-[10px] text-base-content/60 font-semibold">{product.total_reviews || 1} Verified Review(s)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Review List */}
+        {(!product.reviews || product.reviews.length === 0) ? (
+          <div className="p-6 bg-base-200/50 rounded-2xl text-center space-y-1">
+            <p className="text-xs font-bold text-base-content">Authentic Heritage Quality</p>
+            <p className="text-[11px] text-base-content/60">Be the first to order and review this authentic handmade product!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {product.reviews.map((rev, idx) => (
+              <div key={idx} className="bg-base-200/50 border border-base-300 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-base-content">{rev.customer_name}</span>
+                  <div className="flex items-center gap-0.5 text-warning">
+                    {[...Array(rev.rating || 5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-warning" />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-base-content/80 italic leading-relaxed">"{rev.comment}"</p>
+                <span className="text-[10px] text-base-content/40 block">{rev.created_at?.slice(0, 10)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

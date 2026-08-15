@@ -167,8 +167,18 @@ export default function SeniorOrdersPage() {
                 </div>
 
                 {/* State Machine Transition Action Button */}
-                {nextAction && (
-                  <div className="pt-2 flex justify-end">
+                <div className="pt-2 flex items-center justify-between">
+                  {order.status !== 'completed' && order.status !== 'cancelled' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                      className="btn btn-ghost btn-xs text-error font-bold rounded-xl"
+                    >
+                      Reject / Cancel Order
+                    </button>
+                  ) : <div></div>}
+
+                  {nextAction && (
                     <button
                       type="button"
                       disabled={updatingId === order.id}
@@ -184,8 +194,8 @@ export default function SeniorOrdersPage() {
                         </>
                       )}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
 
               </div>
             );

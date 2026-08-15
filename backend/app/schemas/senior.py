@@ -51,3 +51,40 @@ class SeniorProfileResponse(BaseModel):
     completed_jobs_count: int = 0
     rating: float = 5.0
     review_count: int = 0
+
+class SkillPassportBadge(BaseModel):
+    id: str
+    title: str
+    icon: str
+    description: str
+
+class SkillPassportResponse(BaseModel):
+    passport_id: str
+    senior_id: str
+    full_name: str
+    locality: str
+    city: str
+    member_since: str
+    is_age_verified: bool = True
+    dignity_score: int = 100
+    trust_score: float = 4.95
+    completed_orders_count: int = 0
+    completed_sessions_count: int = 0
+    total_earnings: float = 0.0
+    core_skills: List[str]
+    inferred_skills: List[InferredSkillItem]
+    keywords: List[str]
+    badges: List[SkillPassportBadge]
+    credential_hash: str
+
+class SeniorTwinResponse(BaseModel):
+    senior_id: str
+    full_name: str
+    locality: str
+    city: str
+    primary_skill: str
+    skills: List[str]
+    synergy_score: int
+    collaboration_title: str
+    collaboration_rationale: str
+    matched_keywords: List[str]

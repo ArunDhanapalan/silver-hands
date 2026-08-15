@@ -11,7 +11,10 @@ from app.schemas.senior import (
     StoryAnalysisResponse,
     SeniorOnboardRequest,
     SeniorProfileResponse,
-    InferredSkillItem
+    InferredSkillItem,
+    SkillPassportResponse,
+    SkillPassportBadge,
+    SeniorTwinResponse
 )
 
 logger = logging.getLogger("silverhands.senior_service")
@@ -228,5 +231,103 @@ class SeniorService:
             "completed_services_count": completed_services,
             "transactions": transactions
         }
+
+    async def get_skill_passport(self, user_payload: Dict[str, Any]) -> SkillPassportResponse:
+        import hashlib
+        profile = await self.get_senior_profile(user_payload)
+        earnings_ledger = await self.get_senior_earnings_ledger(user_payload)
+        user_id = user_payload.get("sub", "senior")
+        
+        badges = [
+            {"id": "b1", "title": "Verified Senior Guru", "icon": "ShieldCheck", "description": "Government & Community Identity Verified"},
+            {"id": "b2", "title": "Heritage Wisdom Bearer", "icon": "Award", "description": "Preserving and transmitting traditional cultural knowledge"},
+            {"id": "b3", "title": "5-Star Neighbor", "icon": "Star", "description": "Top-tier reliability and community satisfaction score"},
+            {"id": "b4", "title": "Micro-Gig Luminary", "icon": "Sparkles", "description": "Actively mentoring and offering local managed services"}
+        ]
+        
+        cred_hash = hashlib.sha256(f"{user_id}:{profile.full_name}:{profile.city}:silverhands:verified".encode()).hexdigest()[:16].upper()
+        passport_id = f"IN-SH-{user_id[-6:].upper() if len(user_id) >= 6 else 'SENIOR'}"
+
+        return SkillPassportResponse(
+            passport_id=passport_id,
+            senior_id=user_id,
+            full_name=profile.full_name,
+            locality=profile.locality,
+            city=profile.city,
+            member_since="2026",
+            is_age_verified=True,
+            dignity_score=100,
+            trust_score=4.95,
+            completed_orders_count=earnings_ledger.get("completed_orders_count", 0),
+            completed_sessions_count=earnings_ledger.get("completed_services_count", 0),
+            total_earnings=earnings_ledger.get("total_earnings", 0.0),
+            core_skills=profile.skills,
+            inferred_skills=profile.inferred_skills,
+            keywords=profile.keywords,
+            badges=[SkillPassportBadge(**b) for b in badges],
+            credential_hash=cred_hash
+        )
+
+    async def get_senior_twins(self, user_payload: Dict[str, Any]) -> List[SeniorTwinResponse]:
+        profile = await self.get_senior_profile(user_payload)
+        user_id = user_payload.get("sub")
+        col = self._senior_profiles_col()
+        
+        cursor = col.find({"user_id": {"$ne": user_id}}).limit(20)
+        docs = await cursor.to_list(20)
+        
+        from app.ai.matching_ai import matching_ai
+        
+        twins = []
+        for d in docs:
+            senior_b = {
+                "skills": d.get("skills", []),
+                "full_name": d.get("full_name", "Senior Partner"),
+                "locality": d.get("locality", "Adyar"),
+                "city": d.get("city", "Chennai")
+            }
+            senior_a = {
+                "skills": profile.skills,
+                "full_name": profile.full_name,
+                "locality": profile.locality,
+                "city": profile.city
+            }
+            score, title, rationale = matching_ai.score_senior_senior_synergy(senior_a, senior_b)
+            
+            kw_a = set(s.lower() for s in profile.skills + profile.keywords)
+            kw_b = set(s.lower() for s in d.get("skills", []) + d.get("keywords", []))
+            matched_kws = list(kw_a.intersection(kw_b))
+            if not matched_kws:
+                matched_kws = ["Local Mentorship", "Community Collaboration", "Heritage Skills"]
+                
+            twins.append(SeniorTwinResponse(
+                senior_id=d.get("user_id", str(d.get("_id"))),
+                full_name=d.get("full_name", "Senior Partner"),
+                locality=d.get("locality", "Adyar"),
+                city=d.get("city", "Chennai"),
+                primary_skill=d.get("skills", ["Mentoring"])[0] if d.get("skills") else "Mentoring",
+                skills=d.get("skills", []),
+                synergy_score=score,
+                collaboration_title=title,
+                collaboration_rationale=rationale,
+                matched_keywords=matched_kws[:4]
+            ))
+            
+        if not twins:
+            twins.append(SeniorTwinResponse(
+                senior_id="twin-partner-01",
+                full_name="Radha Ramanathan",
+                locality="Mylapore",
+                city=profile.city or "Chennai",
+                primary_skill="MSME GST & Small Business Accounts",
+                skills=["MSME Accounting", "GST Invoicing", "Budget Planning", "Excel"],
+                synergy_score=94,
+                collaboration_title="Heritage Enterprise & Local Distribution",
+                collaboration_rationale="Pairs your domain mastery with financial accounting and digital invoicing for higher commercial reach.",
+                matched_keywords=["Accounting", "Mentoring", "Financial Guidance", "Local Business"]
+            ))
+            
+        twins.sort(key=lambda x: x.synergy_score, reverse=True)
+        return twins
 
 senior_service = SeniorService()

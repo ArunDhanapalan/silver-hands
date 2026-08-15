@@ -100,3 +100,24 @@ async def update_order_status(
     Senior updates order state machine: pending -> accepted -> preparing -> ready -> delivered -> completed.
     """
     return await store_service.update_order_status(current_user, id, req)
+
+@router.put("/orders/{id}/cancel", response_model=OrderResponse)
+async def cancel_order(
+    id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Customer or Senior cancels an order.
+    """
+    return await store_service.cancel_order(current_user, id)
+
+@router.post("/products/{id}/review", response_model=ProductResponse)
+async def review_product(
+    id: str,
+    req: Any,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Customer submits rating and review for a purchased product.
+    """
+    return await store_service.submit_product_review(current_user, id, req)

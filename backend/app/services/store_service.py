@@ -9,6 +9,7 @@ from app.database import db_manager
 from app.schemas.store import (
     ProductCreateRequest,
     ProductResponse,
+    ProductReviewItem,
     OrderItem,
     OrderCreateRequest,
     OrderResponse,
@@ -94,6 +95,9 @@ class StoreService:
                 is_festival_special=d.get("is_festival_special", False),
                 festival_tag=d.get("festival_tag"),
                 stock_quantity=d.get("stock_quantity", 20),
+                rating=d.get("rating", 4.9),
+                total_reviews=d.get("total_reviews", 1),
+                reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in d.get("reviews", [])],
                 created_at=d.get("created_at", "")
             )
             for d in docs
@@ -125,6 +129,9 @@ class StoreService:
             is_festival_special=doc.get("is_festival_special", False),
             festival_tag=doc.get("festival_tag"),
             stock_quantity=doc.get("stock_quantity", 20),
+            rating=doc.get("rating", 4.9),
+            total_reviews=doc.get("total_reviews", 1),
+            reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])],
             created_at=doc.get("created_at", "")
         )
 
@@ -359,5 +366,102 @@ class StoreService:
             )
             for d in docs
         ]
+
+    async def submit_product_review(self, user_payload: Dict[str, Any], product_id: str, req: Any) -> ProductResponse:
+        col = self._products_col()
+        filter_q = self._build_id_filter(product_id)
+        doc = await col.find_one(filter_q)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        customer_id = user_payload.get("sub", "anonymous")
+        customer_name = user_payload.get("full_name", "Customer")
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        current_rating = float(doc.get("rating", 4.9))
+        current_count = int(doc.get("total_reviews", 1))
+
+        new_count = current_count + 1
+        new_avg_rating = round(((current_rating * current_count) + req.rating) / new_count, 2)
+
+        new_review = {
+            "customer_id": customer_id,
+            "customer_name": customer_name,
+            "rating": req.rating,
+            "comment": req.comment,
+            "created_at": now
+        }
+
+        await col.update_one(
+            filter_q,
+            {
+                "$set": {"rating": new_avg_rating, "total_reviews": new_count, "seller_rating": new_avg_rating},
+                "$push": {"reviews": new_review}
+            }
+        )
+
+        doc["rating"] = new_avg_rating
+        doc["total_reviews"] = new_count
+        doc["seller_rating"] = new_avg_rating
+        reviews = doc.get("reviews", [])
+        reviews.append(new_review)
+        doc["reviews"] = reviews
+
+        return ProductResponse(
+            id=str(doc.get("_id")),
+            seller_id=doc.get("seller_id", ""),
+            seller_name=doc.get("seller_name", "Senior Artisan"),
+            seller_locality=doc.get("seller_locality", "Mylapore"),
+            seller_city=doc.get("seller_city", "Chennai"),
+            seller_rating=doc.get("seller_rating", 4.9),
+            is_age_verified=doc.get("is_age_verified", True),
+            title=doc["title"],
+            description=doc["description"],
+            category=doc["category"],
+            price=doc["price"],
+            unit=doc.get("unit", "piece"),
+            images=doc.get("images", []),
+            keywords=doc.get("keywords", []),
+            locality=doc.get("locality", "Mylapore"),
+            city=doc.get("city", "Chennai"),
+            is_festival_special=doc.get("is_festival_special", False),
+            festival_tag=doc.get("festival_tag"),
+            stock_quantity=doc.get("stock_quantity", 20),
+            rating=new_avg_rating,
+            total_reviews=new_count,
+            reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in reviews],
+            created_at=doc.get("created_at", "")
+        )
+
+    async def cancel_order(self, user_payload: Dict[str, Any], order_id: str) -> OrderResponse:
+        col = self._orders_col()
+        filter_q = self._build_id_filter(order_id)
+        doc = await col.find_one(filter_q)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        await col.update_one(filter_q, {"$set": {"status": "cancelled", "updated_at": now}})
+        doc["status"] = "cancelled"
+        doc["updated_at"] = now
+
+        return OrderResponse(
+            id=str(doc.get("_id")),
+            order_number=doc["order_number"],
+            customer_id=doc["customer_id"],
+            customer_name=doc["customer_name"],
+            customer_phone=doc["customer_phone"],
+            items=[OrderItem(**item) for item in doc["items"]],
+            total_amount=doc["total_amount"],
+            status=doc["status"],
+            delivery_address=doc["delivery_address"],
+            delivery_city=doc["delivery_city"],
+            delivery_locality=doc["delivery_locality"],
+            payment_method=doc["payment_method"],
+            payment_status=doc["payment_status"],
+            special_notes=doc.get("special_notes"),
+            created_at=doc["created_at"],
+            updated_at=doc["updated_at"]
+        )
 
 store_service = StoreService()

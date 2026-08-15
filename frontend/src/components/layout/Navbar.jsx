@@ -19,7 +19,9 @@ import {
   LogOut,
   User,
   SlidersHorizontal,
-  Home
+  Home,
+  Award,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
@@ -232,18 +234,21 @@ export default function Navbar() {
                     {user?.role === 'senior' && (
                       <>
                         <li><Link to="/senior" className="py-2 rounded-xl font-semibold"><Layers className="w-4 h-4 text-primary" /> Opportunities Deck</Link></li>
-                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
-                        <li><Link to="/senior/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> Manage Store Orders</Link></li>
+                        <li><Link to="/senior/passport" className="py-2 rounded-xl font-semibold text-warning"><Award className="w-4 h-4 text-warning" /> My Skill Passport</Link></li>
+                        <li><Link to="/senior/services" className="py-2 rounded-xl font-semibold"><BookOpen className="w-4 h-4 text-accent" /> Manage Live Classes</Link></li>
+                        <li><Link to="/senior/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> Store Orders</Link></li>
                         <li><Link to="/senior/earnings" className="py-2 rounded-xl font-semibold"><TrendingUp className="w-4 h-4 text-success" /> Earnings & Ledger</Link></li>
-                        <li><Link to="/senior/onboarding" className="py-2 rounded-xl font-semibold"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life-to-Skill Story</Link></li>
+                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
+                        <li><Link to="/senior/onboarding" className="py-2 rounded-xl font-semibold"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life Story</Link></li>
                       </>
                     )}
 
                     {user?.role === 'customer' && (
                       <>
-                        <li><Link to="/cart" className="py-2 rounded-xl font-semibold"><ShoppingBag className="w-4 h-4 text-primary" /> My Cart</Link></li>
-                        <li><Link to="/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-secondary" /> My Orders</Link></li>
-                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-accent" /> Community Feed</Link></li>
+                        <li><Link to="/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> My Store Orders</Link></li>
+                        <li><Link to="/customer/services" className="py-2 rounded-xl font-semibold"><BookOpen className="w-4 h-4 text-accent" /> My Booked Classes</Link></li>
+                        <li><Link to="/cart" className="py-2 rounded-xl font-semibold"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart</Link></li>
+                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-primary" /> Community Feed</Link></li>
                       </>
                     )}
 

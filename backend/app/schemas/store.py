@@ -15,6 +15,13 @@ class ProductCreateRequest(BaseModel):
     festival_tag: Optional[str] = None
     stock_quantity: int = 20
 
+class ProductReviewItem(BaseModel):
+    customer_id: str
+    customer_name: str
+    rating: int
+    comment: str
+    created_at: str
+
 class ProductResponse(BaseModel):
     id: str
     seller_id: str
@@ -35,6 +42,9 @@ class ProductResponse(BaseModel):
     is_festival_special: bool = False
     festival_tag: Optional[str] = None
     stock_quantity: int = 20
+    rating: float = 4.9
+    total_reviews: int = 1
+    reviews: List[ProductReviewItem] = []
     created_at: str
 
 class OrderItem(BaseModel):
@@ -87,3 +97,7 @@ class AISuggestProductResponse(BaseModel):
     suggested_category: str
     suggested_price: int
     keywords: List[str]
+
+class ProductReviewRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: str = Field(..., min_length=2)

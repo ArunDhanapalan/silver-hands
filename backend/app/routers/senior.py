@@ -1,10 +1,12 @@
-from typing import Dict, Any
+from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, status
 from app.schemas.senior import (
     StoryAnalysisRequest,
     StoryAnalysisResponse,
     SeniorOnboardRequest,
-    SeniorProfileResponse
+    SeniorProfileResponse,
+    SkillPassportResponse,
+    SeniorTwinResponse
 )
 from app.services.senior_service import senior_service
 from app.security import get_current_user, require_role
@@ -47,3 +49,21 @@ async def get_my_earnings(
     Retrieves real dynamic earnings, wallet balance, and transaction ledger for the logged-in senior.
     """
     return await senior_service.get_senior_earnings_ledger(current_user["sub"])
+
+@router.get("/passport", response_model=SkillPassportResponse)
+async def get_skill_passport(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Retrieves verifiable Skill Passport for the authenticated senior.
+    """
+    return await senior_service.get_skill_passport(current_user)
+
+@router.get("/twins", response_model=List[SeniorTwinResponse])
+async def get_senior_twins(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Discovers high-synergy senior peer collaborators and co-founders based on complementary skills.
+    """
+    return await senior_service.get_senior_twins(current_user)

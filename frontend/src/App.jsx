@@ -19,6 +19,10 @@ const SeniorDashboardPage = lazy(() => import('./pages/SeniorDashboardPage'));
 const SeniorOnboardingPage = lazy(() => import('./pages/SeniorOnboardingPage'));
 const SeniorOrdersPage = lazy(() => import('./pages/SeniorOrdersPage'));
 const SeniorEarningsPage = lazy(() => import('./pages/SeniorEarningsPage'));
+const SkillPassportPage = lazy(() => import('./pages/SkillPassportPage'));
+const SeniorManageServicesPage = lazy(() => import('./pages/SeniorManageServicesPage'));
+const CustomerServicesPage = lazy(() => import('./pages/CustomerServicesPage'));
+const CustomerOrdersPage = lazy(() => import('./pages/CustomerOrdersPage'));
 const StorePage = lazy(() => import('./pages/StorePage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
@@ -66,10 +70,13 @@ export default function App() {
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/store/:id" element={<ProductDetailPage />} />
                     <Route path="/cart" element={<CartPage />} />
+                    <Route path="/orders" element={<CustomerOrdersPage />} />
                     
                     {/* Managed Services */}
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/services/:id" element={<ServiceDetailPage />} />
+                    <Route path="/customer/services" element={<CustomerServicesPage />} />
+                    <Route path="/my-bookings" element={<CustomerServicesPage />} />
                     
                     {/* Community & Regional Collab */}
                     <Route path="/community" element={<CommunityPage />} />
@@ -88,6 +95,22 @@ export default function App() {
                       element={
                         <ProtectedRoute allowedRoles={['senior']}>
                           <SeniorDashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/senior/passport" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SkillPassportPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/senior/services" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorManageServicesPage />
                         </ProtectedRoute>
                       } 
                     />

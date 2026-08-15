@@ -81,6 +81,25 @@ async def invite_candidate(
     """
     return await matching_service.invite_candidate(current_user, req)
 
+@router.get("/interviews", response_model=List[ApplicationItemResponse])
+async def get_interviews(
+    current_user: Dict[str, Any] = Depends(require_role(["senior", "company"]))
+):
+    """
+    Retrieves all scheduled corporate interviews with live video room links.
+    """
+    return await matching_service.get_interviews(current_user)
+
+@router.put("/applications/{id}/cancel")
+async def cancel_application(
+    id: str,
+    current_user: Dict[str, Any] = Depends(require_role(["senior", "company"]))
+):
+    """
+    Cancels or withdraws an application / interview invitation.
+    """
+    return await matching_service.cancel_application(current_user, id)
+
 @router.post("/parse-job")
 async def parse_job_description(
     req: JobParseRequest,

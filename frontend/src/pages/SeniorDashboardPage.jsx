@@ -18,7 +18,8 @@ import {
   BookOpen,
   Video,
   ExternalLink,
-  Check
+  Check,
+  Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -146,14 +147,17 @@ export default function SeniorDashboardPage() {
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Link to="/senior/passport" className="btn btn-outline btn-warning btn-sm rounded-xl font-bold text-xs gap-1.5 shadow-xs">
+              <Award className="w-4 h-4 text-warning" /> Skill Passport
+            </Link>
+            <Link to="/senior/services" className="btn btn-outline btn-accent btn-sm rounded-xl font-bold text-xs gap-1.5">
+              <BookOpen className="w-4 h-4 text-accent" /> Manage Classes
+            </Link>
             <Link to="/senior/earnings" className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold text-xs gap-1">
               <TrendingUp className="w-4 h-4 text-success" /> View Earnings
             </Link>
             <Link to="/senior/orders" className="btn btn-outline btn-primary btn-sm rounded-xl font-bold text-xs gap-1">
               <Package className="w-4 h-4 text-primary" /> Store Orders
-            </Link>
-            <Link to="/senior/onboarding" className="btn btn-outline btn-secondary btn-sm rounded-xl font-bold text-xs gap-1">
-              <Sparkles className="w-4 h-4 text-secondary" /> Edit Life Story
             </Link>
           </div>
 
@@ -362,9 +366,28 @@ export default function SeniorDashboardPage() {
                       <span className="font-extrabold text-primary">
                         ₹{app.pay_amount?.toLocaleString('en-IN')}/{app.pay_unit}
                       </span>
-                      <span className="text-[11px] text-base-content/60">
-                        {app.match_score}% Skill Match
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-base-content/60">
+                          {app.match_score}% Match
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm('Withdraw this application / interview?')) return;
+                            try {
+                              await api.put(`/opportunities/applications/${app.id}/cancel`);
+                              setToastMsg('Application withdrawn.');
+                              setTimeout(() => setToastMsg(''), 3000);
+                              fetchData();
+                            } catch (err) {
+                              setError(err.message || 'Failed to withdraw');
+                            }
+                          }}
+                          className="btn btn-ghost btn-xs text-error font-bold rounded-lg text-[10px]"
+                        >
+                          Withdraw
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

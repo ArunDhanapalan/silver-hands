@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -423,8 +424,8 @@ export default function CommunityPage() {
       )}
 
       {/* CREATE COMMUNITY POST MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {showCreateModal && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-base-200">
               <h3 className="text-lg font-bold text-base-content">Create a Community Post</h3>
@@ -496,7 +497,7 @@ export default function CommunityPage() {
                     onChange={(e) => setPostForm(prev => ({ ...prev, locality: e.target.value }))}
                     className="select select-bordered select-sm w-full rounded-xl text-xs"
                   >
-                    {selectedCity.localities.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                    {(selectedCity?.localities || []).map(loc => <option key={loc} value={loc}>{loc}</option>)}
                   </select>
                 </div>
               </div>
@@ -516,7 +517,8 @@ export default function CommunityPage() {
             </form>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

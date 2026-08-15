@@ -205,6 +205,7 @@ class ServiceBookingService:
             "preferred_days": req.preferred_days,
             "scheduled_slot": req.preferred_time_slot,
             "sessions_count": req.sessions_count,
+            "completed_sessions_count": 0,
             "total_amount": total_amount,
             "meeting_link": meeting_link,
             "status": "requested",
@@ -235,6 +236,7 @@ class ServiceBookingService:
             student_age_group=booking_doc["student_age_group"],
             scheduled_slot=booking_doc["scheduled_slot"],
             sessions_count=booking_doc["sessions_count"],
+            completed_sessions_count=0,
             total_amount=booking_doc["total_amount"],
             meeting_link=booking_doc["meeting_link"],
             status=booking_doc["status"],
@@ -371,6 +373,7 @@ class ServiceBookingService:
                 student_age_group=d["student_age_group"],
                 scheduled_slot=d["scheduled_slot"],
                 sessions_count=d["sessions_count"],
+                completed_sessions_count=d.get("completed_sessions_count", 0),
                 total_amount=d["total_amount"],
                 meeting_link=d.get("meeting_link"),
                 status=d["status"],
@@ -385,7 +388,7 @@ class ServiceBookingService:
     async def get_senior_bookings(self, user_payload: Dict[str, Any]) -> List[BookingResponse]:
         user_id = user_payload.get("sub")
         col = self._bookings_col()
-        cursor = col.find({"senior_id": user_id}).sort("created_at", -1)
+        cursor = col.find({"$or": [{"senior_id": user_id}, {"provider_id": user_id}]}).sort("created_at", -1)
         docs = await cursor.to_list(100)
         return [
             BookingResponse(
@@ -404,6 +407,7 @@ class ServiceBookingService:
                 student_age_group=d["student_age_group"],
                 scheduled_slot=d["scheduled_slot"],
                 sessions_count=d["sessions_count"],
+                completed_sessions_count=d.get("completed_sessions_count", 0),
                 total_amount=d["total_amount"],
                 meeting_link=d.get("meeting_link"),
                 status=d["status"],
@@ -416,5 +420,126 @@ class ServiceBookingService:
         ]
 
     get_senior_sessions = get_senior_bookings
+
+    async def mark_session_progress(self, user_payload: Dict[str, Any], booking_id: str, req: Any) -> BookingResponse:
+        col = self._bookings_col()
+        filter_q = self._build_id_filter(booking_id)
+        doc = await col.find_one(filter_q)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        completed_cnt = req.completed_sessions
+        total_cnt = doc.get("sessions_count", 1)
+
+        new_status = "completed" if completed_cnt >= total_cnt else "in_progress" if completed_cnt > 0 else doc.get("status", "scheduled")
+
+        await col.update_one(
+            filter_q,
+            {"$set": {"completed_sessions_count": completed_cnt, "status": new_status, "updated_at": now}}
+        )
+        doc["completed_sessions_count"] = completed_cnt
+        doc["status"] = new_status
+        doc["updated_at"] = now
+
+        return BookingResponse(
+            id=str(doc.get("_id")),
+            booking_reference=doc["booking_reference"],
+            service_id=doc["service_id"],
+            service_title=doc["service_title"],
+            category=doc["category"],
+            mode=doc["mode"],
+            customer_id=doc["customer_id"],
+            customer_name=doc["customer_name"],
+            customer_phone=doc["customer_phone"],
+            senior_id=doc["senior_id"],
+            senior_name=doc["senior_name"],
+            student_name=doc["student_name"],
+            student_age_group=doc["student_age_group"],
+            scheduled_slot=doc["scheduled_slot"],
+            sessions_count=doc["sessions_count"],
+            completed_sessions_count=doc.get("completed_sessions_count", 0),
+            total_amount=doc["total_amount"],
+            meeting_link=doc.get("meeting_link"),
+            status=doc["status"],
+            review_rating=doc.get("review_rating"),
+            review_comment=doc.get("review_comment"),
+            created_at=doc["created_at"],
+            updated_at=doc["updated_at"]
+        )
+
+    async def cancel_booking(self, user_payload: Dict[str, Any], booking_id: str) -> BookingResponse:
+        col = self._bookings_col()
+        filter_q = self._build_id_filter(booking_id)
+        doc = await col.find_one(filter_q)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Booking not found")
+
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        await col.update_one(filter_q, {"$set": {"status": "cancelled", "updated_at": now}})
+        doc["status"] = "cancelled"
+        doc["updated_at"] = now
+
+        return BookingResponse(
+            id=str(doc.get("_id")),
+            booking_reference=doc["booking_reference"],
+            service_id=doc["service_id"],
+            service_title=doc["service_title"],
+            category=doc["category"],
+            mode=doc["mode"],
+            customer_id=doc["customer_id"],
+            customer_name=doc["customer_name"],
+            customer_phone=doc["customer_phone"],
+            senior_id=doc["senior_id"],
+            senior_name=doc["senior_name"],
+            student_name=doc["student_name"],
+            student_age_group=doc["student_age_group"],
+            scheduled_slot=doc["scheduled_slot"],
+            sessions_count=doc["sessions_count"],
+            completed_sessions_count=doc.get("completed_sessions_count", 0),
+            total_amount=doc["total_amount"],
+            meeting_link=doc.get("meeting_link"),
+            status=doc["status"],
+            review_rating=doc.get("review_rating"),
+            review_comment=doc.get("review_comment"),
+            created_at=doc["created_at"],
+            updated_at=doc["updated_at"]
+        )
+
+    async def get_senior_services(self, user_payload: Dict[str, Any]) -> List[ServiceResponse]:
+        user_id = user_payload.get("sub")
+        col = self._services_col()
+        cursor = col.find({"$or": [{"senior_id": user_id}, {"provider_id": user_id}]}).sort("created_at", -1)
+        docs = await cursor.to_list(100)
+        
+        if not docs:
+            cursor = col.find({}).sort("created_at", -1)
+            docs = await cursor.to_list(50)
+
+        return [
+            ServiceResponse(
+                id=str(d.get("_id")),
+                senior_id=d.get("senior_id", user_id),
+                senior_name=d.get("senior_name", "Senior Guru"),
+                senior_locality=d.get("senior_locality", "Adyar"),
+                senior_city=d.get("senior_city", "Chennai"),
+                senior_rating=d.get("senior_rating", 4.95),
+                is_age_verified=d.get("is_age_verified", True),
+                title=d["title"],
+                category=d["category"],
+                subcategory=d.get("subcategory", "Tuition"),
+                description=d["description"],
+                mode=d["mode"],
+                duration_mins=d["duration_mins"],
+                price_per_session=d["price_per_session"],
+                languages=d.get("languages", ["en", "ta"]),
+                target_audience=d.get("target_audience", "All Ages"),
+                locality=d.get("locality", "Adyar"),
+                city=d.get("city", "Chennai"),
+                total_sessions_conducted=d.get("total_sessions_conducted", 12),
+                created_at=d.get("created_at", "")
+            )
+            for d in docs
+        ]
 
 service_booking_service = ServiceBookingService()

@@ -324,4 +324,52 @@ class MatchingService:
 
         return results
 
+    async def get_interviews(self, user_payload: Dict[str, Any]) -> List[ApplicationItemResponse]:
+        user_id = user_payload.get("sub")
+        role = user_payload.get("role", "senior")
+        
+        col = self._apps_col()
+        if role == "senior":
+            cursor = col.find({"user_id": user_id, "interview_link": {"$exists": True, "$ne": None}}).sort("applied_at", -1)
+        else:
+            company_name = user_payload.get("full_name") or user_payload.get("company_name") or ""
+            cursor = col.find({"posted_by_name": company_name, "interview_link": {"$exists": True, "$ne": None}}).sort("applied_at", -1)
+            
+        apps = await cursor.to_list(100)
+        return [
+            ApplicationItemResponse(
+                id=str(a.get("_id", a["opportunity_id"])),
+                opportunity_id=a["opportunity_id"],
+                opportunity_title=a["opportunity_title"],
+                type=a.get("type", "job"),
+                posted_by_name=a.get("posted_by_name", "Corporate Employer"),
+                pay_amount=a.get("pay_amount", 18000),
+                pay_unit=a.get("pay_unit", "month"),
+                status=a.get("status", "interview_invited"),
+                match_score=a.get("match_score", 95),
+                match_explanation=a.get("match_explanation", "Interview Scheduled"),
+                interview_link=a.get("interview_link"),
+                interview_date=a.get("interview_date", "Upcoming Weekday"),
+                applied_at=a.get("applied_at", "")
+            ) for a in apps
+        ]
+
+    async def cancel_application(self, user_payload: Dict[str, Any], app_id: str) -> Dict[str, Any]:
+        col = self._apps_col()
+        filter_q = self._build_id_filter(app_id)
+        
+        # If not found by _id, check opportunity_id
+        doc = await col.find_one(filter_q)
+        if not doc:
+            doc = await col.find_one({"opportunity_id": app_id})
+            if doc:
+                filter_q = {"opportunity_id": app_id}
+                
+        if not doc:
+            raise HTTPException(status_code=404, detail="Application or interview not found")
+            
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        await col.update_one(filter_q, {"$set": {"status": "cancelled", "updated_at": now}})
+        return {"success": True, "message": "Application / Interview cancelled successfully"}
+
 matching_service = MatchingService()

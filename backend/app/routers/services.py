@@ -100,6 +100,36 @@ async def update_booking_status(
     """
     return await service_booking_service.update_booking_status(current_user, id, req)
 
+@router.get("/my-offerings", response_model=List[ServiceResponse])
+async def get_my_offerings(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior views all their offered managed services.
+    """
+    return await service_booking_service.get_senior_services(current_user)
+
+@router.put("/bookings/{id}/progress", response_model=BookingResponse)
+async def mark_session_progress(
+    id: str,
+    req: Any,
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior guru marks off completed sessions/classes (e.g. 1/3, 2/3, 3/3).
+    """
+    return await service_booking_service.mark_session_progress(current_user, id, req)
+
+@router.put("/bookings/{id}/cancel", response_model=BookingResponse)
+async def cancel_booking(
+    id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Customer or Senior cancels a service booking.
+    """
+    return await service_booking_service.cancel_booking(current_user, id)
+
 @router.post("/bookings/{id}/review", response_model=BookingResponse)
 async def review_booking(
     id: str,

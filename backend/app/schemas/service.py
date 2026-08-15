@@ -77,6 +77,7 @@ class BookingResponse(BaseModel):
     student_age_group: str
     scheduled_slot: str
     sessions_count: int
+    completed_sessions_count: int = 0
     total_amount: int
     meeting_link: Optional[str] = None
     status: str # requested, accepted, scheduled, in_progress, completed, cancelled
@@ -88,6 +89,9 @@ class BookingResponse(BaseModel):
 class BookingStatusUpdateRequest(BaseModel):
     status: str = Field(..., pattern="^(accepted|scheduled|in_progress|completed|cancelled)$")
     meeting_link: Optional[str] = None
+
+class MarkSessionProgressRequest(BaseModel):
+    completed_sessions: int = Field(..., ge=0)
 
 class BookingReviewRequest(BaseModel):
     rating: int = Field(..., ge=1, le=5)
