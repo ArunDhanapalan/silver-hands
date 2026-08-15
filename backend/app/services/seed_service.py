@@ -405,3 +405,101 @@ async def seed_initial_data():
             await products_col.insert_one(p)
         logger.info("Successfully seeded store products.")
 
+    # 5. Seed Managed Services (Bouquet & Online Language Tuition reference)
+    services_col = db_manager.get_collection("services")
+    serv_count = await services_col.count_documents({})
+    if serv_count == 0:
+        services = [
+            {
+                "_id": "serv_telugu_tuition_01",
+                "senior_id": ramesh_id,
+                "senior_name": "Ramesh Krishnan",
+                "senior_locality": "Adyar",
+                "senior_city": "Chennai",
+                "senior_rating": 4.95,
+                "is_age_verified": True,
+                "title": "1-on-1 Online Conversational & Reading Telugu Tuition",
+                "category": "Education & Learning",
+                "subcategory": "Language Tuition",
+                "description": "Patient, structured Telugu language instruction tailored for children and beginners. Focuses on daily conversational fluency, script reading, and cultural folklore with customized practice worksheets.",
+                "mode": "online",
+                "duration_mins": 45,
+                "price_per_session": 500,
+                "languages": ["te", "en", "ta"],
+                "target_audience": "School Students & Beginners (Ages 6+)",
+                "locality": "Adyar",
+                "city": "Chennai",
+                "total_sessions_conducted": 38,
+                "created_at": now
+            },
+            {
+                "_id": "serv_bookkeeping_mentoring_02",
+                "senior_id": ramesh_id,
+                "senior_name": "Ramesh Krishnan",
+                "senior_locality": "Adyar",
+                "senior_city": "Chennai",
+                "senior_rating": 4.95,
+                "is_age_verified": True,
+                "title": "MSME Bookkeeping, GST & Cashflow Mentoring for Founders",
+                "category": "Knowledge & Mentoring",
+                "subcategory": "Bookkeeping",
+                "description": "Practical financial mentoring for small business owners and startups. Learn how to maintain clean ledgers, file GST returns on time, and budget cashflow efficiently.",
+                "mode": "both",
+                "duration_mins": 60,
+                "price_per_session": 1200,
+                "languages": ["en", "ta"],
+                "target_audience": "Entrepreneurs & Retail Founders",
+                "locality": "Adyar",
+                "city": "Chennai",
+                "total_sessions_conducted": 19,
+                "created_at": now
+            },
+            {
+                "_id": "serv_cooking_masterclass_03",
+                "senior_id": lakshmi_id,
+                "senior_name": "Lakshmi Venkatesh",
+                "senior_locality": "Mylapore",
+                "senior_city": "Chennai",
+                "senior_rating": 4.98,
+                "is_age_verified": True,
+                "title": "Traditional South Indian Culinary & Festive Sweets Masterclass",
+                "category": "Culture & Tradition",
+                "subcategory": "Culinary",
+                "description": "Step-by-step masterclass on preparing authentic stone-ground spice podis, Mysore Pak, sun-dried mango preserves, and heritage rasam pastes.",
+                "mode": "both",
+                "duration_mins": 90,
+                "price_per_session": 850,
+                "languages": ["ta", "en"],
+                "target_audience": "Home Cooks & Culinary Enthusiasts",
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "total_sessions_conducted": 42,
+                "created_at": now
+            },
+            {
+                "_id": "serv_tailoring_guidance_04",
+                "senior_id": meena_id,
+                "senior_name": "Meena Sundaram",
+                "senior_locality": "Anna Nagar",
+                "senior_city": "Chennai",
+                "senior_rating": 4.90,
+                "is_age_verified": True,
+                "title": "Handicraft Aari Embroidery & Blouse Pattern Drafting Workshop",
+                "category": "Home & Practical Skills",
+                "subcategory": "Tailoring",
+                "description": "Hands-on guidance on mastering neck drafting, piping, and traditional Aari needle embroidery for ethnic wear.",
+                "mode": "offline",
+                "duration_mins": 60,
+                "price_per_session": 650,
+                "languages": ["ta", "en"],
+                "target_audience": "Beginners & DIY Enthusiasts",
+                "locality": "Anna Nagar",
+                "city": "Chennai",
+                "total_sessions_conducted": 14,
+                "created_at": now
+            }
+        ]
+        for s in services:
+            await services_col.insert_one(s)
+        logger.info("Successfully seeded managed services.")
+
