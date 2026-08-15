@@ -285,3 +285,123 @@ async def seed_initial_data():
             await opps_col.insert_one(opp)
         logger.info("Successfully seeded opportunities.")
 
+    # 4. Seed Store Products
+    products_col = db_manager.get_collection("products")
+    prod_count = await products_col.count_documents({})
+    if prod_count == 0:
+        products = [
+            {
+                "_id": "prod_mango_pickle_01",
+                "seller_id": lakshmi_id,
+                "seller_name": "Lakshmi Venkatesh",
+                "seller_locality": "Mylapore",
+                "seller_city": "Chennai",
+                "seller_rating": 4.98,
+                "is_age_verified": True,
+                "title": "Authentic Sun-Dried Thanjavur Mango Pickle (Mavadu)",
+                "description": "Small-batch, hand-cut tender green mango pickle made using 40-year-old family recipe with cold-pressed sesame oil, roasted fenugreek, and mustard. Zero preservatives.",
+                "category": "Food & Preserves",
+                "price": 280,
+                "unit": "350g Jar",
+                "images": ["https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80"],
+                "keywords": ["Mango Pickle", "Traditional Recipe", "Homemade Food", "South Indian", "Mylapore"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "is_festival_special": False,
+                "festival_tag": None,
+                "stock_quantity": 25,
+                "created_at": now
+            },
+            {
+                "_id": "prod_mysore_pak_02",
+                "seller_id": lakshmi_id,
+                "seller_name": "Lakshmi Venkatesh",
+                "seller_locality": "Mylapore",
+                "seller_city": "Chennai",
+                "seller_rating": 4.98,
+                "is_age_verified": True,
+                "title": "Festive Pure Ghee Mysore Pak Box",
+                "description": "Melt-in-mouth traditional Mysore Pak made with pure cow ghee and freshly ground gram flour. Handcrafted for Diwali gifting.",
+                "category": "Festive Sweets & Snacks",
+                "price": 450,
+                "unit": "500g Gift Box",
+                "images": ["https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80"],
+                "keywords": ["Mysore Pak", "Diwali Sweets", "Pure Ghee", "Festival Gift", "Homemade"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "is_festival_special": True,
+                "festival_tag": "Diwali",
+                "stock_quantity": 40,
+                "created_at": now
+            },
+            {
+                "_id": "prod_idli_podi_03",
+                "seller_id": lakshmi_id,
+                "seller_name": "Lakshmi Venkatesh",
+                "seller_locality": "Mylapore",
+                "seller_city": "Chennai",
+                "seller_rating": 4.98,
+                "is_age_verified": True,
+                "title": "Heritage Roasted Sesame Idli Chutney Podi",
+                "description": "Crispy aromatic gunpowder spiced podi made from stone-ground black urad dal, roasted red chillies, and curry leaves.",
+                "category": "Food & Preserves",
+                "price": 190,
+                "unit": "250g Pouch",
+                "images": ["https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop&q=80"],
+                "keywords": ["Idli Podi", "Gunpowder", "Homemade Masala", "Traditional Spice", "Chennai"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "is_festival_special": False,
+                "festival_tag": None,
+                "stock_quantity": 30,
+                "created_at": now
+            },
+            {
+                "_id": "prod_potli_bags_04",
+                "seller_id": meena_id,
+                "seller_name": "Meena Sundaram",
+                "seller_locality": "Anna Nagar",
+                "seller_city": "Chennai",
+                "seller_rating": 4.90,
+                "is_age_verified": True,
+                "title": "Handmade Raw Silk Festival Potli Gift Pouches (Set of 3)",
+                "description": "Exquisite silk potli bags with golden zari drawstring and beadwork, ideal for festive gifting and wedding return favors.",
+                "category": "Handicrafts & Decor",
+                "price": 350,
+                "unit": "Set of 3",
+                "images": ["https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&auto=format&fit=crop&q=80"],
+                "keywords": ["Potli Bags", "Silk Pouches", "Festival Decor", "Handmade Gifting", "Anna Nagar"],
+                "locality": "Anna Nagar",
+                "city": "Chennai",
+                "is_festival_special": True,
+                "festival_tag": "Diwali",
+                "stock_quantity": 18,
+                "created_at": now
+            },
+            {
+                "_id": "prod_blouse_stitching_05",
+                "seller_id": meena_id,
+                "seller_name": "Meena Sundaram",
+                "seller_locality": "Anna Nagar",
+                "seller_city": "Chennai",
+                "seller_rating": 4.90,
+                "is_age_verified": True,
+                "title": "Custom Silk Saree Blouse Tailoring & Maggam Border",
+                "description": "Bespoke fitted saree blouse tailoring with customizable necklines, piping, and handcrafted temple border embellishments.",
+                "category": "Tailoring & Apparel",
+                "price": 1200,
+                "unit": "Piece",
+                "images": ["https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80"],
+                "keywords": ["Tailoring", "Saree Blouse", "Custom Stitching", "Festive Wear", "Embroidery"],
+                "locality": "Anna Nagar",
+                "city": "Chennai",
+                "is_festival_special": True,
+                "festival_tag": "Diwali",
+                "stock_quantity": 12,
+                "created_at": now
+            }
+        ]
+        for p in products:
+            await products_col.insert_one(p)
+        logger.info("Successfully seeded store products.")
+

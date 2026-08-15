@@ -13,6 +13,29 @@ class InMemoryAsyncCollection:
         self.name = name
         self._docs: List[Dict[str, Any]] = []
 
+    def _get_val(self, doc: Dict[str, Any], path: str) -> Any:
+        parts = path.split(".")
+        curr = doc
+        for i, part in enumerate(parts):
+            if curr is None:
+                return None
+            if isinstance(curr, list):
+                sub_path = ".".join(parts[i:])
+                res = []
+                for item in curr:
+                    if isinstance(item, dict):
+                        v = self._get_val(item, sub_path)
+                        if isinstance(v, list):
+                            res.extend(v)
+                        elif v is not None:
+                            res.append(v)
+                return res
+            elif isinstance(curr, dict):
+                curr = curr.get(part)
+            else:
+                return None
+        return curr
+
     def _matches_filter(self, doc: Dict[str, Any], filter_doc: Dict[str, Any]) -> bool:
         if not filter_doc:
             return True
@@ -26,7 +49,7 @@ class InMemoryAsyncCollection:
                     return False
                 continue
             
-            doc_val = doc.get(k)
+            doc_val = self._get_val(doc, k)
             if isinstance(v, dict):
                 # Handle operators like $in, $ne, $gte, $lte, $regex
                 if "$in" in v:
@@ -35,8 +58,11 @@ class InMemoryAsyncCollection:
                             return False
                     elif doc_val not in v["$in"]:
                         return False
-                if "$ne" in v and doc_val == v["$ne"]:
-                    return False
+                if "$ne" in v:
+                    if isinstance(doc_val, list) and v["$ne"] in doc_val:
+                        return False
+                    elif doc_val == v["$ne"]:
+                        return False
                 if "$gte" in v and (doc_val is None or doc_val < v["$gte"]):
                     return False
                 if "$lte" in v and (doc_val is None or doc_val > v["$lte"]):
