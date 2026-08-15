@@ -14,6 +14,7 @@ import HomePage from './pages/HomePage';
 // Lazy loaded page components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const WelcomeLanguagePage = lazy(() => import('./pages/WelcomeLanguagePage'));
 const SeniorDashboardPage = lazy(() => import('./pages/SeniorDashboardPage'));
 const SeniorOnboardingPage = lazy(() => import('./pages/SeniorOnboardingPage'));
 const SeniorOrdersPage = lazy(() => import('./pages/SeniorOrdersPage'));
@@ -59,6 +60,7 @@ export default function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/welcome" element={<WelcomeLanguagePage />} />
                     
                     {/* Store & Commerce */}
                     <Route path="/store" element={<StorePage />} />
@@ -75,6 +77,14 @@ export default function App() {
                     {/* Senior Citizen Space */}
                     <Route 
                       path="/senior" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorDashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/opportunities" 
                       element={
                         <ProtectedRoute allowedRoles={['senior']}>
                           <SeniorDashboardPage />

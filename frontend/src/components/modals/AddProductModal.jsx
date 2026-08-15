@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Sparkles, 
   ShoppingBag, 
@@ -6,7 +6,10 @@ import {
   DollarSign, 
   CheckCircle2, 
   X, 
-  Image, 
+  Image as ImageIcon, 
+  Upload,
+  Camera,
+  Trash2,
   Layers 
 } from 'lucide-react';
 import api from '../../api/client';
@@ -25,6 +28,7 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
   const [aiLoading, setAiLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
 
   const [productForm, setProductForm] = useState({
     title: '',
@@ -52,16 +56,43 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
         ...prev,
         title: res.title || prev.title,
         description: res.description || prev.description,
-        category: res.suggested_category && PRODUCT_CATEGORIES.includes(res.suggested_category) ? res.suggested_category : prev.category,
-        price: res.suggested_price || prev.price,
+        category: res.suggested_category || prev.category,
+        price: res.suggested_price || res.price || prev.price,
         unit: res.unit || prev.unit
       }));
     } catch (err) {
       console.error('Product AI suggest error:', err);
-      setError('AI assistant encountered a brief issue. You can fill out the fields manually below.');
+      setError('NLP assistant encountered an issue. You can fill in the fields manually below.');
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image file is too large (max 5MB). Please choose a smaller photo.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target.result;
+      setProductForm(prev => ({
+        ...prev,
+        images: [base64Url, ...(prev.images.slice(0, 2))]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (indexToRemove) => {
+    setProductForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== indexToRemove)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -75,108 +106,148 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
         category: productForm.category,
         price: parseInt(productForm.price, 10) || 350,
         unit: productForm.unit.trim() || 'Pack',
-        stock: parseInt(productForm.stock, 10) || 20,
-        images: productForm.images,
+        stock_quantity: parseInt(productForm.stock, 10) || 20,
+        images: productForm.images && productForm.images.length > 0 ? productForm.images : ['https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80'],
         locality: productForm.locality || 'Adyar',
         city: productForm.city || 'Chennai',
         is_festival_special: productForm.is_festival_special,
-        festival_tag: productForm.is_festival_special ? (productForm.festival_tag || 'Festive Special') : null
+        festival_tag: productForm.festival_tag,
+        keywords: [productForm.category, 'Handmade', 'Authentic']
       };
-      const created = await api.post('/store/products', payload);
-      if (onProductCreated) onProductCreated(created);
+
+      const res = await api.post('/store/products', payload);
+      if (onProductCreated) onProductCreated(res);
       onClose();
     } catch (err) {
-      setError(err.message || 'Failed to list product in store.');
+      console.error('Failed to create product:', err);
+      setError(err.message || 'Failed to list product in store. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
+    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8 animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-base-200 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center font-bold">
-              <ShoppingBag className="w-5 h-5" />
+        <div className="flex items-center justify-between pb-3 border-b border-base-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-bold">
+              <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-extrabold text-lg text-base-content">Sell Homemade Product / Craft</h3>
-              <p className="text-xs text-base-content/60">List your traditional pickles, sweets, tailoring, or artwork directly to local customers.</p>
+              <h3 className="font-extrabold text-base text-base-content">List Homemade Product in Store</h3>
+              <p className="text-xs text-base-content/60">Reach local buyers directly with zero listing commission</p>
             </div>
           </div>
-          <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
+          <button type="button" onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <ErrorAlert message={error} />
-
-        {/* AI Assistant Banner */}
-        <div className="bg-secondary/10 border border-secondary/25 rounded-2xl p-4 space-y-2">
+        {/* NLP Assist Box */}
+        <div className="bg-secondary/10 border border-secondary/25 rounded-2xl p-3.5 space-y-2">
           <label className="text-xs font-bold text-secondary flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-secondary" /> AI Product Catalog Assistant
+            <Sparkles className="w-3.5 h-3.5" /> NLP Product Story Generator (Fast Auto-Fill):
           </label>
-          <p className="text-[11px] text-base-content/70">
-            Describe what you make (e.g. "pure ghee Mysore pak with roasted gram flour" or "hand-stitched silk potli gift bags"). AI will draft a compelling story and price.
-          </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={rawIdea}
               onChange={(e) => setRawIdea(e.target.value)}
-              placeholder="e.g. Traditional tender mango pickle in cold-pressed oil, silk saree blouse tailoring..."
-              className="input input-bordered input-sm flex-1 text-xs rounded-xl"
+              placeholder="e.g. Traditional pure ghee Mysore Pak box or sun-dried mango pickle"
+              className="input input-bordered input-sm w-full text-xs rounded-xl bg-base-100"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiSuggest(); } }}
             />
             <button
               type="button"
               onClick={handleAiSuggest}
               disabled={aiLoading || !rawIdea.trim()}
-              className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1.5"
+              className="btn btn-secondary btn-sm text-white rounded-xl font-bold text-xs shrink-0 shadow-xs"
             >
-              {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-3.5 h-3.5" />}
-              Generate with AI
+              {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Auto-Fill'}
             </button>
           </div>
         </div>
 
-        {/* Manual Refinement Form */}
+        <ErrorAlert message={error} />
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           
           <div className="form-control">
-            <label className="label text-[11px] font-semibold">Product Title</label>
+            <label className="label text-xs font-bold py-1">Product Title</label>
             <input
               type="text"
               required
               value={productForm.title}
-              onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
-              placeholder="e.g. Heritage Pure Ghee Festive Mysore Pak Box"
-              className="input input-bordered input-sm rounded-xl"
+              onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="e.g. Heritage Pure Cow Ghee Festive Mysore Pak Box"
+              className="input input-bordered input-sm w-full rounded-xl font-semibold"
             />
           </div>
 
           <div className="form-control">
-            <label className="label text-[11px] font-semibold">Product Story & Description</label>
+            <label className="label text-xs font-bold py-1">Description & Heritage Story</label>
             <textarea
               rows={3}
               required
               value={productForm.description}
-              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-              placeholder="Describe your authentic ingredients, preparation recipe, or handcrafted process..."
-              className="textarea textarea-bordered rounded-xl text-xs"
+              onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Describe your authentic traditional ingredients, preparation method, and flavor profile..."
+              className="textarea textarea-bordered text-xs w-full rounded-xl leading-relaxed"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <label className="label text-xs font-bold py-0 flex items-center justify-between">
+              <span className="flex items-center gap-1"><Camera className="w-3.5 h-3.5 text-primary" /> Product Photos</span>
+              <span className="text-[10px] text-base-content/60 font-normal">Upload photo or use defaults</span>
+            </label>
+
+            {/* Photo Previews */}
+            <div className="flex flex-wrap items-center gap-2">
+              {productForm.images.map((imgUrl, idx) => (
+                <div key={idx} className="relative w-16 h-16 rounded-xl border border-base-300 overflow-hidden group shadow-xs">
+                  <img src={imgUrl} alt="Product" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+
+              {/* Upload Trigger Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-16 h-16 rounded-xl border-2 border-dashed border-base-300 hover:border-secondary flex flex-col items-center justify-center text-base-content/60 hover:text-secondary transition-colors text-[10px] font-bold gap-1"
+              >
+                <Upload className="w-4 h-4" />
+                Upload
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Category</label>
+              <label className="label text-xs font-bold py-1">Category</label>
               <select
                 value={productForm.category}
-                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                className="select select-bordered select-sm rounded-xl text-xs"
+                onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
+                className="select select-bordered select-sm w-full rounded-xl font-medium"
               >
                 {PRODUCT_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -185,70 +256,65 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
             </div>
 
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Unit / Packaging</label>
-              <input
-                type="text"
-                required
-                value={productForm.unit}
-                onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
-                placeholder="e.g. 500g Box, 350g Jar, Piece, Set of 3"
-                className="input input-bordered input-sm rounded-xl"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="form-control">
-              <label className="label text-[11px] font-semibold">Selling Price (₹)</label>
+              <label className="label text-xs font-bold py-1">Selling Price (₹)</label>
               <input
                 type="number"
                 required
                 min={10}
                 value={productForm.price}
-                onChange={(e) => setProductForm({ ...productForm, price: parseInt(e.target.value) || 0 })}
-                className="input input-bordered input-sm rounded-xl"
+                onChange={(e) => setProductForm(prev => ({ ...prev, price: parseInt(e.target.value, 10) || 0 }))}
+                className="input input-bordered input-sm w-full rounded-xl font-bold text-primary"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="form-control">
+              <label className="label text-xs font-bold py-1">Unit / Packaging</label>
+              <input
+                type="text"
+                value={productForm.unit}
+                onChange={(e) => setProductForm(prev => ({ ...prev, unit: e.target.value }))}
+                placeholder="e.g. 500g Box, 350g Jar, Piece"
+                className="input input-bordered input-sm w-full rounded-xl"
               />
             </div>
 
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Initial Stock Batch</label>
+              <label className="label text-xs font-bold py-1">Locality Area</label>
               <input
-                type="number"
-                required
-                min={1}
-                value={productForm.stock}
-                onChange={(e) => setProductForm({ ...productForm, stock: parseInt(e.target.value) || 10 })}
-                className="input input-bordered input-sm rounded-xl"
+                type="text"
+                value={productForm.locality}
+                onChange={(e) => setProductForm(prev => ({ ...prev, locality: e.target.value }))}
+                placeholder="e.g. Adyar, Mylapore"
+                className="input input-bordered input-sm w-full rounded-xl"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
-            <label className="label cursor-pointer gap-2 p-0">
+          <div className="form-control pt-1">
+            <label className="cursor-pointer label justify-start gap-2">
               <input
                 type="checkbox"
                 checked={productForm.is_festival_special}
-                onChange={(e) => setProductForm({ ...productForm, is_festival_special: e.target.checked })}
-                className="checkbox checkbox-secondary checkbox-sm rounded-md"
+                onChange={(e) => setProductForm(prev => ({ ...prev, is_festival_special: e.target.checked }))}
+                className="checkbox checkbox-sm checkbox-secondary rounded"
               />
-              <span className="text-xs font-semibold text-base-content">Tag as Festival Special</span>
+              <span className="label-text text-xs font-bold">Tag as Festive Special Offering</span>
             </label>
           </div>
 
-          <div className="modal-action pt-2 border-t border-base-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-ghost btn-sm rounded-xl"
-            >
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between pt-3 border-t border-base-200">
+            <button type="button" onClick={onClose} className="btn btn-ghost btn-sm rounded-xl">
               Cancel
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="btn btn-secondary btn-sm rounded-xl text-white font-bold"
+              disabled={submitting || !productForm.title.trim()}
+              className="btn btn-secondary btn-sm text-white rounded-xl font-extrabold px-5 shadow-sm"
             >
-              {submitting ? <span className="loading loading-spinner loading-xs"></span> : 'List Product in Marketplace'}
+              {submitting ? <span className="loading loading-spinner loading-xs"></span> : 'Publish to Store'}
             </button>
           </div>
 

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 class ProductCreateRequest(BaseModel):
     title: str = Field(..., min_length=2)
     description: str = Field(..., min_length=10)
-    category: str = Field(..., pattern="^(Food & Preserves|Festive Sweets & Snacks|Handicrafts & Decor|Tailoring & Apparel|Plants & Gardening|Gifting)$")
+    category: str = "Food & Preserves"
     price: int = Field(..., gt=0)
     unit: str = "item" # jar, box, piece, kg, pair
     images: List[str] = []

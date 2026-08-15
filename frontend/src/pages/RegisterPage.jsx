@@ -100,8 +100,7 @@ export default function RegisterPage() {
 
       const user = await register(payload);
       setRegisteredUser(user);
-      // Open Welcome Language Selection Modal for delightful personalization
-      setShowWelcomeLangModal(true);
+      navigate('/welcome');
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {

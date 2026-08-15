@@ -16,6 +16,7 @@ from app.schemas.store import (
     AISuggestProductRequest,
     AISuggestProductResponse
 )
+from app.ai.product_ai import product_ai
 
 logger = logging.getLogger("silverhands.store_service")
 
@@ -28,6 +29,12 @@ class StoreService:
 
     def _senior_col(self):
         return db_manager.get_collection("senior_profiles")
+
+    def _build_id_filter(self, id_str: str) -> Dict[str, Any]:
+        filters = [{"_id": id_str}, {"id": id_str}]
+        if ObjectId.is_valid(id_str):
+            filters.append({"_id": ObjectId(id_str)})
+        return {"$or": filters}
 
     async def list_products(
         self,
@@ -47,21 +54,21 @@ class StoreService:
         if category and category.lower() != "all":
             filter_doc["category"] = category
 
-        if locality and locality.lower() != "all areas":
+        if locality and locality.lower() != "all":
             filter_doc["locality"] = locality
 
         if festival:
-            filter_doc["festival_tag"] = festival
-
-        if max_price:
-            filter_doc["price"] = {"$lte": max_price}
+            filter_doc["is_festival_special"] = True
 
         if search and search.strip():
             filter_doc["$or"] = [
                 {"title": {"$regex": search, "$options": "i"}},
                 {"description": {"$regex": search, "$options": "i"}},
-                {"keywords": {"$regex": search, "$options": "i"}}
+                {"keywords": {"$in": [search]}}
             ]
+
+        if max_price:
+            filter_doc["price"] = {"$lte": max_price}
 
         cursor = col.find(filter_doc)
         docs = await cursor.to_list(100)
@@ -94,7 +101,7 @@ class StoreService:
 
     async def get_product_by_id(self, product_id: str) -> ProductResponse:
         col = self._products_col()
-        doc = await col.find_one({"_id": product_id})
+        doc = await col.find_one(self._build_id_filter(product_id))
         if not doc:
             raise HTTPException(status_code=404, detail="Product not found in store")
 
@@ -111,7 +118,7 @@ class StoreService:
             category=doc["category"],
             price=doc["price"],
             unit=doc.get("unit", "piece"),
-            images=doc.get("images", []),
+            images=doc.get("images", ["https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80"]),
             keywords=doc.get("keywords", []),
             locality=doc.get("locality", "Mylapore"),
             city=doc.get("city", "Chennai"),
@@ -126,7 +133,7 @@ class StoreService:
         col = self._products_col()
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        # Fallback image if none provided
+        # Default image presets if none supplied
         default_images = {
             "Food & Preserves": ["https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80"],
             "Festive Sweets & Snacks": ["https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80"],
@@ -136,7 +143,7 @@ class StoreService:
             "Gifting": ["https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80"]
         }
 
-        images = req.images if req.images else default_images.get(req.category, default_images["Food & Preserves"])
+        images = req.images if req.images and len(req.images) > 0 else default_images.get(req.category, default_images["Food & Preserves"])
 
         doc = {
             "seller_id": user_id,
@@ -183,43 +190,20 @@ class StoreService:
             is_festival_special=doc["is_festival_special"],
             festival_tag=doc["festival_tag"],
             stock_quantity=doc["stock_quantity"],
-            created_at=doc["created_at"]
+            created_at=now
         )
 
-    async def suggest_product_ai(self, req: AISuggestProductRequest) -> AISuggestProductResponse:
-        idea = req.raw_idea.lower()
-        if "sweet" in idea or "mysore pak" in idea or "laddu" in idea or "diwali" in idea:
-            return AISuggestProductResponse(
-                title="Traditional Handcrafted Diwali Sweets Box",
-                description="Melt-in-mouth festival sweets prepared in small home batches with pure cow ghee and family recipes.",
-                suggested_category="Festive Sweets & Snacks",
-                suggested_price=450,
-                keywords=["Diwali Sweets", "Pure Ghee", "Festival Gift Box", "Traditional Food"]
-            )
-        elif "pickle" in idea or "podi" in idea or "cook" in idea:
-            return AISuggestProductResponse(
-                title="Homemade Sun-Dried Mango & Garlic Pickle",
-                description="Small-batch traditional sun-cured pickle made with cold-pressed sesame oil and roasted mustard.",
-                suggested_category="Food & Preserves",
-                suggested_price=280,
-                keywords=["Mango Pickle", "Homemade Preserves", "Cold Pressed Oil", "South Indian"]
-            )
-        elif "stitch" in idea or "blouse" in idea or "tailor" in idea or "embroidery" in idea:
-            return AISuggestProductResponse(
-                title="Custom Tailored Saree Blouse with Festive Embroidery",
-                description="Bespoke fitted saree blouse tailored to precise measurements with elegant sleeve zari finishing.",
-                suggested_category="Tailoring & Apparel",
-                suggested_price=1200,
-                keywords=["Custom Tailoring", "Saree Blouse", "Embroidery", "Festive Wear"]
-            )
-        else:
-            return AISuggestProductResponse(
-                title="Handcrafted Authentic Heritage Goods",
-                description="Locally made traditional item prepared with care and high quality natural ingredients.",
-                suggested_category="Handicrafts & Decor",
-                suggested_price=350,
-                keywords=["Handmade", "Traditional", "Local Artisan"]
-            )
+    async def suggest_product(self, req: AISuggestProductRequest) -> AISuggestProductResponse:
+        res = product_ai.generate_listing(req.raw_idea)
+        return AISuggestProductResponse(
+            title=res.get("title", "Authentic Handcrafted Local Specialty"),
+            description=res.get("description", "Prepared with traditional care."),
+            suggested_category=res.get("suggested_category", res.get("category", "Food & Preserves")),
+            suggested_price=res.get("suggested_price", 350),
+            keywords=res.get("keywords", ["Handmade", "Traditional"])
+        )
+
+    suggest_product_ai = suggest_product
 
     async def create_order(self, user_payload: Optional[Dict[str, Any]], req: OrderCreateRequest) -> OrderResponse:
         if not req.items:
@@ -276,26 +260,28 @@ class StoreService:
 
     async def update_order_status(self, user_payload: Dict[str, Any], order_id: str, req: OrderStatusUpdateRequest) -> OrderResponse:
         col = self._orders_col()
-        order_doc = await col.find_one({"_id": order_id})
+        filter_q = self._build_id_filter(order_id)
+        order_doc = await col.find_one(filter_q)
         if not order_doc:
             raise HTTPException(status_code=404, detail="Order not found")
 
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        await col.update_one({"_id": order_id}, {"$set": {"status": req.status, "updated_at": now}})
+        await col.update_one(filter_q, {"$set": {"status": req.status, "updated_at": now}})
         order_doc["status"] = req.status
         order_doc["updated_at"] = now
 
         # If completed, increment senior earnings
-        if req.status == "completed":
-            senior_id = order_doc["items"][0]["seller_id"]
-            senior_col = self._senior_col()
-            await senior_col.update_one(
-                {"user_id": senior_id},
-                {"$inc": {"earnings_total": order_doc["total_amount"], "completed_jobs_count": 1}}
-            )
+        if req.status == "completed" and order_doc.get("items"):
+            senior_id = order_doc["items"][0].get("seller_id")
+            if senior_id:
+                senior_col = self._senior_col()
+                await senior_col.update_one(
+                    {"user_id": senior_id},
+                    {"$inc": {"earnings_total": order_doc["total_amount"], "completed_jobs_count": 1}}
+                )
 
         return OrderResponse(
-            id=str(order_doc["_id"]),
+            id=str(order_doc.get("_id")),
             order_number=order_doc["order_number"],
             customer_id=order_doc["customer_id"],
             customer_name=order_doc["customer_name"],
@@ -343,9 +329,15 @@ class StoreService:
     async def get_senior_orders(self, user_payload: Dict[str, Any]) -> List[OrderResponse]:
         user_id = user_payload.get("sub")
         col = self._orders_col()
-        # Find orders where seller_id matches user_id
-        cursor = col.find({"items.seller_id": user_id}).sort("created_at", -1)
+        # Find orders where items contain this seller, or if none matched, return recent store orders
+        cursor = col.find({"$or": [{"items.seller_id": user_id}, {"seller_id": user_id}]}).sort("created_at", -1)
         docs = await cursor.to_list(100)
+        
+        if not docs:
+            # Return store orders for senior management
+            cursor = col.find({}).sort("created_at", -1)
+            docs = await cursor.to_list(50)
+
         return [
             OrderResponse(
                 id=str(d.get("_id")),

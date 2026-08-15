@@ -1,62 +1,60 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
+import { Link, useLocation as useRouteLocation } from 'react-router-dom';
 import { 
   ShoppingBag, 
   Sparkles, 
-  MapPin, 
-  Globe, 
-  User, 
-  LogOut, 
-  Briefcase, 
   Users, 
   Layers, 
-  TrendingUp,
+  TrendingUp, 
+  MapPin, 
+  Globe, 
+  Briefcase, 
+  ChevronDown, 
+  Plus, 
+  Check, 
+  X,
+  ShieldCheck,
   Package,
   Calendar,
-  Search,
-  Check,
-  ChevronDown,
-  X,
-  Plus
+  LogOut,
+  User,
+  SlidersHorizontal,
+  Home
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useLanguage } from '../../context/LanguageContext';
 import { useLocation } from '../../context/LocationContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Navbar() {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { 
+    selectedCity, 
+    setSelectedCity, 
+    indianCities, 
+    activeFestival, 
+    setActiveFestival,
+    selectedLocality,
+    setSelectedLocality,
+    setCustomLocality
+  } = useLocation();
   const { language, setLanguage, languages, t } = useLanguage();
-  const { cities, selectedCity, setSelectedCity, selectedLocality, setSelectedLocality, setCustomLocality, activeFestival, setActiveFestival } = useLocation();
-  const routerLocation = useRouterLocation();
-  const navigate = useNavigate();
+  const routerLocation = useRouteLocation();
 
-  // Modal States
   const [cityModalOpen, setCityModalOpen] = useState(false);
   const [langModalOpen, setLangModalOpen] = useState(false);
   const [festModalOpen, setFestModalOpen] = useState(false);
-
-  // City Search & Custom Locality
-  const [citySearch, setCitySearch] = useState('');
-  const [customLocalityInput, setCustomLocalityInput] = useState('');
   const [customCityInput, setCustomCityInput] = useState('');
-  const [selectedTierFilter, setSelectedTierFilter] = useState('ALL');
+  const [customLocalityInput, setCustomLocalityInput] = useState('');
 
-  const filteredCities = cities.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(citySearch.toLowerCase()) || 
-                          c.state.toLowerCase().includes(citySearch.toLowerCase());
-    const matchesTier = selectedTierFilter === 'ALL' || c.tier === selectedTierFilter;
-    return matchesSearch && matchesTier;
-  });
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleCitySelect = (cityObj) => {
+    setSelectedCity(cityObj.name);
+    setSelectedLocality('All Areas');
+    setCityModalOpen(false);
   };
 
-  const handleSelectCity = (city) => {
-    setSelectedCity(city);
+  const handleLocalitySelect = (locName) => {
+    setSelectedLocality(locName);
     setCityModalOpen(false);
-    setCitySearch('');
   };
 
   const handleAddCustomCityOrLocality = (e) => {
@@ -77,6 +75,7 @@ export default function Navbar() {
   };
 
   const isCompany = user?.role === 'company';
+  const isSenior = user?.role === 'senior';
 
   return (
     <>
@@ -86,7 +85,7 @@ export default function Navbar() {
             
             {/* Brand */}
             <div className="flex items-center gap-3">
-              <Link to={isCompany ? "/company" : "/"} className="flex items-center gap-2.5 group">
+              <Link to={isCompany ? "/company" : isSenior ? "/senior" : "/"} className="flex items-center gap-2.5 group">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
                   🤝
                 </div>
@@ -95,7 +94,7 @@ export default function Navbar() {
                     SilverHands
                   </span>
                   <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    {isCompany ? 'Company Portal' : 'Livelihood 2.0'}
+                    {isCompany ? 'Company Portal' : isSenior ? 'Senior Guru' : 'Livelihood 2.0'}
                   </span>
                 </div>
               </Link>
@@ -104,7 +103,7 @@ export default function Navbar() {
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
               
-              {/* If Company Profile, ONLY Show Company Hub (Issue #14) */}
+              {/* If Company Profile, ONLY Show Company Hub */}
               {isCompany ? (
                 <Link 
                   to="/company" 
@@ -116,38 +115,50 @@ export default function Navbar() {
               ) : (
                 /* Consumer & Senior Navigation */
                 <>
+                  {/* Opportunities (Front and Center for Seniors and All) */}
+                  <Link 
+                    to="/senior" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 font-bold ${routerLocation.pathname === '/senior' ? 'btn-active text-primary bg-primary/10' : ''}`}
+                  >
+                    <Layers className="w-4 h-4 text-primary" />
+                    Opportunities
+                  </Link>
+
+                  {/* Community & Collaborations */}
+                  <Link 
+                    to="/community" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 font-bold ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary bg-primary/10' : ''}`}
+                  >
+                    <Users className="w-4 h-4 text-secondary" />
+                    Community
+                  </Link>
+
+                  {/* Store */}
                   <Link 
                     to="/store" 
                     className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary' : ''}`}
                   >
-                    <ShoppingBag className="w-4 h-4 text-secondary" />
+                    <ShoppingBag className="w-4 h-4 text-accent" />
                     {t('nav_store')}
                   </Link>
 
+                  {/* Services */}
                   <Link 
                     to="/services" 
                     className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary' : ''}`}
                   >
-                    <Sparkles className="w-4 h-4 text-accent" />
+                    <Sparkles className="w-4 h-4 text-warning" />
                     {t('nav_services')}
                   </Link>
 
-                  <Link 
-                    to="/community" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary' : ''}`}
-                  >
-                    <Users className="w-4 h-4 text-primary" />
-                    {t('nav_community')}
-                  </Link>
-
-                  {user?.role === 'senior' && (
+                  {isSenior && (
                     <>
                       <Link 
-                        to="/senior" 
-                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior' ? 'btn-active text-primary' : ''}`}
+                        to="/senior/orders" 
+                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior/orders' ? 'btn-active text-primary' : ''}`}
                       >
-                        <Layers className="w-4 h-4 text-warning" />
-                        {t('nav_deck')}
+                        <Package className="w-4 h-4 text-primary" />
+                        My Orders
                       </Link>
                       <Link 
                         to="/senior/earnings" 
@@ -219,44 +230,50 @@ export default function Navbar() {
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   </div>
-                  <ul tabIndex={0} className="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 text-sm">
-                    <li className="px-3 py-2 border-b border-base-200">
-                      <p className="font-bold text-base-content truncate">{user?.full_name}</p>
-                      <p className="text-xs text-base-content/60 capitalize flex items-center gap-1.5 mt-0.5">
-                        <span className="w-2 h-2 rounded-full bg-success"></span>
-                        {user?.role === 'senior' ? 'Senior / Homemaker' : user?.role === 'company' ? 'Job Provider' : 'Customer'}
-                      </p>
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-xl bg-base-100 rounded-2xl w-56 border border-base-300 text-xs">
+                    <li className="menu-title px-3 py-1 font-bold text-base-content/70 border-b border-base-200">
+                      {user?.full_name}
+                      <span className="badge badge-xs badge-primary font-normal text-white uppercase ml-1">{user?.role}</span>
                     </li>
+                    
                     {user?.role === 'senior' && (
                       <>
-                        <li><Link to="/senior"><Layers className="w-4 h-4 text-warning" /> Opportunity Deck</Link></li>
-                        <li><Link to="/senior/onboarding"><Sparkles className="w-4 h-4 text-primary" /> Edit AI Skills</Link></li>
-                        <li><Link to="/senior/orders"><Package className="w-4 h-4 text-secondary" /> Customer Orders</Link></li>
-                        <li><Link to="/senior/earnings"><TrendingUp className="w-4 h-4 text-success" /> Earnings</Link></li>
+                        <li><Link to="/senior"><Layers className="w-4 h-4 text-primary" /> Opportunities Deck</Link></li>
+                        <li><Link to="/community"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
+                        <li><Link to="/senior/orders"><Package className="w-4 h-4 text-primary" /> Manage Store Orders</Link></li>
+                        <li><Link to="/senior/earnings"><TrendingUp className="w-4 h-4 text-success" /> Earnings & Ledger</Link></li>
+                        <li><Link to="/senior/onboarding"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life-to-Skill Story</Link></li>
                       </>
                     )}
-                    {user?.role === 'company' && (
-                      <li><Link to="/company"><Briefcase className="w-4 h-4 text-primary" /> Manage Postings</Link></li>
-                    )}
+
                     {user?.role === 'customer' && (
                       <>
-                        <li><Link to="/cart"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart & Orders</Link></li>
+                        <li><Link to="/cart"><ShoppingBag className="w-4 h-4 text-primary" /> My Cart</Link></li>
+                        <li><Link to="/orders"><Package className="w-4 h-4 text-secondary" /> My Orders</Link></li>
+                        <li><Link to="/community"><Users className="w-4 h-4 text-accent" /> Community Feed</Link></li>
                       </>
                     )}
+
+                    {user?.role === 'company' && (
+                      <>
+                        <li><Link to="/company"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
+                      </>
+                    )}
+
                     <li className="border-t border-base-200 mt-1">
-                      <button onClick={handleLogout} className="text-error font-medium">
-                        <LogOut className="w-4 h-4" /> {t('logout')}
+                      <button onClick={logout} className="text-error font-bold">
+                        <LogOut className="w-4 h-4" /> Logout
                       </button>
                     </li>
                   </ul>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <Link to="/login" className="btn btn-ghost btn-sm text-xs font-semibold rounded-lg">
-                    {t('login')}
+                  <Link to="/login" className="btn btn-ghost btn-sm text-xs font-bold rounded-xl">
+                    {t('nav_login')}
                   </Link>
-                  <Link to="/register" className="btn btn-primary btn-sm text-xs font-bold rounded-lg shadow-sm">
-                    {t('register')}
+                  <Link to="/register" className="btn btn-primary btn-sm text-white text-xs font-bold rounded-xl shadow-xs">
+                    {t('nav_register')}
                   </Link>
                 </div>
               )}
@@ -267,23 +284,88 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ========================================================================= */}
-      {/* CITY SELECTION POPUP MODAL (FULL SCREEN OVERLAY - FIXED OUTSIDE HEADER) */}
-      {/* ========================================================================= */}
+      {/* MOBILE BOTTOM NAVIGATION BAR (md:hidden) */}
+      {!isCompany && (
+        <nav 
+          aria-label="Mobile Navigation"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100/95 backdrop-blur-md border-t border-base-300 py-1 px-2 flex items-center justify-around text-[10px] font-bold shadow-lg"
+        >
+          <Link 
+            to="/senior" 
+            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+              routerLocation.pathname === '/senior' ? 'text-primary' : 'text-base-content/70 hover:text-primary'
+            }`}
+          >
+            <Layers className="w-5 h-5" />
+            <span>Opportunities</span>
+          </Link>
+
+          <Link 
+            to="/community" 
+            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+              routerLocation.pathname.startsWith('/community') ? 'text-secondary' : 'text-base-content/70 hover:text-secondary'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span>Community</span>
+          </Link>
+
+          <Link 
+            to="/store" 
+            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+              routerLocation.pathname.startsWith('/store') ? 'text-accent' : 'text-base-content/70 hover:text-accent'
+            }`}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span>Store</span>
+          </Link>
+
+          <Link 
+            to="/services" 
+            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+              routerLocation.pathname.startsWith('/services') ? 'text-warning' : 'text-base-content/70 hover:text-warning'
+            }`}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span>Services</span>
+          </Link>
+
+          {isSenior ? (
+            <Link 
+              to="/senior/orders" 
+              className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+                routerLocation.pathname.startsWith('/senior/orders') ? 'text-success' : 'text-base-content/70 hover:text-success'
+              }`}
+            >
+              <Package className="w-5 h-5" />
+              <span>Orders</span>
+            </Link>
+          ) : (
+            <Link 
+              to="/cart" 
+              className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
+                routerLocation.pathname === '/cart' ? 'text-primary' : 'text-base-content/70 hover:text-primary'
+              }`}
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>Cart</span>
+            </Link>
+          )}
+        </nav>
+      )}
+
+      {/* FULL-SCREEN FIXED CITY SELECTOR MODAL */}
       {cityModalOpen && (
         <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-base-200 pb-3">
+          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-base-content">Select Your City & Area</h3>
-                  <p className="text-xs text-base-content/60">Choose your city or enter a custom locality anywhere in India</p>
-                </div>
+                <MapPin className="w-5 h-5 text-secondary" />
+                <h3 className="font-extrabold text-lg text-base-content">Select Your City & Locality</h3>
               </div>
               <button 
+                type="button" 
                 onClick={() => setCityModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -291,138 +373,119 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-base-content/40 absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                placeholder="Search city (e.g. Chennai, Bengaluru, Mumbai, Jaipur)..."
-                value={citySearch}
-                onChange={(e) => setCitySearch(e.target.value)}
-                className="input input-bordered w-full pl-10 text-sm rounded-2xl"
-              />
-            </div>
-
-            {/* Tier Filters */}
-            <div className="flex items-center gap-2">
-              {['ALL', 'T1', 'T2', 'T3'].map(tier => (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => setSelectedTierFilter(tier)}
-                  className={`btn btn-xs rounded-xl font-bold ${selectedTierFilter === tier ? 'btn-primary text-white' : 'btn-ghost border border-base-300'}`}
-                >
-                  {tier === 'ALL' ? 'All Cities' : `Tier ${tier.slice(1)}`}
-                </button>
-              ))}
-            </div>
-
-            {/* Cities Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto pr-1">
-              {filteredCities.map((city) => {
-                const isSelected = selectedCity.name === city.name;
-                return (
-                  <button
-                    key={city.id}
-                    type="button"
-                    onClick={() => handleSelectCity(city)}
-                    className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      isSelected 
-                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' 
-                        : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50'
-                    }`}
-                  >
-                    <div>
-                      <div className="text-sm font-bold text-base-content">{city.name}</div>
-                      <div className="text-[11px] text-base-content/60">{city.state}</div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="badge badge-xs badge-neutral font-semibold">{city.tier}</span>
+            {/* City Grid */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-base-content/70 uppercase">Supported Cities across India</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                {indianCities.map((c) => {
+                  const isSelected = selectedCity.name === c.name;
+                  return (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => handleCitySelect(c)}
+                      className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                        isSelected 
+                          ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' 
+                          : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50 text-base-content'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-bold text-sm">{c.name}</div>
+                        <div className="text-[10px] text-base-content/60">{c.tier} • {c.localities.length} Localities</div>
+                      </div>
                       {isSelected && <Check className="w-4 h-4 text-primary" />}
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Localities for Current City */}
-            {selectedCity.localities && selectedCity.localities.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-base-200">
-                <span className="text-xs font-bold text-base-content/70 block">
-                  Select Neighborhood in {selectedCity.name}:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedLocality('All Areas'); setCityModalOpen(false); }}
-                    className={`btn btn-xs rounded-xl ${selectedLocality === 'All Areas' ? 'btn-secondary text-white font-bold' : 'btn-ghost border border-base-300'}`}
-                  >
-                    All Areas
-                  </button>
-                  {selectedCity.localities.map((loc) => (
-                    <button
-                      key={loc}
-                      type="button"
-                      onClick={() => { setSelectedLocality(loc); setCityModalOpen(false); }}
-                      className={`btn btn-xs rounded-xl ${selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost border border-base-300'}`}
-                    >
-                      {loc}
-                    </button>
-                  ))}
-                </div>
+            <div className="space-y-2 pt-2 border-t border-base-200">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-base-content/70 uppercase">
+                  Localities in {selectedCity.name}
+                </label>
+                <span className="text-[11px] text-primary font-semibold">Active: {selectedLocality}</span>
               </div>
-            )}
+              
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleLocalitySelect('All Areas')}
+                  className={`btn btn-xs rounded-xl font-bold ${
+                    selectedLocality === 'All Areas' ? 'btn-secondary text-white' : 'btn-outline border-base-300'
+                  }`}
+                >
+                  All Areas ({selectedCity.name})
+                </button>
+                {selectedCity.localities.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => handleLocalitySelect(loc)}
+                    className={`btn btn-xs rounded-xl ${
+                      selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost bg-base-200/60'
+                    }`}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            {/* Custom City / Locality Entry */}
-            <form onSubmit={handleAddCustomCityOrLocality} className="pt-3 border-t border-base-200 space-y-2">
-              <span className="text-xs font-bold text-base-content/70 block">
-                Don't see your city or neighborhood? Enter custom:
-              </span>
+            {/* Custom City / Locality Input */}
+            <form onSubmit={handleAddCustomCityOrLocality} className="space-y-2 pt-2 border-t border-base-200">
+              <label className="text-xs font-bold text-base-content/70 flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5 text-primary" /> Enter Another City / Locality in India:
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
-                  placeholder="Custom City Name..."
                   value={customCityInput}
                   onChange={(e) => setCustomCityInput(e.target.value)}
-                  className="input input-sm input-bordered rounded-xl text-xs"
+                  placeholder="e.g. Pune, Jaipur, Mysore"
+                  className="input input-bordered input-sm text-xs rounded-xl w-full"
                 />
                 <input
                   type="text"
-                  placeholder="Custom Locality / Area..."
                   value={customLocalityInput}
                   onChange={(e) => setCustomLocalityInput(e.target.value)}
-                  className="input input-sm input-bordered rounded-xl text-xs"
+                  placeholder="e.g. Kothrud, Vaishali Nagar"
+                  className="input input-bordered input-sm text-xs rounded-xl w-full"
                 />
               </div>
-              <button
-                type="submit"
-                className="btn btn-sm btn-primary rounded-xl text-white font-bold text-xs w-full gap-1 mt-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> Set Custom Location
-              </button>
+              <div className="flex justify-end pt-1">
+                <button 
+                  type="submit" 
+                  disabled={!customCityInput.trim() && !customLocalityInput.trim()}
+                  className="btn btn-primary btn-sm text-white rounded-xl font-bold text-xs"
+                >
+                  Apply Location
+                </button>
+              </div>
             </form>
 
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* LANGUAGE SELECTION POPUP MODAL (11 LANGUAGES) */}
-      {/* ========================================================================= */}
+      {/* FULL-SCREEN FIXED LANGUAGE SELECTOR MODAL */}
       {langModalOpen && (
         <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-base-100 border border-base-300 max-w-xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-base-200 pb-3">
+          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
-                  <Globe className="w-4 h-4" />
-                </div>
+                <Globe className="w-5 h-5 text-accent" />
                 <div>
-                  <h3 className="font-extrabold text-lg text-base-content">Choose Language / மொழி / भाषा</h3>
-                  <p className="text-xs text-base-content/60">SilverHands supports 11 Indian regional languages</p>
+                  <h3 className="font-extrabold text-lg text-base-content">Choose Your Preferred Language</h3>
+                  <p className="text-xs text-base-content/60">100% Platform translation across 11 Indian languages</p>
                 </div>
               </div>
               <button 
+                type="button" 
                 onClick={() => setLangModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -430,8 +493,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* 3-Column Language Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {languages.map((l) => {
                 const isSelected = language === l.code;
                 return (
@@ -442,40 +504,41 @@ export default function Navbar() {
                       setLanguage(l.code);
                       setLangModalOpen(false);
                     }}
-                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between h-20 ${
+                    className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                       isSelected
-                        ? 'border-primary bg-primary/10 text-primary shadow-sm font-bold'
-                        : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50'
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-xs'
+                        : 'border-base-300 bg-base-100 hover:border-accent/40 hover:bg-base-200/50 text-base-content'
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-base font-extrabold text-base-content">{l.native}</span>
-                      {isSelected && <Check className="w-4 h-4 text-primary" />}
+                    <div>
+                      <div className="text-base font-extrabold">{l.native}</div>
+                      <div className="text-xs text-base-content/60">{l.name}</div>
                     </div>
-                    <span className="text-xs text-base-content/60 font-medium">{l.name}</span>
+                    {isSelected && <Check className="w-4 h-4 text-accent" />}
                   </button>
                 );
               })}
             </div>
+
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* FESTIVAL SELECTION POPUP MODAL */}
-      {/* ========================================================================= */}
+      {/* FULL-SCREEN FIXED FESTIVAL SELECTOR MODAL */}
       {festModalOpen && (
         <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-base-100 border border-base-300 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-base-200 pb-3">
+          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🪔</span>
                 <div>
-                  <h3 className="font-extrabold text-lg text-base-content">Cultural & Festive Context</h3>
-                  <p className="text-xs text-base-content/60">Adapts opportunities, products, and seasonal demand</p>
+                  <h3 className="font-extrabold text-lg text-base-content">Festival Edition & Catalogs</h3>
+                  <p className="text-xs text-base-content/60">Tailor store items & gigs to current Indian festivals</p>
                 </div>
               </div>
               <button 
+                type="button" 
                 onClick={() => setFestModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -503,7 +566,7 @@ export default function Navbar() {
                     }}
                     className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                       isSelected
-                        ? 'border-secondary bg-secondary/10 text-secondary font-bold'
+                        ? 'border-secondary bg-secondary/10 text-secondary font-bold shadow-xs'
                         : 'border-base-300 bg-base-100 hover:border-secondary/40 hover:bg-base-200/50'
                     }`}
                   >
