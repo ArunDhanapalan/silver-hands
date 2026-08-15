@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { LocationProvider } from './context/LocationContext';
 import AppShell from './components/layout/AppShell';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import AccessibilityBar from './components/common/AccessibilityBar';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -112,6 +113,7 @@ export default function App() {
                   {/* Fallback */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                <AccessibilityBar />
               </Suspense>
             </AppShell>
           </AuthProvider>
