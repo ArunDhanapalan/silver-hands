@@ -40,6 +40,7 @@ export default function SeniorDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [skillTwins, setSkillTwins] = useState([]);
 
   // Modals for Offer Service & Sell Product
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -49,14 +50,16 @@ export default function SeniorDashboardPage() {
     setLoading(true);
     setError('');
     try {
-      const [deckData, appsData, sessionsData] = await Promise.all([
+      const [deckData, appsData, sessionsData, twinsData] = await Promise.all([
         api.get('/opportunities/deck').catch(() => []),
         api.get('/opportunities/my-applications').catch(() => []),
-        api.get('/services/bookings/senior-sessions').catch(() => [])
+        api.get('/services/bookings/senior-sessions').catch(() => []),
+        api.get('/senior/twins').catch(() => [])
       ]);
       setDeck(deckData || []);
       setActiveApps(appsData || []);
       setSeniorSessions(sessionsData || []);
+      setSkillTwins(twinsData || []);
     } catch (err) {
       setError(err.message || 'Failed to load opportunities');
     } finally {
@@ -398,6 +401,35 @@ export default function SeniorDashboardPage() {
         </div>
 
       </div>
+
+      {/* 3. Skill-Twin Peer Collaborators */}
+      {skillTwins.length > 0 && (
+        <div className="card bg-gradient-to-r from-accent/5 via-base-100 to-primary/5 border border-base-300 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-accent" />
+            <h2 className="text-base font-extrabold text-base-content">Skill-Twin Peer Collaborators</h2>
+            <span className="badge badge-accent badge-sm font-bold text-white">{skillTwins.length}</span>
+          </div>
+          <p className="text-xs text-base-content/60">Seniors with complementary skills matched by Gemini AI for potential joint ventures.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {skillTwins.map((twin, idx) => (
+              <div key={idx} className="bg-base-100 border border-base-300 rounded-2xl p-4 shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-sm text-base-content">{twin.peer_name}</h4>
+                  <span className="badge badge-primary badge-sm font-bold text-white">{twin.synergy_score}% Synergy</span>
+                </div>
+                <p className="text-xs text-base-content/70 font-semibold">{twin.venture_title}</p>
+                <p className="text-[11px] text-base-content/60">{twin.rationale}</p>
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {(twin.shared_keywords || []).slice(0, 4).map((kw, ki) => (
+                    <span key={ki} className="badge badge-ghost badge-xs text-[9px] font-medium">#{kw}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <AddServiceModal

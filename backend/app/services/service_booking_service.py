@@ -261,11 +261,17 @@ class ServiceBookingService:
         if req.meeting_link:
             update_fields["meeting_link"] = req.meeting_link
 
+        previous_status = doc.get("status", "requested")
+
+        # Block invalid transitions
+        if previous_status in ("completed", "cancelled"):
+            raise HTTPException(status_code=400, detail=f"Cannot change status of {previous_status} booking")
+
         await col.update_one(filter_q, {"$set": update_fields})
         doc.update(update_fields)
 
-        # If completed, credit senior earnings and session count
-        if req.status == "completed":
+        # Credit earnings ONLY on first completed transition
+        if req.status == "completed" and previous_status not in ("completed", "cancelled"):
             senior_id = doc.get("senior_id")
             if senior_id:
                 senior_col = self._senior_col()
@@ -428,10 +434,18 @@ class ServiceBookingService:
         if not doc:
             raise HTTPException(status_code=404, detail="Booking not found")
 
+        current_status = doc.get("status", "requested")
+        if current_status in ("completed", "cancelled"):
+            raise HTTPException(status_code=400, detail=f"Cannot update progress of {current_status} booking")
+
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         completed_cnt = req.completed_sessions
         total_cnt = doc.get("sessions_count", 1)
 
+        # Clamp to valid range
+        completed_cnt = max(0, min(completed_cnt, total_cnt))
+
+        was_already_completed = current_status == "completed"
         new_status = "completed" if completed_cnt >= total_cnt else "in_progress" if completed_cnt > 0 else doc.get("status", "scheduled")
 
         await col.update_one(
@@ -441,6 +455,16 @@ class ServiceBookingService:
         doc["completed_sessions_count"] = completed_cnt
         doc["status"] = new_status
         doc["updated_at"] = now
+
+        # Credit earnings only on FIRST completion
+        if new_status == "completed" and not was_already_completed:
+            senior_id = doc.get("senior_id")
+            if senior_id:
+                senior_col = self._senior_col()
+                await senior_col.update_one(
+                    {"user_id": senior_id},
+                    {"$inc": {"earnings_total": doc["total_amount"], "completed_jobs_count": 1}}
+                )
 
         return BookingResponse(
             id=str(doc.get("_id")),

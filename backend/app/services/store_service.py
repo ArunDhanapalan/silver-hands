@@ -201,7 +201,7 @@ class StoreService:
         )
 
     async def suggest_product(self, req: AISuggestProductRequest) -> AISuggestProductResponse:
-        res = product_ai.generate_listing(req.raw_idea)
+        res = await product_ai.generate_listing(req.raw_idea)
         return AISuggestProductResponse(
             title=res.get("title", "Authentic Handcrafted Local Specialty"),
             description=res.get("description", "Prepared with traditional care."),
@@ -272,13 +272,19 @@ class StoreService:
         if not order_doc:
             raise HTTPException(status_code=404, detail="Order not found")
 
+        previous_status = order_doc.get("status", "pending")
+
+        # Block invalid transitions
+        if previous_status in ("completed", "cancelled"):
+            raise HTTPException(status_code=400, detail=f"Cannot change status of {previous_status} order")
+
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         await col.update_one(filter_q, {"$set": {"status": req.status, "updated_at": now}})
         order_doc["status"] = req.status
         order_doc["updated_at"] = now
 
-        # If completed, increment senior earnings
-        if req.status == "completed" and order_doc.get("items"):
+        # Credit earnings ONLY on first completed transition (not from cancelled/completed)
+        if req.status == "completed" and previous_status not in ("completed", "cancelled") and order_doc.get("items"):
             senior_id = order_doc["items"][0].get("seller_id")
             if senior_id:
                 senior_col = self._senior_col()

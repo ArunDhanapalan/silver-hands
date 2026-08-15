@@ -123,7 +123,7 @@ export default function SeniorManageServicesPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-base-200">
         <div>
           <div className="flex items-center gap-2">
-            <Link to="/senior" className="btn btn-ghost btn-xs btn-circle">
+            <Link to="/senior" className="btn btn-ghost btn-sm min-h-[44px] btn-circle">
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content">
@@ -230,7 +230,7 @@ export default function SeniorManageServicesPage() {
                             <button
                               type="button"
                               onClick={() => handleMarkClassProgress(b.id, done, total)}
-                              className="btn btn-accent btn-xs rounded-xl text-white font-bold gap-1"
+                              className="btn btn-accent btn-sm min-h-[44px] rounded-xl text-white font-bold gap-1"
                             >
                               <Check className="w-3 h-3" /> Mark Class {done + 1} Done
                             </button>
@@ -245,7 +245,7 @@ export default function SeniorManageServicesPage() {
                             <button
                               type="button"
                               onClick={() => handleUpdateStatus(b.id, 'scheduled')}
-                              className="btn btn-accent btn-xs rounded-xl text-white font-bold"
+                              className="btn btn-accent btn-sm min-h-[44px] rounded-xl text-white font-bold"
                             >
                               Accept & Schedule
                             </button>
@@ -256,7 +256,7 @@ export default function SeniorManageServicesPage() {
                               href={b.meeting_link}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn btn-primary btn-xs rounded-xl text-white font-bold gap-1"
+                              className="btn btn-primary btn-sm min-h-[44px] rounded-xl text-white font-bold gap-1"
                             >
                               <Video className="w-3.5 h-3.5" /> Start Video Classroom
                             </a>
@@ -266,7 +266,7 @@ export default function SeniorManageServicesPage() {
                         <button
                           type="button"
                           onClick={() => handleCancelBooking(b.id)}
-                          className="btn btn-ghost btn-xs text-error font-bold rounded-xl"
+                          className="btn btn-ghost btn-sm min-h-[44px] text-error font-bold rounded-xl"
                         >
                           Cancel Booking
                         </button>
@@ -339,7 +339,7 @@ export default function SeniorManageServicesPage() {
                       <span className="font-extrabold text-primary text-sm">₹{srv.price_per_session}</span>
                       <span className="text-[10px] text-base-content/60"> / {srv.duration_mins}m</span>
                     </div>
-                    <Link to={`/services/${srv.id}`} className="btn btn-ghost btn-xs text-accent font-bold rounded-lg gap-1">
+                    <Link to={`/services/${srv.id}`} className="btn btn-ghost btn-sm min-h-[44px] text-accent font-bold rounded-lg gap-1">
                       View Public Page <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>

@@ -109,4 +109,4 @@ async def parse_job_description(
     AI parser for unstructured job posts.
     """
     from app.ai.job_description_ai import job_description_ai
-    return job_description_ai.parse_job_posting(req.raw_text)
+    return await job_description_ai.parse_job_posting(req.raw_text)

@@ -107,8 +107,7 @@ Extract the following JSON structure strictly with no markdown wrapper:
   "suggested_service_product_title": "A short, appealing title for a service or product they could offer"
 }}
 """
-    # Try gemini-1.5-flash and gemini-2.0-flash
-    models = ["gemini-1.5-flash", "gemini-2.0-flash"]
+    models = ["gemini-2.0-flash", "gemini-1.5-flash"]
     
     async with httpx.AsyncClient(timeout=15.0) as client:
         for model in models:
@@ -128,6 +127,22 @@ Extract the following JSON structure strictly with no markdown wrapper:
                         if json_match:
                             parsed = json.loads(json_match.group(0))
                             if "explicit_skills" in parsed and "bio" in parsed:
+                                # Ensure inferred skills are objects
+                                inferred = []
+                                for item in parsed.get("inferred_skills", []):
+                                    if isinstance(item, dict) and "skill" in item:
+                                        inferred.append({
+                                            "skill": str(item["skill"]),
+                                            "reason": str(item.get("reason", "Inferred from your career background"))
+                                        })
+                                    elif isinstance(item, str):
+                                        inferred.append({
+                                            "skill": item,
+                                            "reason": "Derived from your life story"
+                                        })
+                                parsed["inferred_skills"] = inferred
+                                parsed["analysis_engine"] = "gemini_live"
+                                logger.info("Skill extraction successfully completed via Gemini API")
                                 return parsed
             except Exception as ex:
                 logger.warning(f"Error calling {model}: {ex}")

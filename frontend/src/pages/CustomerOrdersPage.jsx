@@ -158,7 +158,7 @@ export default function CustomerOrdersPage() {
                 <span className="text-[11px] font-bold text-base-content/70 uppercase">Ordered Products:</span>
                 <div className="space-y-2">
                   {ord.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs pt-1 border-t border-base-300/50">
+                    <div key={idx} className="flex items-center justify-between text-sm pt-2 border-t border-base-300/50">
                       <div>
                         <span className="font-bold text-base-content">{item.product_title}</span>
                         <span className="text-base-content/60 ml-2">x{item.quantity} (by {item.seller_name})</span>
@@ -166,14 +166,16 @@ export default function CustomerOrdersPage() {
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-primary">₹{item.price_per_unit * item.quantity}</span>
                         
-                        {/* Rate Product Button */}
-                        <button
-                          type="button"
-                          onClick={() => setRatingProduct(item)}
-                          className="btn btn-ghost btn-xs text-warning font-bold gap-1 rounded-lg hover:bg-warning/10"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-warning" /> Rate
-                        </button>
+                        {/* Rate Product Button — ONLY after delivery/completion */}
+                        {(ord.status === 'completed' || ord.status === 'delivered') && (
+                          <button
+                            type="button"
+                            onClick={() => setRatingProduct(item)}
+                            className="btn btn-sm min-h-[44px] text-warning font-bold gap-1.5 rounded-xl hover:bg-warning/10 border border-warning/30"
+                          >
+                            <Star className="w-4 h-4 fill-warning" /> Rate
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -181,13 +183,13 @@ export default function CustomerOrdersPage() {
               </div>
 
               {/* Order Actions */}
-              <div className="flex items-center justify-between pt-1 border-t border-base-200 text-xs">
+              <div className="flex items-center justify-between pt-2 border-t border-base-200 text-sm">
                 <span className="text-base-content/60">Payment: <strong>{ord.payment_method}</strong></span>
                 {ord.status !== 'completed' && ord.status !== 'delivered' && ord.status !== 'cancelled' && (
                   <button
                     type="button"
                     onClick={() => handleCancelOrder(ord.id)}
-                    className="btn btn-ghost btn-xs text-error font-bold rounded-xl"
+                    className="btn btn-sm min-h-[44px] text-error font-bold rounded-xl border border-error/30"
                   >
                     Cancel Order
                   </button>

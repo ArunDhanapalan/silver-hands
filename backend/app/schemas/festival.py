@@ -3,15 +3,15 @@ from pydantic import BaseModel
 
 class FestivalInfo(BaseModel):
     id: str
-    name: str # Diwali, Pongal, Onam, Durga Puja, Eid, Navratri, Christmas, Ganesh Chaturthi
+    name: str
     icon: str
     primary_regions: List[str]
-    banner_theme: str # festive-gold, harvest-green, vibrant-marigold, royal-blue
-    greeting: Dict[str, str] # language code -> greeting string
+    banner_theme: str
+    greeting: Dict[str, str]
     key_categories: List[str]
     surge_multiplier: float = 1.25
-    active_months: List[str]
+    active_months: Optional[List[str]] = None
 
 class FestivalCalendarResponse(BaseModel):
-    current_festival: FestivalInfo
+    current_festival: Optional[FestivalInfo] = None
     all_festivals: List[FestivalInfo]

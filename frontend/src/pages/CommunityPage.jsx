@@ -41,9 +41,9 @@ export default function CommunityPage() {
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
-  // Comments state for expanded post
+  // Comments state — keyed by postId to avoid cross-post leaking
   const [activeCommentsPostId, setActiveCommentsPostId] = useState(null);
-  const [comments, setComments] = useState([]);
+  const [commentsMap, setCommentsMap] = useState({});
   const [newCommentText, setNewCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
 
@@ -102,14 +102,19 @@ export default function CommunityPage() {
       return;
     }
     setActiveCommentsPostId(postId);
-    setLoadingComments(true);
-    try {
-      const data = await api.get(`/community/posts/${postId}/comments`);
-      setComments(data || []);
-    } catch (err) {
-      console.error('Fetch comments error:', err);
-    } finally {
-      setLoadingComments(false);
+    setNewCommentText('');
+    // Only fetch if not already cached
+    if (!commentsMap[postId]) {
+      setLoadingComments(true);
+      try {
+        const data = await api.get(`/community/posts/${postId}/comments`);
+        setCommentsMap(prev => ({ ...prev, [postId]: data || [] }));
+      } catch (err) {
+        console.error('Fetch comments error:', err);
+        setCommentsMap(prev => ({ ...prev, [postId]: [] }));
+      } finally {
+        setLoadingComments(false);
+      }
     }
   };
 
@@ -119,9 +124,11 @@ export default function CommunityPage() {
       const res = await api.post(`/community/posts/${postId}/comments`, {
         content: newCommentText
       });
-      setComments(prev => [...prev, res]);
+      setCommentsMap(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), res]
+      }));
       setNewCommentText('');
-      // update count locally
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p));
     } catch (err) {
       console.error('Add comment error:', err);
@@ -383,10 +390,10 @@ export default function CommunityPage() {
                     <span className="loading loading-spinner loading-xs text-primary"></span>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {comments.length === 0 ? (
+                      {(commentsMap[post.id] || []).length === 0 ? (
                         <p className="text-[11px] text-base-content/50 italic">No comments yet. Start the conversation!</p>
                       ) : (
-                        comments.map((c) => (
+                        (commentsMap[post.id] || []).map((c) => (
                           <div key={c.id} className="bg-base-200 p-2.5 rounded-xl text-xs space-y-0.5">
                             <span className="font-bold text-base-content block text-[11px]">
                               {c.author_name} <span className="text-base-content/50 font-normal">({c.author_role})</span>

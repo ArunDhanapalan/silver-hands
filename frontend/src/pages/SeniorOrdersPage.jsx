@@ -172,7 +172,7 @@ export default function SeniorOrdersPage() {
                     <button
                       type="button"
                       onClick={() => handleUpdateStatus(order.id, 'cancelled')}
-                      className="btn btn-ghost btn-xs text-error font-bold rounded-xl"
+                      className="btn btn-ghost btn-sm min-h-[44px] text-error font-bold rounded-xl"
                     >
                       Reject / Cancel Order
                     </button>

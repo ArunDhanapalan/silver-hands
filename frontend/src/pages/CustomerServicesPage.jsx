@@ -182,7 +182,7 @@ export default function CustomerServicesPage() {
                         href={b.meeting_link}
                         target="_blank"
                         rel="noreferrer"
-                        className="btn btn-primary btn-xs rounded-xl text-white font-bold gap-1"
+                        className="btn btn-primary btn-sm min-h-[44px] rounded-xl text-white font-bold gap-1"
                       >
                         <Video className="w-3.5 h-3.5" /> Enter Live Video Classroom
                       </a>
@@ -192,7 +192,7 @@ export default function CustomerServicesPage() {
                       <button
                         type="button"
                         onClick={() => setReviewBookingId(b.id)}
-                        className="btn btn-warning btn-xs rounded-xl text-black font-bold gap-1"
+                        className="btn btn-warning btn-sm min-h-[44px] rounded-xl text-black font-bold gap-1"
                       >
                         <Star className="w-3.5 h-3.5" /> Rate & Review Guru
                       </button>
@@ -209,7 +209,7 @@ export default function CustomerServicesPage() {
                     <button
                       type="button"
                       onClick={() => handleCancel(b.id)}
-                      className="btn btn-ghost btn-xs text-error font-bold rounded-xl"
+                      className="btn btn-ghost btn-sm min-h-[44px] text-error font-bold rounded-xl"
                     >
                       Cancel Booking
                     </button>
@@ -230,7 +230,7 @@ export default function CustomerServicesPage() {
               <h3 className="font-extrabold text-base text-base-content flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-warning" /> Rate Your Guru
               </h3>
-              <button onClick={() => setReviewBookingId(null)} className="btn btn-ghost btn-xs btn-circle">
+              <button onClick={() => setReviewBookingId(null)} className="btn btn-ghost btn-sm min-h-[44px] btn-circle">
                 <X className="w-4 h-4" />
               </button>
             </div>
