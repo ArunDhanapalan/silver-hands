@@ -26,7 +26,7 @@ class OpportunityResponse(OpportunityBase):
     status: Optional[str] = None # None, applied, passed, accepted
 
 class SwipeActionRequest(BaseModel):
-    action: str = Field(..., pattern="^(interested|pass)$")
+    action: str = Field(..., pattern="^(interested|pass|right|left)$")
 
 class SwipeActionResponse(BaseModel):
     success: bool

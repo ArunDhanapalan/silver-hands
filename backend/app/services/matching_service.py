@@ -125,7 +125,7 @@ class MatchingService:
             raise HTTPException(status_code=404, detail="Opportunity not found")
 
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        status_val = "accepted" if req.action == "interested" else "passed"
+        status_val = "accepted" if req.action in ["interested", "right"] else "passed"
 
         app_doc = {
             "user_id": user_id,
