@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import db_manager
-from app.routers import health
+from app.routers import health, auth
 
 # Setup logging
 logging.basicConfig(
@@ -65,6 +65,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include Routers
 app.include_router(health.router, prefix=settings.API_V1_STR)
+app.include_router(auth.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
