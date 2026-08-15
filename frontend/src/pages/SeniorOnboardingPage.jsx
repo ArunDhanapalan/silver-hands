@@ -248,10 +248,21 @@ export default function SeniorOnboardingPage() {
         story_text: storyText,
         language
       });
+      const rawExplicit = Array.isArray(res.explicit_skills) ? res.explicit_skills : [];
+      const rawInferred = Array.isArray(res.inferred_skills) ? res.inferred_skills : [];
+
+      const cleanExplicit = rawExplicit.map(s => typeof s === 'object' ? (s.skill || s.name || 'Core Skill') : String(s));
+      const cleanInferred = rawInferred.map(s => {
+        if (typeof s === 'object') {
+          return { skill: s.skill || s.name || 'Transferable Skill', reason: s.reason || 'Derived from your career background' };
+        }
+        return { skill: String(s), reason: 'Identified from your life story' };
+      });
+
       setExtractedData({
-        explicit_skills: res.explicit_skills || [],
-        inferred_skills: res.inferred_skills || [],
-        keywords: res.keywords || [],
+        explicit_skills: cleanExplicit,
+        inferred_skills: cleanInferred,
+        keywords: Array.isArray(res.keywords) ? res.keywords : ['Experience', 'Advisory'],
         bio: res.bio || storyText.slice(0, 150),
         suggested_service_product_title: res.suggested_service_product_title || '',
         analysis_engine: res.analysis_engine || 'gemini_flash_nlp'
@@ -543,14 +554,18 @@ export default function SeniorOnboardingPage() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-base-content/70">Inferred & Soft Skills:</label>
               <div className="flex flex-wrap gap-2">
-                {extractedData.inferred_skills.map((skill) => (
-                  <span key={skill} className="badge badge-secondary badge-outline badge-md font-semibold gap-1 text-xs">
-                    {skill}
-                    <button type="button" onClick={() => handleRemoveSkill(skill, false)}>
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
+                {extractedData.inferred_skills.map((skillItem, idx) => {
+                  const skillName = typeof skillItem === 'object' ? (skillItem.skill || skillItem.name) : skillItem;
+                  const reason = typeof skillItem === 'object' ? skillItem.reason : '';
+                  return (
+                    <span key={idx} title={reason} className="badge badge-secondary badge-outline badge-md font-semibold gap-1 text-xs py-3 px-3">
+                      {skillName}
+                      <button type="button" onClick={() => handleRemoveSkill(skillItem, false)}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}

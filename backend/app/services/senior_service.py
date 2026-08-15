@@ -159,12 +159,12 @@ class SeniorService:
         )
 
     async def get_senior_earnings_ledger(self, user_id: str) -> Dict[str, Any]:
-        orders_col = db_manager.get_collection("store_orders")
+        orders_col = db_manager.get_collection("orders")
         bookings_col = db_manager.get_collection("service_bookings")
         profile = await self.get_senior_profile(user_id)
 
         # 1. Fetch Store Orders for this Senior
-        orders_cursor = orders_col.find({"items.seller_id": user_id})
+        orders_cursor = orders_col.find({"$or": [{"items.seller_id": user_id}, {"seller_id": user_id}]})
         orders = await orders_cursor.to_list(100)
 
         store_earnings = 0
@@ -175,13 +175,14 @@ class SeniorService:
             is_comp = ord_doc.get("status") in ["delivered", "completed"]
             if is_comp:
                 completed_orders += 1
-            for item in ord_doc.get("items", []):
-                if item.get("seller_id") == user_id:
+            items = ord_doc.get("items", [])
+            for item in items:
+                if item.get("seller_id") == user_id or ord_doc.get("seller_id") == user_id:
                     item_total = item.get("price_per_unit", 0) * item.get("quantity", 1)
                     if is_comp:
                         store_earnings += item_total
                     transactions.append({
-                        "id": f"TXN-ORD-{ord_doc.get('_id')}",
+                        "id": f"TXN-ORD-{str(ord_doc.get('_id'))[-6:]}",
                         "date": ord_doc.get("created_at", "")[:10] or "2026-08-15",
                         "description": f"Store Sale: {item.get('product_title')}",
                         "type": "store_product",
@@ -190,7 +191,7 @@ class SeniorService:
                     })
 
         # 2. Fetch Service Bookings for this Senior
-        bookings_cursor = bookings_col.find({"provider_id": user_id})
+        bookings_cursor = bookings_col.find({"$or": [{"senior_id": user_id}, {"provider_id": user_id}]})
         bookings = await bookings_cursor.to_list(100)
 
         service_earnings = 0
@@ -198,16 +199,17 @@ class SeniorService:
 
         for b in bookings:
             is_comp = b.get("status") == "completed"
+            b_amount = b.get("total_amount") or b.get("total_price", 0)
             if is_comp:
                 completed_services += 1
-                service_earnings += b.get("total_price", 0)
+                service_earnings += b_amount
             transactions.append({
-                "id": f"TXN-SRV-{b.get('_id')}",
+                "id": f"TXN-SRV-{str(b.get('_id'))[-6:]}",
                 "date": b.get("created_at", "")[:10] or "2026-08-15",
-                "description": f"Service Session: {b.get('service_title')}",
+                "description": f"Teaching Session: {b.get('service_title')}",
                 "type": "managed_service",
-                "status": "Settled" if is_comp else b.get("status", "pending").capitalize(),
-                "amount": b.get("total_price", 0)
+                "status": "Settled" if is_comp else b.get("status", "requested").capitalize(),
+                "amount": b_amount
             })
 
         total_earnings = store_earnings + service_earnings

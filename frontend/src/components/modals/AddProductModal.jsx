@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Sparkles, 
   ShoppingBag, 
@@ -126,72 +127,132 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8 animate-in fade-in zoom-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-base-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-extrabold text-base text-base-content">List Homemade Product in Store</h3>
-              <p className="text-xs text-base-content/60">Reach local buyers directly with zero listing commission</p>
+              <h3 className="font-extrabold text-lg text-base-content">Add Product for Sale</h3>
+              <p className="text-[11px] text-base-content/60">Share your homemade delicacies, apparel, or crafts</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
+          <button type="button" onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* NLP Assist Box */}
-        <div className="bg-secondary/10 border border-secondary/25 rounded-2xl p-3.5 space-y-2">
-          <label className="text-xs font-bold text-secondary flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> NLP Product Story Generator (Fast Auto-Fill):
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
+        {/* NLP Auto-Generation Helper */}
+        <div className="bg-gradient-to-r from-secondary/10 to-primary/10 p-3.5 rounded-2xl border border-secondary/20 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-base-content flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-secondary" /> AI Listing Assistant (NLP)
+            </span>
+            <span className="text-[10px] text-base-content/60">Type item name & click Generate</span>
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
               value={rawIdea}
               onChange={(e) => setRawIdea(e.target.value)}
-              placeholder="e.g. Traditional pure ghee Mysore Pak box or sun-dried mango pickle"
-              className="input input-bordered input-sm w-full text-xs rounded-xl bg-base-100"
+              placeholder="e.g. Traditional Sun-Dried Mango Pickle or Silk Potli Bags"
+              className="input input-bordered input-sm flex-1 text-xs rounded-xl"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiSuggest(); } }}
             />
             <button
               type="button"
               onClick={handleAiSuggest}
               disabled={aiLoading || !rawIdea.trim()}
-              className="btn btn-secondary btn-sm text-white rounded-xl font-bold text-xs shrink-0 shadow-xs"
+              className="btn btn-secondary btn-sm text-white rounded-xl font-bold text-xs gap-1"
             >
-              {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Auto-Fill'}
+              {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-3.5 h-3.5" />}
+              Auto-Fill
             </button>
           </div>
         </div>
 
         <ErrorAlert message={error} />
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           
+          {/* Title */}
           <div className="form-control">
-            <label className="label text-xs font-bold py-1">Product Title</label>
-            <input
-              type="text"
+            <label className="label text-[11px] font-bold text-base-content/80">Product Title</label>
+            <input 
+              type="text" 
               required
               value={productForm.title}
               onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="e.g. Heritage Pure Cow Ghee Festive Mysore Pak Box"
+              placeholder="e.g. Authentic Homemade Sun-Dried Mango Pickle"
               className="input input-bordered input-sm w-full rounded-xl font-semibold"
             />
           </div>
 
+          {/* Category & Unit */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="form-control">
+              <label className="label text-[11px] font-bold text-base-content/80">Category</label>
+              <select 
+                value={productForm.category}
+                onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
+                className="select select-bordered select-sm w-full rounded-xl text-xs"
+              >
+                {PRODUCT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-control">
+              <label className="label text-[11px] font-bold text-base-content/80">Packaging / Unit</label>
+              <input 
+                type="text" 
+                required
+                value={productForm.unit}
+                onChange={(e) => setProductForm(prev => ({ ...prev, unit: e.target.value }))}
+                placeholder="e.g. 500g Jar, Pack of 2, 1 Piece"
+                className="input input-bordered input-sm w-full rounded-xl text-xs"
+              />
+            </div>
+          </div>
+
+          {/* Price & Stock */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="form-control">
+              <label className="label text-[11px] font-bold text-base-content/80">Price (₹ INR)</label>
+              <input 
+                type="number" 
+                required
+                min="10"
+                value={productForm.price}
+                onChange={(e) => setProductForm(prev => ({ ...prev, price: parseInt(e.target.value, 10) || 0 }))}
+                className="input input-bordered input-sm w-full rounded-xl text-xs font-bold"
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label text-[11px] font-bold text-base-content/80">Initial Stock</label>
+              <input 
+                type="number" 
+                required
+                min="1"
+                value={productForm.stock}
+                onChange={(e) => setProductForm(prev => ({ ...prev, stock: parseInt(e.target.value, 10) || 1 }))}
+                className="input input-bordered input-sm w-full rounded-xl text-xs"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="form-control">
-            <label className="label text-xs font-bold py-1">Description & Heritage Story</label>
-            <textarea
-              rows={3}
+            <label className="label text-[11px] font-bold text-base-content/80">Description & Care</label>
+            <textarea 
+              rows={2}
               required
               value={productForm.description}
               onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}

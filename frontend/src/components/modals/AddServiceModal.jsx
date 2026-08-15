@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Sparkles, 
   Video, 
@@ -96,42 +97,36 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-base-200 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold">
-              <Sparkles className="w-5 h-5" />
+        <div className="flex items-center justify-between pb-2 border-b border-base-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center font-bold">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-extrabold text-lg text-base-content">Offer a Managed Service</h3>
-              <p className="text-xs text-base-content/60">Teach, mentor, or consult on your schedule. SilverHands manages bookings.</p>
+              <p className="text-[11px] text-base-content/60">Teach languages, share wisdom, mentor students, or teach arts</p>
             </div>
           </div>
-          <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
+          <button type="button" onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <ErrorAlert message={error} />
-
-        {/* AI Assistant Banner */}
-        <div className="bg-accent/10 border border-accent/25 rounded-2xl p-4 space-y-2">
-          <label className="text-xs font-bold text-accent-content flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-accent" /> AI Service Package Assistant
+        {/* NLP Assist Box */}
+        <div className="bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/25 rounded-2xl p-3.5 space-y-2">
+          <label className="text-xs font-bold text-accent flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" /> AI Service Assistant (NLP Auto-Fill):
           </label>
-          <p className="text-[11px] text-base-content/70">
-            Tell us in your own words what you can teach or offer. AI will generate an enticing title, curriculum summary, and session fee.
-          </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               value={rawIdea}
               onChange={(e) => setRawIdea(e.target.value)}
-              placeholder="e.g. Spoken Telugu for school children, Carnatic vocal basics, MSME GST tax consultation..."
+              placeholder="e.g. Spoken Telugu for Children or MSME Accounting & GST Guidance"
               className="input input-bordered input-sm flex-1 text-xs rounded-xl"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiSuggest(); } }}
             />
@@ -139,44 +134,34 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
               type="button"
               onClick={handleAiSuggest}
               disabled={aiLoading || !rawIdea.trim()}
-              className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5"
+              className="btn btn-accent btn-sm text-white rounded-xl font-bold text-xs shrink-0 shadow-xs gap-1"
             >
               {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-3.5 h-3.5" />}
-              Generate with AI
+              Auto-Fill
             </button>
           </div>
         </div>
 
-        {/* Manual Refinement Form */}
+        <ErrorAlert message={error} />
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           
           <div className="form-control">
-            <label className="label text-[11px] font-semibold">Service / Course Title</label>
+            <label className="label text-[11px] font-bold py-1">Service Title</label>
             <input
               type="text"
               required
               value={serviceForm.title}
               onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
-              placeholder="e.g. 1-on-1 Conversational Telugu & Fluency Masterclass"
-              className="input input-bordered input-sm rounded-xl"
+              placeholder="e.g. 1-on-1 Spoken Telugu & Cultural Storytelling for Children"
+              className="input input-bordered input-sm w-full rounded-xl font-semibold"
             />
           </div>
 
-          <div className="form-control">
-            <label className="label text-[11px] font-semibold">Service Description & Curriculum</label>
-            <textarea
-              rows={3}
-              required
-              value={serviceForm.description}
-              onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-              placeholder="Describe your teaching approach, what the student will learn, and why your experience helps..."
-              className="textarea textarea-bordered rounded-xl text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Category</label>
+              <label className="label text-[11px] font-bold py-1">Category</label>
               <select
                 value={serviceForm.category}
                 onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
@@ -189,45 +174,81 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
             </div>
 
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Delivery Mode</label>
-              <select
-                value={serviceForm.mode}
-                onChange={(e) => setServiceForm({ ...serviceForm, mode: e.target.value })}
-                className="select select-bordered select-sm rounded-xl text-xs"
-              >
-                <option value="online">Online Video (Zoom/Google Meet managed)</option>
-                <option value="offline">In-Person (Local neighborhood)</option>
-                <option value="both">Both Online & In-Person</option>
-              </select>
+              <label className="label text-[11px] font-bold py-1">Subcategory</label>
+              <input
+                type="text"
+                value={serviceForm.subcategory}
+                onChange={(e) => setServiceForm({ ...serviceForm, subcategory: e.target.value })}
+                placeholder="e.g. Language Tuition"
+                className="input input-bordered input-sm rounded-xl"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="form-control">
+            <label className="label text-[11px] font-bold py-1">Detailed Description & What Students Will Learn</label>
+            <textarea
+              rows={2}
+              required
+              value={serviceForm.description}
+              onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+              placeholder="Describe your teaching style, interactive exercises, lesson outline, and what students will gain."
+              className="textarea textarea-bordered text-xs rounded-xl"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Fee per Session (₹)</label>
-              <input
-                type="number"
-                required
-                min={50}
-                value={serviceForm.price_per_session}
-                onChange={(e) => setServiceForm({ ...serviceForm, price_per_session: parseInt(e.target.value) || 0 })}
-                className="input input-bordered input-sm rounded-xl"
-              />
+              <label className="label text-[11px] font-bold py-1">Delivery Mode</label>
+              <select
+                value={serviceForm.mode}
+                onChange={(e) => setServiceForm({ ...serviceForm, mode: e.target.value })}
+                className="select select-bordered select-sm rounded-xl text-xs font-semibold"
+              >
+                <option value="online">Online Video</option>
+                <option value="offline">In-Person</option>
+                <option value="both">Both (Hybrid)</option>
+              </select>
             </div>
 
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Duration (Minutes)</label>
+              <label className="label text-[11px] font-bold py-1">Duration (Mins)</label>
               <input
                 type="number"
-                required
+                min="15"
+                step="15"
                 value={serviceForm.duration_mins}
-                onChange={(e) => setServiceForm({ ...serviceForm, duration_mins: parseInt(e.target.value) || 45 })}
+                onChange={(e) => setServiceForm({ ...serviceForm, duration_mins: parseInt(e.target.value, 10) || 45 })}
                 className="input input-bordered input-sm rounded-xl"
               />
             </div>
 
             <div className="form-control">
-              <label className="label text-[11px] font-semibold">Target Audience</label>
+              <label className="label text-[11px] font-bold py-1">Fee / Session (₹)</label>
+              <input
+                type="number"
+                min="100"
+                step="50"
+                value={serviceForm.price_per_session}
+                onChange={(e) => setServiceForm({ ...serviceForm, price_per_session: parseInt(e.target.value, 10) || 300 })}
+                className="input input-bordered input-sm rounded-xl font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="form-control">
+              <label className="label text-[11px] font-bold py-1">Locality</label>
+              <input
+                type="text"
+                value={serviceForm.locality}
+                onChange={(e) => setServiceForm({ ...serviceForm, locality: e.target.value })}
+                className="input input-bordered input-sm rounded-xl"
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label text-[11px] font-bold py-1">Target Audience</label>
               <input
                 type="text"
                 value={serviceForm.target_audience}
@@ -258,6 +279,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
         </form>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -71,7 +71,16 @@ class ApplicationItemResponse(BaseModel):
     posted_by_name: str
     pay_amount: int
     pay_unit: str
-    status: str # applied, accepted, in_progress, completed, passed
+    status: str # applied, accepted, interview_invited, in_progress, completed, passed
     match_score: int
     match_explanation: str
+    interview_link: Optional[str] = None
+    interview_date: Optional[str] = None
     applied_at: str
+
+class InviteCandidateRequest(BaseModel):
+    senior_id: str
+    opportunity_id: str
+    role_title: str
+    message: Optional[str] = "We would love to invite you for a flexible discussion regarding this senior role."
+    interview_date: Optional[str] = "Upcoming Weekday (Flexible Slot)"

@@ -578,5 +578,23 @@ export const translations = {
 
 export const getTranslation = (langCode, key) => {
   const lang = translations[langCode] || translations.en;
-  return lang[key] || translations.en[key] || key;
+  if (lang && lang[key]) return lang[key];
+  if (translations.en && translations.en[key]) return translations.en[key];
+
+  const fallbackMap = {
+    'nav_home': 'Home',
+    'nav_store': 'Store',
+    'nav_services': 'Services',
+    'nav_community': 'Community',
+    'nav_deck': 'Opportunities',
+    'nav_earnings': 'My Earnings',
+    'nav_orders': 'My Orders',
+    'nav_login': 'Login',
+    'nav_register': 'Register',
+    'login': 'Login',
+    'register': 'Register'
+  };
+
+  if (fallbackMap[key]) return fallbackMap[key];
+  return key.replace(/^nav_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };

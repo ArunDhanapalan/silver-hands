@@ -15,7 +15,10 @@ import {
   AlertCircle,
   Users,
   ShoppingBag,
-  BookOpen
+  BookOpen,
+  Video,
+  ExternalLink,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -32,6 +35,7 @@ export default function SeniorDashboardPage() {
 
   const [deck, setDeck] = useState([]);
   const [activeApps, setActiveApps] = useState([]);
+  const [seniorSessions, setSeniorSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
@@ -44,12 +48,14 @@ export default function SeniorDashboardPage() {
     setLoading(true);
     setError('');
     try {
-      const [deckData, appsData] = await Promise.all([
-        api.get('/opportunities/deck'),
-        api.get('/opportunities/my-applications')
+      const [deckData, appsData, sessionsData] = await Promise.all([
+        api.get('/opportunities/deck').catch(() => []),
+        api.get('/opportunities/my-applications').catch(() => []),
+        api.get('/services/bookings/senior-sessions').catch(() => [])
       ]);
       setDeck(deckData || []);
       setActiveApps(appsData || []);
+      setSeniorSessions(sessionsData || []);
     } catch (err) {
       setError(err.message || 'Failed to load opportunities');
     } finally {
@@ -64,10 +70,10 @@ export default function SeniorDashboardPage() {
   const handleSwipe = async (oppId, action) => {
     try {
       const res = await api.post(`/opportunities/${oppId}/swipe`, { action });
-      setToastMsg(res.message);
+      setToastMsg(res.message || 'Updated');
       setTimeout(() => setToastMsg(''), 3500);
 
-      // Refresh applications list
+      // Refresh applications and deck list
       const updatedApps = await api.get('/opportunities/my-applications');
       setActiveApps(updatedApps || []);
     } catch (err) {
@@ -81,6 +87,24 @@ export default function SeniorDashboardPage() {
       fetchData();
     } catch (err) {
       console.error('Reset error:', err);
+    }
+  };
+
+  // Senior Accepts or Completes a Service Booking
+  const handleUpdateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      const payload = {
+        status: newStatus,
+        meeting_link: `https://meet.silverhands.in/room-${Math.floor(100000 + Math.random() * 900000)}`
+      };
+      await api.put(`/services/bookings/${bookingId}/status`, payload);
+      setToastMsg(`Booking marked as ${newStatus}!`);
+      setTimeout(() => setToastMsg(''), 3500);
+      
+      const updatedSessions = await api.get('/services/bookings/senior-sessions');
+      setSeniorSessions(updatedSessions || []);
+    } catch (err) {
+      setError(err.message || 'Failed to update booking status.');
     }
   };
 
@@ -98,93 +122,99 @@ export default function SeniorDashboardPage() {
       )}
 
       {/* Header Profile Summary */}
-      <div className="bg-base-100 border border-base-300 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="badge badge-success badge-sm text-white font-bold gap-1 text-[10px]">
-              <ShieldCheck className="w-3.5 h-3.5" /> Age Verified Senior
-            </span>
-            <span className="text-xs text-base-content/60 font-medium">
-              📍 {selectedCity?.name || 'Chennai'} • Travel Radius: 5 km
-            </span>
+      <div className="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/10 border border-base-300 rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center text-xl font-bold shadow-md">
+              {user?.full_name?.charAt(0) || 'S'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-base-content">
+                  Vanakkam, {user?.full_name || 'Senior Guru'}!
+                </h1>
+                <span className="badge badge-primary badge-sm text-white font-bold gap-1">
+                  <ShieldCheck className="w-3 h-3" /> Verified Senior
+                </span>
+              </div>
+              <p className="text-xs text-base-content/70 mt-0.5">
+                Active in <strong>{user?.locality || selectedCity?.name || 'Chennai'}</strong> • Travel Radius: <strong>{user?.travel_radius || '5 km'}</strong> • {activeFestival} Edition Active 🪔
+              </p>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content">
-            Vanakkam, {user?.full_name || 'Senior Guru'}!
-          </h1>
-          <p className="text-xs sm:text-sm text-base-content/70">
-            Swipe matching neighborhood livelihood opportunities, or launch your own managed tuition & homemade products.
-          </p>
-        </div>
 
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button 
-            type="button"
-            onClick={() => setShowServiceModal(true)}
-            className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-sm"
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Offer a Service
-          </button>
-          <button 
-            type="button"
-            onClick={() => setShowProductModal(true)}
-            className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-sm"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" /> Sell Product
-          </button>
-          <Link to="/senior/earnings" className="btn btn-primary btn-sm text-white rounded-xl font-bold text-xs gap-1 shadow-sm">
-            <TrendingUp className="w-3.5 h-3.5" /> My Earnings
-          </Link>
+          {/* Quick Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Link to="/senior/earnings" className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold text-xs gap-1">
+              <TrendingUp className="w-4 h-4 text-success" /> View Earnings
+            </Link>
+            <Link to="/senior/orders" className="btn btn-outline btn-primary btn-sm rounded-xl font-bold text-xs gap-1">
+              <Package className="w-4 h-4 text-primary" /> Store Orders
+            </Link>
+            <Link to="/senior/onboarding" className="btn btn-outline btn-secondary btn-sm rounded-xl font-bold text-xs gap-1">
+              <Sparkles className="w-4 h-4 text-secondary" /> Edit Life Story
+            </Link>
+          </div>
+
         </div>
       </div>
 
-      <ErrorAlert message={error} onRetry={fetchData} />
+      <ErrorAlert message={error} />
 
-      {/* AI Livelihood Quick Generator Hub */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="card bg-gradient-to-r from-accent/15 via-base-100 to-base-100 border border-accent/30 rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="badge badge-accent badge-sm font-bold text-white uppercase text-[10px]">Managed Tuition & Consulting</span>
+      {/* Senior Micro-Gig Creator Buttons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        
+        {/* Sell Homemade Products */}
+        <div className="card bg-base-100 border-2 border-secondary/20 hover:border-secondary/50 rounded-3xl p-5 shadow-xs transition-all flex flex-col justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center font-bold shrink-0">
+              <ShoppingBag className="w-5 h-5" />
             </div>
-            <h3 className="font-extrabold text-base text-base-content">Teach Spoken Language or Consult</h3>
-            <p className="text-xs text-base-content/70">
-              Create a personalized learning package in minutes with AI. SilverHands manages student bookings and video links.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowServiceModal(true)}
-            className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 self-start"
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Create Service Offering with AI
-          </button>
-        </div>
-
-        <div className="card bg-gradient-to-r from-secondary/15 via-base-100 to-base-100 border border-secondary/30 rounded-3xl p-5 shadow-xs flex flex-col justify-between space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="badge badge-secondary badge-sm font-bold text-white uppercase text-[10px]">Artisanal Marketplace</span>
+            <div>
+              <h3 className="font-extrabold text-base text-base-content">Sell Homemade Products</h3>
+              <p className="text-xs text-base-content/70 mt-1">
+                List festive sweets, traditional pickles, tailored clothes, or handloom crafts with 0% platform commission.
+              </p>
             </div>
-            <h3 className="font-extrabold text-base text-base-content">Sell Homemade Pickles, Sweets & Crafts</h3>
-            <p className="text-xs text-base-content/70">
-              List your authentic delicacies or bespoke tailoring for {activeFestival}. AI drafts your story and optimal price.
-            </p>
           </div>
-          <button
-            type="button"
+          <button 
+            type="button" 
             onClick={() => setShowProductModal(true)}
-            className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 self-start"
+            className="btn btn-secondary btn-sm text-white rounded-xl font-bold text-xs gap-1.5 mt-4 self-start shadow-xs"
           >
-            <ShoppingBag className="w-3.5 h-3.5" /> List Product with AI
+            <Plus className="w-4 h-4" /> Add My Product (NLP Assisted)
           </button>
         </div>
+
+        {/* Offer Managed Services */}
+        <div className="card bg-base-100 border-2 border-accent/20 hover:border-accent/50 rounded-3xl p-5 shadow-xs transition-all flex flex-col justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-base-content">Offer Managed Knowledge Services</h3>
+              <p className="text-xs text-base-content/70 mt-1">
+                Offer 1-on-1 language coaching (Telugu, Tamil, Hindi), accounting guidance, or cooking masterclasses with auto video rooms.
+              </p>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setShowServiceModal(true)}
+            className="btn btn-accent btn-sm text-white rounded-xl font-bold text-xs gap-1.5 mt-4 self-start shadow-xs"
+          >
+            <Plus className="w-4 h-4" /> Add My Service (NLP Assisted)
+          </button>
+        </div>
+
       </div>
 
-      {/* Main Opportunity Section */}
+      {/* Main Opportunity Deck & Active Work */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left: Tinder-style Swipe Deck */}
+        {/* Left: Swipe Deck */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -204,55 +234,144 @@ export default function SeniorDashboardPage() {
           />
         </div>
 
-        {/* Right: Active Work & Applications */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-secondary" />
-              <h2 className="text-lg font-extrabold text-base-content">My Active Work & Matches</h2>
+        {/* Right: Active Work, Interview Invites & Service Bookings */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* 1. Incoming Teaching & Service Bookings */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-accent" />
+                <h2 className="text-base font-extrabold text-base-content">Student & Client Bookings</h2>
+              </div>
+              <span className="badge badge-accent badge-sm font-bold text-white">{seniorSessions.length}</span>
             </div>
-            <span className="badge badge-primary badge-sm font-bold">{activeApps.length}</span>
+
+            {seniorSessions.length === 0 ? (
+              <div className="bg-base-100 rounded-3xl border border-base-300 p-6 text-center space-y-2">
+                <BookOpen className="w-8 h-8 text-base-content/30 mx-auto" />
+                <p className="text-xs text-base-content/60">No pending student session bookings right now.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                {seniorSessions.map((session) => (
+                  <div key={session.id} className="bg-base-100 border border-base-300 rounded-2xl p-4 shadow-xs space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="font-mono text-[10px] font-bold text-accent">{session.booking_reference}</span>
+                        <h4 className="font-bold text-sm text-base-content">{session.service_title}</h4>
+                        <p className="text-xs text-base-content/70">Student: <strong>{session.student_name}</strong> ({session.student_age_group})</p>
+                        <p className="text-[11px] text-base-content/60">Time: {session.scheduled_slot}</p>
+                      </div>
+                      <span className="badge badge-sm uppercase font-bold text-[10px] badge-accent text-white">
+                        {session.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-base-200">
+                      <span className="font-extrabold text-primary text-xs">
+                        ₹{session.total_amount?.toLocaleString('en-IN')} ({session.sessions_count} sessions)
+                      </span>
+                      
+                      <div className="flex items-center gap-1.5">
+                        {session.status === 'requested' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateBookingStatus(session.id, 'scheduled')}
+                            className="btn btn-accent btn-xs rounded-lg text-white font-bold gap-1"
+                          >
+                            <Check className="w-3 h-3" /> Accept & Schedule
+                          </button>
+                        )}
+
+                        {session.status === 'scheduled' && (
+                          <>
+                            {session.meeting_link && (
+                              <a
+                                href={session.meeting_link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn btn-primary btn-xs rounded-lg text-white font-bold gap-1"
+                              >
+                                <Video className="w-3 h-3" /> Start Video Classroom
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateBookingStatus(session.id, 'completed')}
+                              className="btn btn-success btn-xs rounded-lg text-white font-bold"
+                            >
+                              Complete
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {activeApps.length === 0 ? (
-            <div className="bg-base-100 rounded-3xl border border-base-300 p-8 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center mx-auto text-base-content/40">
-                <Briefcase className="w-6 h-6" />
+          {/* 2. Corporate Job Matches & Interview Invitations */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-secondary" />
+                <h2 className="text-base font-extrabold text-base-content">Interview Invites & Active Work</h2>
               </div>
-              <h3 className="font-bold text-sm text-base-content">No active work yet</h3>
-              <p className="text-xs text-base-content/60">
-                Swipe right on opportunities in the deck or offer a service above to get started.
-              </p>
+              <span className="badge badge-primary badge-sm font-bold">{activeApps.length}</span>
             </div>
-          ) : (
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-              {activeApps.map((app) => (
-                <div 
-                  key={app.id}
-                  className="bg-base-100 border border-base-300 rounded-2xl p-4 shadow-xs hover:shadow-sm transition-all space-y-2.5"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-bold text-sm text-base-content">{app.opportunity_title}</h4>
-                      <p className="text-xs text-base-content/60">Posted by {app.posted_by_name}</p>
-                    </div>
-                    <span className="badge badge-success badge-sm font-bold text-white text-[10px] uppercase">
-                      {app.status}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-base-200">
-                    <span className="font-extrabold text-primary">
-                      ₹{app.pay_amount?.toLocaleString('en-IN')}/{app.pay_unit}
-                    </span>
-                    <span className="text-[11px] text-base-content/60">
-                      {app.match_score}% Skill Match
-                    </span>
+            {activeApps.length === 0 ? (
+              <div className="bg-base-100 rounded-3xl border border-base-300 p-6 text-center space-y-2">
+                <Briefcase className="w-8 h-8 text-base-content/30 mx-auto" />
+                <p className="text-xs text-base-content/60">No corporate work matches yet. Swipe right on the deck to apply.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                {activeApps.map((app) => (
+                  <div key={app.id} className="bg-base-100 border border-base-300 rounded-2xl p-4 shadow-xs space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-base-content">{app.opportunity_title}</h4>
+                        <p className="text-xs text-base-content/60">Company: {app.posted_by_name}</p>
+                      </div>
+                      <span className={`badge badge-sm font-bold text-white text-[10px] uppercase ${app.status === 'interview_invited' ? 'badge-secondary' : 'badge-success'}`}>
+                        {app.status === 'interview_invited' ? '🎉 Interview Invited' : app.status}
+                      </span>
+                    </div>
+
+                    {app.interview_link && (
+                      <div className="bg-secondary/10 p-2.5 rounded-xl border border-secondary/20 space-y-1">
+                        <span className="text-[11px] font-bold text-secondary flex items-center gap-1">
+                          <Video className="w-3.5 h-3.5" /> Scheduled Interview: {app.interview_date || 'Upcoming Slot'}
+                        </span>
+                        <a
+                          href={app.interview_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-secondary btn-xs rounded-lg text-white font-bold w-full gap-1"
+                        >
+                          Join Corporate Video Interview <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-base-200">
+                      <span className="font-extrabold text-primary">
+                        ₹{app.pay_amount?.toLocaleString('en-IN')}/{app.pay_unit}
+                      </span>
+                      <span className="text-[11px] text-base-content/60">
+                        {app.match_score}% Skill Match
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
       </div>
@@ -264,6 +383,7 @@ export default function SeniorDashboardPage() {
         onServiceCreated={() => {
           setToastMsg('Service offering published successfully!');
           setTimeout(() => setToastMsg(''), 3500);
+          fetchData();
         }}
       />
 

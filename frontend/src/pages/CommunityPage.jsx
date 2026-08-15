@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   Plus, 
@@ -54,14 +55,14 @@ export default function CommunityPage() {
     type: 'need',
     tags: [],
     locality: selectedLocality !== 'All Areas' ? selectedLocality : 'Adyar',
-    city: selectedCity.name
+    city: selectedCity?.name || 'Chennai'
   });
 
   const fetchData = async () => {
     setLoading(true);
     setError('');
     try {
-      const params = { city: selectedCity.name };
+      const params = { city: selectedCity?.name || 'Chennai' };
       if (selectedType !== 'all') params.type = selectedType;
 
       const postsData = await api.get('/community/posts', { params });

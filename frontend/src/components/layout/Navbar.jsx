@@ -212,44 +212,50 @@ export default function Navbar() {
 
               {/* User Account / Auth */}
               {isAuthenticated ? (
-                <div className="dropdown dropdown-end">
+                <div className="dropdown dropdown-end relative">
                   <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu">
                     <div className="bg-primary text-primary-content rounded-full w-9 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   </div>
-                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-xl bg-base-100 rounded-2xl w-56 border border-base-300 text-xs">
-                    <li className="menu-title px-3 py-1 font-bold text-base-content/70 border-b border-base-200">
-                      {user?.full_name}
-                      <span className="badge badge-xs badge-primary font-normal text-white uppercase ml-1">{user?.role}</span>
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-2.5 shadow-2xl bg-base-100 rounded-3xl w-64 right-0 max-w-[calc(100vw-2rem)] border border-base-300 text-xs space-y-1">
+                    <li className="px-3 py-2 bg-base-200/60 rounded-2xl mb-1">
+                      <div className="flex flex-col gap-0.5 pointer-events-none p-0">
+                        <span className="font-extrabold text-sm text-base-content truncate">{user?.company_name || user?.full_name}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="badge badge-xs badge-primary font-bold text-white uppercase">{user?.role}</span>
+                          <span className="text-[10px] text-base-content/60 truncate">{user?.email}</span>
+                        </div>
+                      </div>
                     </li>
                     
                     {user?.role === 'senior' && (
                       <>
-                        <li><Link to="/senior"><Layers className="w-4 h-4 text-primary" /> Opportunities Deck</Link></li>
-                        <li><Link to="/community"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
-                        <li><Link to="/senior/orders"><Package className="w-4 h-4 text-primary" /> Manage Store Orders</Link></li>
-                        <li><Link to="/senior/earnings"><TrendingUp className="w-4 h-4 text-success" /> Earnings & Ledger</Link></li>
-                        <li><Link to="/senior/onboarding"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life-to-Skill Story</Link></li>
+                        <li><Link to="/senior" className="py-2 rounded-xl font-semibold"><Layers className="w-4 h-4 text-primary" /> Opportunities Deck</Link></li>
+                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
+                        <li><Link to="/senior/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> Manage Store Orders</Link></li>
+                        <li><Link to="/senior/earnings" className="py-2 rounded-xl font-semibold"><TrendingUp className="w-4 h-4 text-success" /> Earnings & Ledger</Link></li>
+                        <li><Link to="/senior/onboarding" className="py-2 rounded-xl font-semibold"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life-to-Skill Story</Link></li>
                       </>
                     )}
 
                     {user?.role === 'customer' && (
                       <>
-                        <li><Link to="/cart"><ShoppingBag className="w-4 h-4 text-primary" /> My Cart</Link></li>
-                        <li><Link to="/orders"><Package className="w-4 h-4 text-secondary" /> My Orders</Link></li>
-                        <li><Link to="/community"><Users className="w-4 h-4 text-accent" /> Community Feed</Link></li>
+                        <li><Link to="/cart" className="py-2 rounded-xl font-semibold"><ShoppingBag className="w-4 h-4 text-primary" /> My Cart</Link></li>
+                        <li><Link to="/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-secondary" /> My Orders</Link></li>
+                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-accent" /> Community Feed</Link></li>
                       </>
                     )}
 
                     {user?.role === 'company' && (
                       <>
-                        <li><Link to="/company"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
+                        <li><Link to="/company" className="py-2 rounded-xl font-semibold"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
+                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Community Feed</Link></li>
                       </>
                     )}
 
-                    <li className="border-t border-base-200 mt-1">
-                      <button onClick={logout} className="text-error font-bold">
+                    <li className="border-t border-base-200 pt-1 mt-1">
+                      <button onClick={logout} className="text-error font-bold py-2 rounded-xl hover:bg-error/10">
                         <LogOut className="w-4 h-4" /> Logout
                       </button>
                     </li>

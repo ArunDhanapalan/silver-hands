@@ -6,7 +6,8 @@ from app.schemas.opportunity import (
     SwipeActionResponse,
     ApplicationItemResponse,
     OpportunityCreateRequest,
-    JobParseRequest
+    JobParseRequest,
+    InviteCandidateRequest
 )
 from app.services.matching_service import matching_service
 from app.security import require_role
@@ -70,6 +71,16 @@ async def get_company_postings(
     """
     return await matching_service.get_company_postings(current_user)
 
+@router.post("/invite-candidate")
+async def invite_candidate(
+    req: InviteCandidateRequest,
+    current_user: Dict[str, Any] = Depends(require_role(["company"]))
+):
+    """
+    Company sends an official interview invitation with video classroom link to a matched senior candidate.
+    """
+    return await matching_service.invite_candidate(current_user, req)
+
 @router.post("/parse-job")
 async def parse_job_description(
     req: JobParseRequest,
@@ -78,5 +89,5 @@ async def parse_job_description(
     """
     AI parser for unstructured job posts.
     """
-    from app.ai.job_description_ai import parse_job_posting
-    return await parse_job_posting(req.raw_text)
+    from app.ai.job_description_ai import job_description_ai
+    return job_description_ai.parse_job_posting(req.raw_text)

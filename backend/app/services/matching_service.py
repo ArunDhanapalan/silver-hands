@@ -118,9 +118,15 @@ class MatchingService:
         results.sort(key=lambda x: x.match_score, reverse=True)
         return results
 
+    def _build_id_filter(self, id_str: str) -> Dict[str, Any]:
+        filters = [{"_id": id_str}, {"id": id_str}]
+        if ObjectId.is_valid(id_str):
+            filters.append({"_id": ObjectId(id_str)})
+        return {"$or": filters}
+
     async def record_swipe(self, user_payload: Dict[str, Any], opp_id: str, req: SwipeActionRequest) -> SwipeActionResponse:
         user_id = user_payload.get("sub")
-        opp = await self._opps_col().find_one({"_id": opp_id})
+        opp = await self._opps_col().find_one(self._build_id_filter(opp_id))
         if not opp:
             raise HTTPException(status_code=404, detail="Opportunity not found")
 
@@ -173,9 +179,45 @@ class MatchingService:
                 status=a.get("status", "applied"),
                 match_score=a.get("match_score", 90),
                 match_explanation=a.get("match_explanation", "Active opportunity matching your profile."),
+                interview_link=a.get("interview_link"),
+                interview_date=a.get("interview_date"),
                 applied_at=a.get("applied_at", "")
             ) for a in apps
         ]
+
+    async def invite_candidate(self, user_payload: Dict[str, Any], req: Any) -> Dict[str, Any]:
+        company_name = user_payload.get("full_name") or user_payload.get("company_name") or "Corporate Employer"
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        room_code = random.randint(100000, 999999)
+        meeting_link = f"https://meet.silverhands.in/interview-{room_code}"
+
+        app_doc = {
+            "user_id": req.senior_id,
+            "opportunity_id": req.opportunity_id,
+            "opportunity_title": req.role_title,
+            "type": "job",
+            "posted_by_name": company_name,
+            "pay_amount": 18000,
+            "pay_unit": "month",
+            "status": "interview_invited",
+            "match_score": 95,
+            "match_explanation": f"Official interview invitation received from {company_name}: {req.message}",
+            "interview_link": meeting_link,
+            "interview_date": req.interview_date or "Next Available Slot",
+            "applied_at": now,
+            "updated_at": now
+        }
+
+        await self._apps_col().update_one(
+            {"user_id": req.senior_id, "opportunity_id": req.opportunity_id},
+            {"$set": app_doc},
+            upsert=True
+        )
+        return {
+            "success": True, 
+            "message": f"Interview invitation sent with video link {meeting_link}",
+            "interview_link": meeting_link
+        }
 
     async def reset_deck_swipes(self, user_payload: Dict[str, Any]) -> Dict[str, Any]:
         user_id = user_payload.get("sub")

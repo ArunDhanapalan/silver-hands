@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: ['class', '[data-theme="silverhands_dark"]'],
   theme: {
     extend: {
       fontFamily: {
@@ -62,13 +63,31 @@ export default {
           "warning": "#D97706",
           "error": "#DC2626",
         },
+        silverhands_dark: {
+          "primary": "#14B8A6",
+          "primary-content": "#ffffff",
+          "secondary": "#FB923C",
+          "secondary-content": "#ffffff",
+          "accent": "#818CF8",
+          "accent-content": "#ffffff",
+          "neutral": "#1E293B",
+          "neutral-content": "#F8FAFC",
+          "base-100": "#0F172A",        // Deep night slate
+          "base-200": "#1E293B",        // Elevated dark container
+          "base-300": "#334155",        // Slate border
+          "base-content": "#F8FAFC",    // Pure light text
+          "info": "#38BDF8",
+          "success": "#22C55E",
+          "warning": "#F59E0B",
+          "error": "#EF4444",
+        }
       },
+      "dark",
+      "night",
       "emerald",
-      "autumn",
-      "cupcake",
       "sunset"
     ],
-    darkTheme: "silverhands",
+    darkTheme: "silverhands_dark",
     base: true,
     styled: true,
     utils: true,

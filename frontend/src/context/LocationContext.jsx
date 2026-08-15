@@ -20,9 +20,21 @@ export const CITIES = [
 const LocationContext = createContext(null);
 
 export const LocationProvider = ({ children }) => {
-  const [selectedCity, setSelectedCity] = useState(() => {
-    const saved = localStorage.getItem('silverhands_city');
-    return saved ? JSON.parse(saved) : CITIES[0]; // Default Chennai
+  const [selectedCity, setSelectedCityState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('silverhands_city');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && parsed.name) {
+          if (!Array.isArray(parsed.localities)) parsed.localities = [];
+          return parsed;
+        } else if (typeof parsed === 'string') {
+          const match = CITIES.find(c => c.name.toLowerCase() === parsed.toLowerCase());
+          return match || { id: 'custom', name: parsed, state: 'India', tier: 'T2', localities: [] };
+        }
+      }
+    } catch (e) {}
+    return CITIES[0]; // Default Chennai
   });
 
   const [selectedLocality, setSelectedLocality] = useState(() => {
@@ -45,31 +57,52 @@ export const LocationProvider = ({ children }) => {
     localStorage.setItem('silverhands_festival', activeFestival);
   }, [activeFestival]);
 
+  const setSelectedCity = (cityInput) => {
+    if (!cityInput) return;
+    if (typeof cityInput === 'string') {
+      const matched = CITIES.find(c => c.name.toLowerCase() === cityInput.toLowerCase());
+      if (matched) {
+        setSelectedCityState(matched);
+      } else {
+        setSelectedCityState({
+          id: cityInput.toLowerCase().replace(/\s+/g, '-'),
+          name: cityInput,
+          state: 'India',
+          tier: 'Custom',
+          localities: []
+        });
+      }
+    } else if (typeof cityInput === 'object' && cityInput.name) {
+      const safeCity = {
+        ...cityInput,
+        localities: Array.isArray(cityInput.localities) ? cityInput.localities : []
+      };
+      setSelectedCityState(safeCity);
+    }
+    setSelectedLocality('All Areas');
+  };
+
+  const setCustomLocality = (customLoc) => {
+    if (!customLoc) return;
+    setSelectedLocality(customLoc);
+    setSelectedCityState(prev => {
+      const currentLocs = Array.isArray(prev?.localities) ? prev.localities : [];
+      if (!currentLocs.includes(customLoc)) {
+        return { ...prev, localities: [customLoc, ...currentLocs] };
+      }
+      return prev;
+    });
+  };
+
   return (
     <LocationContext.Provider value={{
       cities: CITIES,
-      selectedCity,
-      setSelectedCity: (city) => {
-        if (typeof city === 'string') {
-          const matched = CITIES.find(c => c.name.toLowerCase() === city.toLowerCase());
-          if (matched) {
-            setSelectedCity(matched);
-          } else {
-            setSelectedCity({ id: city.toLowerCase().replace(/\s+/g, '-'), name: city, state: 'India', tier: 'Custom', localities: [] });
-          }
-        } else {
-          setSelectedCity(city);
-        }
-        setSelectedLocality('All Areas');
-      },
+      indianCities: CITIES,
+      selectedCity: selectedCity || CITIES[0],
+      setSelectedCity,
       selectedLocality,
       setSelectedLocality,
-      setCustomLocality: (customLoc) => {
-        setSelectedLocality(customLoc);
-        if (selectedCity && !selectedCity.localities.includes(customLoc)) {
-          setSelectedCity(prev => ({ ...prev, localities: [customLoc, ...(prev.localities || [])] }));
-        }
-      },
+      setCustomLocality,
       activeFestival,
       setActiveFestival
     }}>
