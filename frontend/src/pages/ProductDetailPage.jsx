@@ -169,43 +169,43 @@ export default function ProductDetailPage() {
           <div className="space-y-4 pt-4 border-t border-base-200">
             
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-base-content">Quantity:</span>
-              <div className="join border border-base-300 rounded-xl bg-base-100">
+              <span className="text-sm font-bold text-base-content">Quantity:</span>
+              <div className="join border border-base-300 rounded-2xl bg-base-100">
                 <button 
                   type="button" 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="join-item btn btn-xs btn-ghost px-3"
+                  className="join-item btn min-h-[44px] btn-ghost px-4 text-base font-bold"
                 >
                   -
                 </button>
-                <span className="join-item px-4 flex items-center justify-center font-bold text-xs">
+                <span className="join-item px-5 flex items-center justify-center font-extrabold text-sm">
                   {quantity}
                 </span>
                 <button 
                   type="button" 
                   onClick={() => setQuantity(quantity + 1)}
-                  className="join-item btn btn-xs btn-ghost px-3"
+                  className="join-item btn min-h-[44px] btn-ghost px-4 text-base font-bold"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="btn btn-outline btn-neutral rounded-xl font-bold text-xs gap-2"
+                className="btn btn-outline btn-neutral min-h-[48px] rounded-2xl font-bold text-sm gap-2"
               >
-                <ShoppingBag className="w-4 h-4" /> Add to Cart
+                <ShoppingBag className="w-5 h-5" /> Add to Cart
               </button>
 
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="btn btn-primary rounded-xl text-white font-bold text-xs gap-2 shadow-md"
+                className="btn btn-primary min-h-[48px] rounded-2xl text-white font-bold text-sm gap-2 shadow-md"
               >
-                Instant Buy (₹{product.price * quantity})
+                Instant Buy (₹{(product.price * quantity).toLocaleString('en-IN')})
               </button>
             </div>
 

@@ -23,8 +23,8 @@ import { useLocation } from '../context/LocationContext';
 
 export default function HomePage() {
   const { user, isAuthenticated } = useAuth();
-  const { t } = useLanguage();
-  const { selectedCity, activeFestival } = useLocation();
+  const { language, t } = useLanguage();
+  const { selectedCity, activeFestival, currentFestivalInfo, festivalSuggestions } = useLocation();
   const navigate = useNavigate();
 
   const [giftRecipient, setGiftRecipient] = useState('');
@@ -40,8 +40,10 @@ export default function HomePage() {
     }, 2500);
   };
 
+  const festivalGreeting = currentFestivalInfo?.greeting?.[language] || currentFestivalInfo?.greeting?.en || `Celebrating ${activeFestival} with authentic handmade offerings!`;
+
   return (
-    <div className="space-y-14 pb-16">
+    <div className="space-y-12 pb-16">
       
       {/* 1. HERO SECTION: Story-First & Dignified Generational Connection */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-base-100 to-secondary/20 border border-primary/20 p-8 sm:p-12 lg:p-16 shadow-md">
@@ -53,14 +55,14 @@ export default function HomePage() {
         <div className="relative z-10 max-w-3xl space-y-6">
           
           <div className="flex flex-wrap items-center gap-2">
-            <span className="badge badge-secondary badge-sm font-bold text-white uppercase px-3 py-2 shadow-xs">
-              {activeFestival} Special Edition
+            <span className="badge badge-secondary font-bold text-white uppercase px-3.5 py-2.5 text-xs shadow-xs">
+              {currentFestivalInfo?.icon || '🪔'} {activeFestival} Edition
             </span>
-            <span className="badge badge-outline badge-neutral badge-sm font-semibold gap-1 text-xs">
-              <MapPin className="w-3 h-3 text-secondary" /> Serving {selectedCity.name} ({selectedCity.tier})
+            <span className="badge badge-outline badge-neutral font-semibold gap-1.5 text-xs px-3 py-2.5">
+              <MapPin className="w-3.5 h-3.5 text-secondary" /> Serving {selectedCity.name} ({selectedCity.tier})
             </span>
-            <span className="badge badge-success badge-sm text-white font-bold gap-1 text-xs">
-              <ShieldCheck className="w-3 h-3" /> 100% Verified Seniors
+            <span className="badge badge-success text-white font-bold gap-1.5 text-xs px-3 py-2.5">
+              <ShieldCheck className="w-3.5 h-3.5" /> 100% Verified Seniors
             </span>
           </div>
 
@@ -75,38 +77,73 @@ export default function HomePage() {
             Discover small-batch homemade pickles, heritage festive sweets, bespoke tailoring, and 1-on-1 language tuition directly from experienced grandmothers & retirees in your neighborhood.
           </p>
 
-          {/* Action Pathways */}
+          {/* Action Pathways with accessible 44px+ min touch targets */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link 
               to="/store" 
-              className="btn btn-primary rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-md hover:scale-105 transition-transform"
+              className="btn btn-primary min-h-[48px] px-6 rounded-2xl text-white font-bold text-sm gap-2 shadow-md hover:scale-105 transition-transform"
             >
-              <ShoppingBag className="w-4 h-4" /> Explore Local Store <ArrowRight className="w-4 h-4" />
+              <ShoppingBag className="w-5 h-5" /> Explore Local Store <ArrowRight className="w-4 h-4" />
             </Link>
 
             <Link 
               to="/services" 
-              className="btn btn-accent rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-md hover:scale-105 transition-transform"
+              className="btn btn-accent min-h-[48px] px-6 rounded-2xl text-white font-bold text-sm gap-2 shadow-md hover:scale-105 transition-transform"
             >
-              <Sparkles className="w-4 h-4" /> Book Senior Gurus
+              <Sparkles className="w-5 h-5" /> Book Senior Gurus
             </Link>
 
             <Link 
               to="/community" 
-              className="btn btn-outline btn-neutral rounded-2xl font-bold text-xs sm:text-sm gap-2"
+              className="btn btn-outline btn-neutral min-h-[48px] px-6 rounded-2xl font-bold text-sm gap-2"
             >
-              <Users className="w-4 h-4" /> Post a Need
+              <Users className="w-5 h-5" /> Post a Need
             </Link>
           </div>
 
           {/* Trust Guarantee Pill */}
-          <div className="pt-4 border-t border-base-300/60 flex items-center gap-2 text-xs text-base-content/70">
+          <div className="pt-4 border-t border-base-300/60 flex items-center gap-2 text-xs sm:text-sm text-base-content/70">
             <Heart className="w-4 h-4 text-error fill-error shrink-0" />
             <span><strong>Direct Generational Impact:</strong> 100% of proceeds go directly to senior homemakers, educators, and retirees.</span>
           </div>
 
         </div>
       </section>
+
+      {/* FESTIVAL SUGGESTIONS BANNER (Date-Aware 2-Week Window) */}
+      {festivalSuggestions && festivalSuggestions.suggestions && festivalSuggestions.suggestions.length > 0 && (
+        <section className="card bg-gradient-to-r from-warning/15 via-base-100 to-secondary/15 border-2 border-warning/30 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{festivalSuggestions.festival_icon || currentFestivalInfo?.icon || '🪔'}</span>
+              <div>
+                <span className="badge badge-warning font-bold text-xs uppercase px-2.5 py-1">
+                  Upcoming Festival • {festivalSuggestions.days_until >= 0 ? `In ${festivalSuggestions.days_until} Days` : 'Celebration Week'}
+                </span>
+                <h3 className="text-lg sm:text-xl font-extrabold text-base-content mt-1">
+                  {festivalGreeting}
+                </h3>
+              </div>
+            </div>
+
+            <Link to="/store" className="btn btn-warning min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-base-content gap-1.5 self-start sm:self-auto shadow-xs">
+              <ShoppingBag className="w-4 h-4" /> Shop {activeFestival} Specials →
+            </Link>
+          </div>
+
+          {/* Suggestions Pill Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            {festivalSuggestions.suggestions.map((sug, sidx) => (
+              <div key={sidx} className="bg-base-100/90 border border-warning/30 rounded-2xl p-3.5 space-y-1 shadow-xs">
+                <span className="text-xs font-bold text-warning-content flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-warning" /> Festive Recommendation #{sidx + 1}
+                </span>
+                <p className="text-xs text-base-content/80 font-medium leading-relaxed">{sug}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 2. REAL-TIME SOCIAL IMPACT COUNTER */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

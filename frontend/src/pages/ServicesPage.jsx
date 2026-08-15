@@ -165,42 +165,42 @@ export default function ServicesPage() {
           </div>
           <Link 
             to="/services/srv-telugu-tuition-01" 
-            className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-md w-full"
+            className="btn btn-accent min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-md w-full"
           >
             Book Reference Session <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
 
-      {/* Search & Category Filter */}
+      {/* Search & Category Filter Bar */}
       <div className="space-y-4">
         <div className="relative max-w-xl">
-          <Search className="w-4 h-4 text-base-content/40 absolute left-3.5 top-3.5" />
+          <Search className="w-4 h-4 text-base-content/40 absolute left-4 top-4" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search Telugu tuition, Carnatic music, GST advisory, knitting..."
-            className="input input-bordered w-full pl-10 text-sm rounded-2xl bg-base-100"
+            className="input input-bordered min-h-[48px] w-full pl-11 text-sm rounded-2xl bg-base-100"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="btn btn-ghost btn-xs btn-circle absolute right-2.5 top-2.5"
+              className="btn btn-ghost btn-sm min-h-[36px] btn-circle absolute right-2 top-2"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs sm:text-sm">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              className={`min-h-[40px] px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
                 selectedCategory === cat
-                  ? 'bg-accent text-white shadow-xs'
+                  ? 'bg-accent text-white shadow-sm'
                   : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
               }`}
             >
@@ -224,7 +224,7 @@ export default function ServicesPage() {
           </p>
           <button 
             onClick={() => { setSelectedCategory('All'); setSelectedMode('all'); setSearchQuery(''); }}
-            className="btn btn-outline btn-sm rounded-xl text-xs"
+            className="btn btn-outline min-h-[44px] px-5 rounded-2xl text-xs sm:text-sm font-bold"
           >
             Clear Filters
           </button>
@@ -238,10 +238,10 @@ export default function ServicesPage() {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="badge badge-accent badge-outline badge-sm font-bold text-[11px]">
+                  <span className="badge badge-accent badge-outline badge-sm font-bold text-xs">
                     {service.category}
                   </span>
-                  <span className={`badge badge-sm font-bold text-[10px] uppercase ${
+                  <span className={`badge badge-sm font-bold text-xs uppercase px-2.5 py-1 ${
                     service.mode === 'online' ? 'badge-info text-white' : 'badge-neutral'
                   }`}>
                     {service.mode === 'online' ? '💻 1-on-1 Online' : service.mode === 'offline' ? '📍 In-Person' : '🌐 Online / Offline'}
@@ -254,24 +254,24 @@ export default function ServicesPage() {
                   </h3>
                 </Link>
 
-                <p className="text-xs text-base-content/70 line-clamp-3 leading-relaxed">
+                <p className="text-xs sm:text-sm text-base-content/70 line-clamp-3 leading-relaxed">
                   {service.description}
                 </p>
 
                 {/* Guru Trust & Location */}
-                <div className="bg-base-200/70 p-3 rounded-2xl flex items-center justify-between text-xs">
+                <div className="bg-base-200/70 p-3.5 rounded-2xl flex items-center justify-between text-xs sm:text-sm">
                   <div>
                     <span className="font-bold text-base-content block">{service.senior_name}</span>
-                    <span className="text-[11px] text-base-content/60 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-secondary" /> {service.locality}, {service.city}
+                    <span className="text-xs text-base-content/60 flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3.5 h-3.5 text-secondary" /> {service.locality}, {service.city}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="flex items-center gap-1 font-bold text-base-content">
-                      <Star className="w-3.5 h-3.5 text-warning fill-warning" /> {service.senior_rating}
+                    <span className="flex items-center gap-1 font-bold text-base-content justify-end">
+                      <Star className="w-4 h-4 text-warning fill-warning" /> {service.senior_rating}
                     </span>
-                    <span className="text-[10px] text-base-content/50">
-                      {service.total_sessions_conducted} sessions completed
+                    <span className="text-[11px] text-base-content/60 block mt-0.5">
+                      {service.total_sessions_conducted} sessions conducted
                     </span>
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export default function ServicesPage() {
               {/* Price & Action */}
               <div className="pt-3 border-t border-base-200 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-base-content/60 uppercase font-bold block">Session Fee</span>
+                  <span className="text-[11px] text-base-content/60 uppercase font-bold block">Session Fee</span>
                   <span className="text-lg font-extrabold text-primary">
                     ₹{service.price_per_session?.toLocaleString('en-IN')}
                     <span className="text-xs font-semibold text-base-content/60 ml-1">/ {service.duration_mins} mins</span>
@@ -289,9 +289,9 @@ export default function ServicesPage() {
 
                 <Link 
                   to={`/services/${service.id}`}
-                  className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-xs"
+                  className="btn btn-accent min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-xs"
                 >
-                  Book Session <ArrowRight className="w-3.5 h-3.5" />
+                  Book Session <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 

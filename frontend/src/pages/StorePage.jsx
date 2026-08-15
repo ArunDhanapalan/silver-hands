@@ -147,12 +147,12 @@ export default function StorePage() {
       </div>
 
       {/* Festival Quick Filter Banner */}
-      <div className="bg-gradient-to-r from-secondary/15 via-base-100 to-primary/15 border border-secondary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+      <div className="bg-gradient-to-r from-secondary/15 via-base-100 to-primary/15 border-2 border-secondary/30 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🪔</span>
-          <div className="text-xs">
-            <span className="font-bold text-secondary uppercase block">{activeFestival} Festive Edition</span>
-            <p className="text-base-content/80 font-medium">
+          <span className="text-3xl">🪔</span>
+          <div>
+            <span className="font-extrabold text-secondary uppercase text-xs sm:text-sm block">{activeFestival} Festive Edition</span>
+            <p className="text-xs sm:text-sm text-base-content/80 font-medium">
               Discover authentic handmade delicacies, puja sweets, and festive gifts crafted by local grandmothers & artisans.
             </p>
           </div>
@@ -161,43 +161,43 @@ export default function StorePage() {
         <button
           type="button"
           onClick={() => setShowFestivalOnly(!showFestivalOnly)}
-          className={`btn btn-xs rounded-lg font-bold gap-1 shrink-0 ${
+          className={`btn min-h-[44px] px-5 rounded-2xl font-bold text-xs sm:text-sm gap-2 shrink-0 shadow-xs ${
             showFestivalOnly ? 'btn-secondary text-white' : 'btn-outline btn-secondary'
           }`}
         >
-          <Sparkles className="w-3 h-3" /> {showFestivalOnly ? 'Showing Festival Only' : `Show ${activeFestival} Items`}
+          <Sparkles className="w-4 h-4" /> {showFestivalOnly ? 'Showing Festival Only' : `Show ${activeFestival} Items`}
         </button>
       </div>
 
       {/* Search & Category Filter Bar */}
       <div className="space-y-4">
         <div className="relative max-w-xl">
-          <Search className="w-4 h-4 text-base-content/40 absolute left-3.5 top-3.5" />
+          <Search className="w-4 h-4 text-base-content/40 absolute left-4 top-4" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search mango pickle, Mysore Pak, tailoring, silk potli..."
-            className="input input-bordered w-full pl-10 text-sm rounded-2xl bg-base-100"
+            className="input input-bordered min-h-[48px] w-full pl-11 text-sm rounded-2xl bg-base-100"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="btn btn-ghost btn-xs btn-circle absolute right-2.5 top-2.5"
+              className="btn btn-ghost btn-sm min-h-[36px] btn-circle absolute right-2 top-2"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs sm:text-sm">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full font-bold whitespace-nowrap transition-all ${
+              className={`min-h-[40px] px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
                 selectedCategory === cat
-                  ? 'bg-primary text-white shadow-xs'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
               }`}
             >
@@ -296,10 +296,10 @@ export default function StorePage() {
                     <button
                       type="button"
                       onClick={() => handleAddToCart(product)}
-                      className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-xs"
+                      className="btn btn-primary min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-xs"
                       aria-label={`Add ${product.title} to cart`}
                     >
-                      <ShoppingBag className="w-3.5 h-3.5" /> Add
+                      <ShoppingBag className="w-4 h-4" /> Add to Cart
                     </button>
                   </div>
                 </div>

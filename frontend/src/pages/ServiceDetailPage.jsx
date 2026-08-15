@@ -272,25 +272,25 @@ export default function ServiceDetailPage() {
                 </span>
               </div>
 
-              <form onSubmit={handleCreateBooking} className="space-y-3.5 text-xs">
+              <form onSubmit={handleCreateBooking} className="space-y-4 text-sm">
                 
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">Student / Learner Name</label>
+                  <label className="label text-xs font-bold py-1">Student / Learner Name</label>
                   <input 
                     type="text" 
                     required
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
-                    className="input input-bordered input-sm w-full rounded-xl"
+                    className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
                   />
                 </div>
 
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">Age Group</label>
+                  <label className="label text-xs font-bold py-1">Age Group</label>
                   <select 
                     value={studentAgeGroup}
                     onChange={(e) => setStudentAgeGroup(e.target.value)}
-                    className="select select-bordered select-sm w-full rounded-xl text-xs"
+                    className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
                   >
                     {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
                   </select>
@@ -298,16 +298,16 @@ export default function ServiceDetailPage() {
 
                 {/* Preferred Days */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-base-content block">Preferred Days</label>
-                  <div className="flex flex-wrap gap-1.5">
+                  <label className="text-xs font-bold text-base-content block py-1">Preferred Days</label>
+                  <div className="flex flex-wrap gap-2">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
                       <button
                         key={day}
                         type="button"
                         onClick={() => handleToggleDay(day)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                        className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                           selectedDays.includes(day)
-                            ? 'bg-accent text-white border-accent'
+                            ? 'bg-accent text-white border-accent shadow-xs'
                             : 'bg-base-200 border-base-300 text-base-content/70'
                         }`}
                       >
@@ -319,11 +319,11 @@ export default function ServiceDetailPage() {
 
                 {/* Preferred Time Slot */}
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">Preferred Time Slot</label>
+                  <label className="label text-xs font-bold py-1">Preferred Time Slot</label>
                   <select 
                     value={selectedSlot}
                     onChange={(e) => setSelectedSlot(e.target.value)}
-                    className="select select-bordered select-sm w-full rounded-xl text-xs"
+                    className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
                   >
                     {TIME_SLOTS.map(slot => <option key={slot} value={slot}>{slot}</option>)}
                   </select>
@@ -331,14 +331,14 @@ export default function ServiceDetailPage() {
 
                 {/* Number of Sessions */}
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">Number of Sessions</label>
+                  <label className="label text-xs font-bold py-1">Number of Sessions</label>
                   <div className="join w-full">
                     {[1, 3, 5, 10].map(cnt => (
                       <button
                         key={cnt}
                         type="button"
                         onClick={() => setSessionsCount(cnt)}
-                        className={`join-item btn btn-xs flex-1 ${sessionsCount === cnt ? 'btn-accent text-white font-bold' : 'btn-ghost border-base-300'}`}
+                        className={`join-item btn min-h-[44px] flex-1 text-xs sm:text-sm ${sessionsCount === cnt ? 'btn-accent text-white font-bold shadow-xs' : 'btn-ghost border-base-300'}`}
                       >
                         {cnt} {cnt === 1 ? 'Session' : 'Sessions'}
                       </button>
@@ -348,20 +348,20 @@ export default function ServiceDetailPage() {
 
                 {/* Contact Phone */}
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">WhatsApp / Phone for Meeting Link</label>
+                  <label className="label text-xs font-bold py-1">WhatsApp / Phone for Meeting Link</label>
                   <input 
                     type="tel" 
                     required
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    className="input input-bordered input-sm w-full rounded-xl"
+                    className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
                   />
                 </div>
 
                 {/* Total Summary */}
-                <div className="pt-3 border-t border-base-200 flex items-center justify-between text-xs font-bold">
+                <div className="pt-3 border-t border-base-200 flex items-center justify-between text-sm font-bold">
                   <span>Total Payable ({sessionsCount} sessions):</span>
-                  <span className="text-base font-extrabold text-primary">
+                  <span className="text-xl font-extrabold text-primary">
                     ₹{totalPrice.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -369,7 +369,7 @@ export default function ServiceDetailPage() {
                 <button
                   type="submit"
                   disabled={booking}
-                  className="btn btn-accent w-full rounded-xl text-white font-bold text-xs gap-2 mt-2 shadow-md"
+                  className="btn btn-accent min-h-[48px] w-full rounded-2xl text-white font-bold text-sm gap-2 mt-2 shadow-md"
                 >
                   {booking ? <span className="loading loading-spinner loading-xs"></span> : <>Request Managed Session <ArrowRight className="w-4 h-4" /></>}
                 </button>

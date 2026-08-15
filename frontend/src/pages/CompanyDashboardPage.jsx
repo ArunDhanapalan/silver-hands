@@ -391,9 +391,9 @@ export default function CompanyDashboardPage() {
                             <button
                               type="button"
                               onClick={() => handleInviteCandidate(cand, opp)}
-                              className="btn btn-primary btn-xs rounded-lg text-white font-bold gap-1 text-[10px]"
+                              className="btn btn-primary min-h-[40px] px-4 rounded-xl text-white font-bold gap-1.5 text-xs"
                             >
-                              <Send className="w-3 h-3" /> Invite for Interview
+                              <Send className="w-3.5 h-3.5" /> Invite for Interview
                             </button>
                           </div>
                         </div>
@@ -435,62 +435,62 @@ export default function CompanyDashboardPage() {
             </div>
 
             {/* AI Parsing Assist (Issue #11) */}
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3.5 space-y-2">
-              <label className="text-xs font-bold text-primary flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> AI Job Description Assistant
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-2.5">
+              <label className="text-xs sm:text-sm font-bold text-primary flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" /> Gemini AI Job Description Assistant
               </label>
               <textarea
-                rows={2}
+                rows={3}
                 value={rawJobText}
                 onChange={(e) => setRawJobText(e.target.value)}
                 placeholder="Paste raw job description here (e.g. 'Looking for a senior chef to manage authentic South Indian lunch catering 4 hours daily in Adyar')..."
-                className="textarea textarea-bordered w-full text-xs rounded-xl"
+                className="textarea textarea-bordered w-full text-sm rounded-xl leading-relaxed"
               />
               <button
                 type="button"
                 onClick={handleParseJobAI}
                 disabled={aiParsing || !rawJobText.trim()}
-                className="btn btn-primary btn-xs rounded-xl text-white font-bold gap-1"
+                className="btn btn-primary min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2"
               >
-                {aiParsing ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-3 h-3" />}
-                Auto-Fill Form with AI
+                {aiParsing ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-4 h-4" />}
+                Auto-Fill Form with Gemini AI
               </button>
             </div>
 
-            <form onSubmit={handlePostJob} className="space-y-4">
+            <form onSubmit={handlePostJob} className="space-y-4 text-sm">
               
               <div className="form-control">
-                <label className="label text-xs font-semibold">Job / Assignment Title</label>
+                <label className="label text-xs font-bold py-1">Job / Assignment Title</label>
                 <input
                   type="text"
                   required
                   value={jobForm.title}
                   onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
                   placeholder="e.g. Senior Culinary Chef & Kitchen Advisor"
-                  className="input input-bordered input-sm rounded-xl text-xs"
+                  className="input input-bordered min-h-[44px] rounded-xl text-sm font-semibold"
                 />
               </div>
 
               <div className="form-control">
-                <label className="label text-xs font-semibold">Job Description</label>
+                <label className="label text-xs font-bold py-1">Job Description</label>
                 <textarea
                   rows={3}
                   required
                   value={jobForm.description}
                   onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
                   placeholder="Describe key responsibilities and expectations..."
-                  className="textarea textarea-bordered text-xs rounded-xl"
+                  className="textarea textarea-bordered text-sm rounded-xl leading-relaxed"
                 />
               </div>
 
               {/* Issue #9: Includes Culinary & Cooking */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="form-control">
-                  <label className="label text-xs font-semibold">Category</label>
+                  <label className="label text-xs font-bold py-1">Category</label>
                   <select
                     value={jobForm.category}
                     onChange={(e) => setJobForm({ ...jobForm, category: e.target.value })}
-                    className="select select-bordered select-sm rounded-xl text-xs"
+                    className="select select-bordered min-h-[44px] rounded-xl text-sm"
                   >
                     {JOB_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -499,11 +499,11 @@ export default function CompanyDashboardPage() {
                 </div>
 
                 <div className="form-control">
-                  <label className="label text-xs font-semibold">Work Mode</label>
+                  <label className="label text-xs font-bold py-1">Work Mode</label>
                   <select
                     value={jobForm.work_mode}
                     onChange={(e) => setJobForm({ ...jobForm, work_mode: e.target.value })}
-                    className="select select-bordered select-sm rounded-xl text-xs"
+                    className="select select-bordered min-h-[44px] rounded-xl text-sm"
                   >
                     <option value="offline">In-Person (Local)</option>
                     <option value="online">Online / Remote</option>
@@ -515,20 +515,20 @@ export default function CompanyDashboardPage() {
               {/* Remuneration & Schedule */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="form-control">
-                  <label className="label text-xs font-semibold">Remuneration (₹)</label>
-                  <div className="flex gap-1">
+                  <label className="label text-xs font-bold py-1">Remuneration (₹)</label>
+                  <div className="flex gap-2">
                     <input
                       type="number"
                       required
                       placeholder="e.g. 18000"
                       value={jobForm.pay_amount}
                       onChange={(e) => setJobForm({ ...jobForm, pay_amount: e.target.value })}
-                      className="input input-bordered input-sm rounded-xl text-xs w-2/3"
+                      className="input input-bordered min-h-[44px] rounded-xl text-sm font-bold w-2/3"
                     />
                     <select
                       value={jobForm.pay_unit}
                       onChange={(e) => setJobForm({ ...jobForm, pay_unit: e.target.value })}
-                      className="select select-bordered select-sm rounded-xl text-xs w-1/3"
+                      className="select select-bordered min-h-[44px] rounded-xl text-sm w-1/3"
                     >
                       <option value="month">/mo</option>
                       <option value="session">/session</option>
@@ -539,13 +539,13 @@ export default function CompanyDashboardPage() {
                 </div>
 
                 <div className="form-control">
-                  <label className="label text-xs font-semibold">Schedule</label>
+                  <label className="label text-xs font-bold py-1">Schedule</label>
                   <input
                     type="text"
                     placeholder="e.g. Part-time (15-20 hrs/wk)"
                     value={jobForm.schedule}
                     onChange={(e) => setJobForm({ ...jobForm, schedule: e.target.value })}
-                    className="input input-bordered input-sm rounded-xl text-xs"
+                    className="input input-bordered min-h-[44px] rounded-xl text-sm"
                   />
                 </div>
               </div>

@@ -41,9 +41,13 @@ export const LocationProvider = ({ children }) => {
     return localStorage.getItem('silverhands_locality') || 'All Areas';
   });
 
-  const [activeFestival, setActiveFestival] = useState(() => {
-    return localStorage.getItem('silverhands_festival') || 'Diwali';
+  const [activeFestival, setActiveFestivalState] = useState(() => {
+    return localStorage.getItem('silverhands_festival') || 'Milad-un-Nabi / Id-e-Milad';
   });
+
+  const [currentFestivalInfo, setCurrentFestivalInfo] = useState(null);
+  const [festivalSuggestions, setFestivalSuggestions] = useState(null);
+  const [allFestivals, setAllFestivals] = useState([]);
 
   useEffect(() => {
     localStorage.setItem('silverhands_city', JSON.stringify(selectedCity));
@@ -56,6 +60,44 @@ export const LocationProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('silverhands_festival', activeFestival);
   }, [activeFestival]);
+
+  // Fetch live date-aware festival & suggestions on mount
+  useEffect(() => {
+    const fetchFestivalData = async () => {
+      try {
+        const [currRes, suggRes, calRes] = await Promise.all([
+          fetch('/api/festival/current').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/festival/suggestions').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/festival/calendar').then(r => r.ok ? r.json() : null).catch(() => null)
+        ]);
+
+        if (currRes && currRes.name) {
+          setCurrentFestivalInfo(currRes);
+          setActiveFestivalState(currRes.name);
+        }
+        if (suggRes) {
+          setFestivalSuggestions(suggRes);
+        }
+        if (calRes && calRes.all_festivals) {
+          setAllFestivals(calRes.all_festivals);
+        }
+      } catch (err) {
+        console.error('Failed to load live festival context:', err);
+      }
+    };
+    fetchFestivalData();
+  }, []);
+
+  const setActiveFestival = (festName) => {
+    setActiveFestivalState(festName);
+    // Fetch info for this specific festival
+    fetch(`/api/festival/current?festival=${encodeURIComponent(festName)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(info => {
+        if (info) setCurrentFestivalInfo(info);
+      })
+      .catch(() => {});
+  };
 
   const setSelectedCity = (cityInput) => {
     if (!cityInput) return;
@@ -104,7 +146,10 @@ export const LocationProvider = ({ children }) => {
       setSelectedLocality,
       setCustomLocality,
       activeFestival,
-      setActiveFestival
+      setActiveFestival,
+      currentFestivalInfo,
+      festivalSuggestions,
+      allFestivals
     }}>
       {children}
     </LocationContext.Provider>

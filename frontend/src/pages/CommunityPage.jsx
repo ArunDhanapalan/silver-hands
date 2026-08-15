@@ -364,10 +364,10 @@ export default function CommunityPage() {
               )}
 
               {/* Tags & Action Bar */}
-              <div className="pt-2 border-t border-base-200 flex items-center justify-between text-xs text-base-content/70">
+              <div className="pt-2 border-t border-base-200 flex items-center justify-between text-xs sm:text-sm text-base-content/70">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {post.tags.map((tag, i) => (
-                    <span key={i} className="badge badge-ghost badge-xs text-[10px] font-medium">
+                    <span key={i} className="badge badge-ghost badge-sm text-xs font-medium">
                       #{tag}
                     </span>
                   ))}
@@ -376,9 +376,9 @@ export default function CommunityPage() {
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => handleOpenComments(post.id)}
-                    className="flex items-center gap-1 hover:text-primary font-semibold text-xs"
+                    className="btn btn-ghost min-h-[40px] px-3 rounded-xl flex items-center gap-1.5 hover:text-primary font-bold text-xs sm:text-sm"
                   >
-                    <MessageSquare className="w-4 h-4" /> {post.comments_count} Comments
+                    <MessageSquare className="w-4 h-4 text-primary" /> {post.comments_count || 0} Comments
                   </button>
                 </div>
               </div>
@@ -387,18 +387,22 @@ export default function CommunityPage() {
               {activeCommentsPostId === post.id && (
                 <div className="pt-3 border-t border-base-200 space-y-3">
                   {loadingComments ? (
-                    <span className="loading loading-spinner loading-xs text-primary"></span>
+                    <div className="py-2 text-center">
+                      <span className="loading loading-spinner loading-sm text-primary"></span>
+                    </div>
                   ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-2.5 max-h-56 overflow-y-auto">
                       {(commentsMap[post.id] || []).length === 0 ? (
-                        <p className="text-[11px] text-base-content/50 italic">No comments yet. Start the conversation!</p>
+                        <p className="text-xs text-base-content/60 italic py-1">No comments yet. Be the first to share your thoughts!</p>
                       ) : (
                         (commentsMap[post.id] || []).map((c) => (
-                          <div key={c.id} className="bg-base-200 p-2.5 rounded-xl text-xs space-y-0.5">
-                            <span className="font-bold text-base-content block text-[11px]">
-                              {c.author_name} <span className="text-base-content/50 font-normal">({c.author_role})</span>
-                            </span>
-                            <p className="text-base-content/80 text-[11px]">{c.content}</p>
+                          <div key={c.id} className="bg-base-200/80 p-3 rounded-2xl text-xs sm:text-sm space-y-1 border border-base-300/60">
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-base-content text-xs sm:text-sm">
+                                {c.author_name} <span className="text-base-content/60 font-normal text-[11px]">({c.author_role})</span>
+                              </span>
+                            </div>
+                            <p className="text-base-content/90 text-xs sm:text-sm leading-relaxed">{c.content}</p>
                           </div>
                         ))
                       )}
@@ -406,20 +410,21 @@ export default function CommunityPage() {
                   )}
 
                   {/* Add comment form */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 pt-1">
                     <input 
                       type="text" 
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddComment(post.id))}
-                      placeholder="Write a helpful response or offer..."
-                      className="input input-sm input-bordered w-full text-xs rounded-xl"
+                      placeholder="Write a helpful response, query, or offer..."
+                      className="input input-bordered min-h-[44px] w-full text-xs sm:text-sm rounded-2xl bg-base-100"
                     />
                     <button 
                       onClick={() => handleAddComment(post.id)}
-                      className="btn btn-sm btn-primary text-white rounded-xl"
+                      disabled={!newCommentText.trim()}
+                      className="btn btn-primary min-h-[44px] px-5 text-white rounded-2xl font-bold text-xs sm:text-sm shrink-0 shadow-xs"
                     >
-                      <Send className="w-3.5 h-3.5" />
+                      <Send className="w-4 h-4" /> Send
                     </button>
                   </div>
                 </div>

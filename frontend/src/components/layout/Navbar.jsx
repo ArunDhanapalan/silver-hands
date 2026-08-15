@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation as useRouteLocation } from 'react-router-dom';
 import { 
   ShoppingBag, 
@@ -12,16 +13,16 @@ import {
   ChevronDown, 
   Plus, 
   Check, 
-  X,
-  ShieldCheck,
-  Package,
-  Calendar,
-  LogOut,
-  User,
-  SlidersHorizontal,
-  Home,
-  Award,
-  BookOpen
+  X, 
+  ShieldCheck, 
+  Package, 
+  Calendar, 
+  LogOut, 
+  User, 
+  SlidersHorizontal, 
+  Home, 
+  Award, 
+  BookOpen 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
@@ -37,7 +38,9 @@ export default function Navbar() {
     setActiveFestival,
     selectedLocality,
     setSelectedLocality,
-    setCustomLocality
+    setCustomLocality,
+    allFestivals,
+    currentFestivalInfo
   } = useLocation();
   const { language, setLanguage, languages, t } = useLanguage();
   const routerLocation = useRouteLocation();
@@ -284,8 +287,8 @@ export default function Navbar() {
       </header>
 
       {/* FULL-SCREEN FIXED CITY SELECTOR MODAL */}
-      {cityModalOpen && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {cityModalOpen && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
@@ -305,7 +308,7 @@ export default function Navbar() {
             {/* City Grid */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-base-content/70 uppercase">Supported Cities across India</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                 {indianCities.map((c) => {
                   const isSelected = selectedCity.name === c.name;
                   return (
@@ -313,7 +316,7 @@ export default function Navbar() {
                       key={c.name}
                       type="button"
                       onClick={() => handleCitySelect(c)}
-                      className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                      className={`min-h-[48px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                         isSelected 
                           ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' 
                           : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50 text-base-content'
@@ -339,11 +342,11 @@ export default function Navbar() {
                 <span className="text-[11px] text-primary font-semibold">Active: {selectedLocality}</span>
               </div>
               
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleLocalitySelect('All Areas')}
-                  className={`btn btn-xs rounded-xl font-bold ${
+                  className={`min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-xs ${
                     selectedLocality === 'All Areas' ? 'btn-secondary text-white' : 'btn-outline border-base-300'
                   }`}
                 >
@@ -354,7 +357,7 @@ export default function Navbar() {
                     key={loc}
                     type="button"
                     onClick={() => handleLocalitySelect(loc)}
-                    className={`btn btn-xs rounded-xl ${
+                    className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs ${
                       selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost bg-base-200/60'
                     }`}
                   >
@@ -375,21 +378,21 @@ export default function Navbar() {
                   value={customCityInput}
                   onChange={(e) => setCustomCityInput(e.target.value)}
                   placeholder="e.g. Pune, Jaipur, Mysore"
-                  className="input input-bordered input-sm text-xs rounded-xl w-full"
+                  className="input input-bordered min-h-[44px] text-sm rounded-xl w-full"
                 />
                 <input
                   type="text"
                   value={customLocalityInput}
                   onChange={(e) => setCustomLocalityInput(e.target.value)}
                   placeholder="e.g. Kothrud, Vaishali Nagar"
-                  className="input input-bordered input-sm text-xs rounded-xl w-full"
+                  className="input input-bordered min-h-[44px] text-sm rounded-xl w-full"
                 />
               </div>
               <div className="flex justify-end pt-1">
                 <button 
                   type="submit" 
                   disabled={!customCityInput.trim() && !customLocalityInput.trim()}
-                  className="btn btn-primary btn-sm text-white rounded-xl font-bold text-xs"
+                  className="btn btn-primary min-h-[44px] px-5 text-white rounded-xl font-bold text-sm"
                 >
                   Apply Location
                 </button>
@@ -397,12 +400,13 @@ export default function Navbar() {
             </form>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* FULL-SCREEN FIXED LANGUAGE SELECTOR MODAL */}
-      {langModalOpen && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {langModalOpen && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
@@ -433,7 +437,7 @@ export default function Navbar() {
                       setLanguage(l.code);
                       setLangModalOpen(false);
                     }}
-                    className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                    className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                       isSelected
                         ? 'border-accent bg-accent/10 text-accent font-bold shadow-xs'
                         : 'border-base-300 bg-base-100 hover:border-accent/40 hover:bg-base-200/50 text-base-content'
@@ -450,13 +454,14 @@ export default function Navbar() {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* FULL-SCREEN FIXED FESTIVAL SELECTOR MODAL */}
-      {festModalOpen && (
-        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200">
+      {festModalOpen && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
@@ -477,12 +482,14 @@ export default function Navbar() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {[
-                { name: 'Diwali', icon: '🪔', theme: 'Festival of Lights' },
-                { name: 'Pongal', icon: '🌾', theme: 'Harvest Thanksgiving' },
-                { name: 'Onam', icon: '🌸', theme: 'Grand Harvest Feast' },
-                { name: 'Durga Puja', icon: '🌺', theme: 'Navratri & Sharad Utsav' },
-                { name: 'Eid', icon: '🌙', theme: 'Blessings & Gifting' },
-                { name: 'Christmas', icon: '🎄', theme: 'Winter Joy & Hampers' }
+                { name: 'Milad-un-Nabi / Id-e-Milad', icon: '🌙', theme: 'Aug 26, 2026 • Blessings & Sheer Khurma' },
+                { name: 'Janmashtami', icon: '🪈', theme: 'Sep 4, 2026 • Krishna Sweets & Peda' },
+                { name: 'Onam', icon: '🌸', theme: 'Sep 14, 2026 • Sadhya Feasts & Kasavu' },
+                { name: 'Durga Puja / Navratri', icon: '🌺', theme: 'Oct 2, 2026 • Dandiya & Bhog' },
+                { name: 'Diwali', icon: '🪔', theme: 'Oct 20, 2026 • Festival of Lights & Sweets' },
+                { name: 'Christmas & New Year', icon: '🎄', theme: 'Dec 25, 2026 • Plum Cakes & Gifting' },
+                { name: 'Pongal / Makar Sankranti', icon: '🌾', theme: 'Jan 15, 2027 • Harvest & Clayware' },
+                { name: 'Eid-ul-Fitr', icon: '🌙', theme: 'Mar 31, 2027 • Festive Kurta & Delicacies' }
               ].map((fest) => {
                 const isSelected = activeFestival === fest.name;
                 return (
@@ -493,26 +500,27 @@ export default function Navbar() {
                       setActiveFestival(fest.name);
                       setFestModalOpen(false);
                     }}
-                    className={`p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                    className={`min-h-[56px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
                       isSelected
                         ? 'border-secondary bg-secondary/10 text-secondary font-bold shadow-xs'
                         : 'border-base-300 bg-base-100 hover:border-secondary/40 hover:bg-base-200/50'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{fest.icon}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-2xl">{fest.icon}</span>
                       <div>
                         <div className="text-sm font-bold text-base-content">{fest.name}</div>
                         <div className="text-[10px] text-base-content/60">{fest.theme}</div>
                       </div>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-secondary" />}
+                    {isSelected && <Check className="w-4 h-4 text-secondary shrink-0" />}
                   </button>
                 );
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </>
