@@ -115,50 +115,38 @@ export default function Navbar() {
               ) : (
                 /* Consumer & Senior Navigation */
                 <>
-                  {/* Opportunities (Front and Center for Seniors and All) */}
-                  <Link 
-                    to="/senior" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 font-bold ${routerLocation.pathname === '/senior' ? 'btn-active text-primary bg-primary/10' : ''}`}
-                  >
-                    <Layers className="w-4 h-4 text-primary" />
-                    Opportunities
-                  </Link>
-
-                  {/* Community & Collaborations */}
-                  <Link 
-                    to="/community" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 font-bold ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary bg-primary/10' : ''}`}
-                  >
-                    <Users className="w-4 h-4 text-secondary" />
-                    Community
-                  </Link>
-
-                  {/* Store */}
                   <Link 
                     to="/store" 
                     className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary' : ''}`}
                   >
-                    <ShoppingBag className="w-4 h-4 text-accent" />
+                    <ShoppingBag className="w-4 h-4 text-secondary" />
                     {t('nav_store')}
                   </Link>
 
-                  {/* Services */}
                   <Link 
                     to="/services" 
                     className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary' : ''}`}
                   >
-                    <Sparkles className="w-4 h-4 text-warning" />
+                    <Sparkles className="w-4 h-4 text-accent" />
                     {t('nav_services')}
+                  </Link>
+
+                  <Link 
+                    to="/community" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary' : ''}`}
+                  >
+                    <Users className="w-4 h-4 text-primary" />
+                    {t('nav_community')}
                   </Link>
 
                   {isSenior && (
                     <>
                       <Link 
-                        to="/senior/orders" 
-                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior/orders' ? 'btn-active text-primary' : ''}`}
+                        to="/senior" 
+                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior' ? 'btn-active text-primary' : ''}`}
                       >
-                        <Package className="w-4 h-4 text-primary" />
-                        My Orders
+                        <Layers className="w-4 h-4 text-warning" />
+                        {t('nav_deck')}
                       </Link>
                       <Link 
                         to="/senior/earnings" 
@@ -283,76 +271,6 @@ export default function Navbar() {
           </div>
         </div>
       </header>
-
-      {/* MOBILE BOTTOM NAVIGATION BAR (md:hidden) */}
-      {!isCompany && (
-        <nav 
-          aria-label="Mobile Navigation"
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100/95 backdrop-blur-md border-t border-base-300 py-1 px-2 flex items-center justify-around text-[10px] font-bold shadow-lg"
-        >
-          <Link 
-            to="/senior" 
-            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-              routerLocation.pathname === '/senior' ? 'text-primary' : 'text-base-content/70 hover:text-primary'
-            }`}
-          >
-            <Layers className="w-5 h-5" />
-            <span>Opportunities</span>
-          </Link>
-
-          <Link 
-            to="/community" 
-            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-              routerLocation.pathname.startsWith('/community') ? 'text-secondary' : 'text-base-content/70 hover:text-secondary'
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            <span>Community</span>
-          </Link>
-
-          <Link 
-            to="/store" 
-            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-              routerLocation.pathname.startsWith('/store') ? 'text-accent' : 'text-base-content/70 hover:text-accent'
-            }`}
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span>Store</span>
-          </Link>
-
-          <Link 
-            to="/services" 
-            className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-              routerLocation.pathname.startsWith('/services') ? 'text-warning' : 'text-base-content/70 hover:text-warning'
-            }`}
-          >
-            <Sparkles className="w-5 h-5" />
-            <span>Services</span>
-          </Link>
-
-          {isSenior ? (
-            <Link 
-              to="/senior/orders" 
-              className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-                routerLocation.pathname.startsWith('/senior/orders') ? 'text-success' : 'text-base-content/70 hover:text-success'
-              }`}
-            >
-              <Package className="w-5 h-5" />
-              <span>Orders</span>
-            </Link>
-          ) : (
-            <Link 
-              to="/cart" 
-              className={`flex flex-col items-center gap-0.5 p-1 rounded-xl transition-colors ${
-                routerLocation.pathname === '/cart' ? 'text-primary' : 'text-base-content/70 hover:text-primary'
-              }`}
-            >
-              <ShoppingBag className="w-5 h-5" />
-              <span>Cart</span>
-            </Link>
-          )}
-        </nav>
-      )}
 
       {/* FULL-SCREEN FIXED CITY SELECTOR MODAL */}
       {cityModalOpen && (
