@@ -210,6 +210,7 @@ class MatchingService:
             "created_at": now
         }
         res = await self._opps_col().insert_one(opp_doc)
+        opp_doc["_id"] = str(res.inserted_id)
         opp_doc["id"] = str(res.inserted_id)
         return opp_doc
 
@@ -230,23 +231,28 @@ class MatchingService:
         results = []
         for opp in opps:
             opp_id = str(opp.get("_id"))
-            req_skills = [s.lower() for s in opp.get("required_skills", [])]
+            req_skills = [s.lower().strip() for s in opp.get("required_skills", [])]
             opp_city = opp.get("city", "Chennai").lower()
 
             matched_seniors = []
             for sr in all_seniors:
-                sr_skills = [s.lower() for s in sr.get("skills", [])]
+                sr_skills = [s.lower().strip() for s in sr.get("skills", [])]
+                # Check actual intersection
                 common = [s for s in req_skills if any(s in sk or sk in s for sk in sr_skills)]
                 
-                # Base score + skill match
-                base_score = 60
-                skill_bonus = int((len(common) / max(len(req_skills), 1)) * 35) if req_skills else 25
-                city_bonus = 5 if sr.get("city", "").lower() == opp_city else 0
-                total_score = min(base_score + skill_bonus + city_bonus, 98)
+                # CRITICAL (Issue #8): Only match if senior actually has matching skills!
+                if not common and req_skills:
+                    continue
 
-                if total_score >= 65:
+                skill_ratio = len(common) / max(len(req_skills), 1) if req_skills else 0.5
+                skill_score = int(skill_ratio * 75)
+                same_city = sr.get("city", "").lower() == opp_city
+                city_bonus = 15 if same_city else 5
+                total_score = min(skill_score + city_bonus + 10, 98)
+
+                if total_score >= 50:
                     matched_seniors.append({
-                        "senior_id": str(sr.get("_id")),
+                        "senior_id": str(sr.get("_id", sr.get("user_id"))),
                         "full_name": sr.get("full_name", "Senior Guru"),
                         "locality": sr.get("locality", "Adyar"),
                         "city": sr.get("city", "Chennai"),
@@ -264,6 +270,7 @@ class MatchingService:
                 "title": opp["title"],
                 "description": opp["description"],
                 "type": opp.get("type", "job"),
+                "category": opp.get("category", "General"),
                 "locality": opp.get("locality", "Adyar"),
                 "city": opp.get("city", "Chennai"),
                 "work_mode": opp.get("work_mode", "offline"),

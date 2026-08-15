@@ -80,15 +80,19 @@ export default function CommunityPage() {
 
   useEffect(() => {
     fetchData();
-  }, [selectedType, selectedCity, user]);
+  }, [selectedType, selectedCity?.name, user?.sub]);
 
   useEffect(() => {
-    setPostForm(prev => ({
-      ...prev,
-      city: selectedCity.name,
-      locality: selectedLocality !== 'All Areas' ? selectedLocality : (selectedCity.localities[0] || 'Central Area')
-    }));
-  }, [selectedCity, selectedLocality]);
+    if (selectedCity?.name) {
+      setPostForm(prev => ({
+        ...prev,
+        city: selectedCity.name,
+        locality: selectedLocality && selectedLocality !== 'All Areas' 
+          ? selectedLocality 
+          : (selectedCity.localities && selectedCity.localities.length > 0 ? selectedCity.localities[0] : 'Central Area')
+      }));
+    }
+  }, [selectedCity?.name, selectedLocality]);
 
   const handleOpenComments = async (postId) => {
     if (activeCommentsPostId === postId) {
@@ -419,8 +423,8 @@ export default function CommunityPage() {
 
       {/* CREATE COMMUNITY POST MODAL */}
       {showCreateModal && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box rounded-3xl max-w-lg p-6 space-y-4">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-base-200">
               <h3 className="text-lg font-bold text-base-content">Create a Community Post</h3>
               <button onClick={() => setShowCreateModal(false)} className="btn btn-sm btn-circle btn-ghost">✕</button>

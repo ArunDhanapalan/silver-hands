@@ -1,7 +1,8 @@
 import React from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-export default class ErrorBoundary extends React.Component {
+class ErrorBoundaryInner extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -15,9 +16,14 @@ export default class ErrorBoundary extends React.Component {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.locationKey !== this.props.locationKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
   };
 
   render() {
@@ -35,7 +41,7 @@ export default class ErrorBoundary extends React.Component {
             onClick={this.handleReset}
             className="btn btn-primary btn-sm rounded-xl text-white font-bold gap-1 text-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Reload Page
+            <RotateCcw className="w-3.5 h-3.5" /> Try Again
           </button>
         </div>
       );
@@ -43,4 +49,13 @@ export default class ErrorBoundary extends React.Component {
 
     return this.props.children;
   }
+}
+
+export default function ErrorBoundary({ children }) {
+  const location = useLocation();
+  return (
+    <ErrorBoundaryInner locationKey={location.pathname + location.search}>
+      {children}
+    </ErrorBoundaryInner>
+  );
 }

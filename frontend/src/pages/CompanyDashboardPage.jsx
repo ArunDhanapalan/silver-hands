@@ -15,7 +15,8 @@ import {
   X,
   Send,
   Building,
-  DollarSign
+  DollarSign,
+  Utensils
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -23,16 +24,26 @@ import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
+const JOB_CATEGORIES = [
+  'Culinary & Cooking',
+  'Accounting & Finance',
+  'Mentoring & Advisory',
+  'Tutoring & Academics',
+  'Operations & Logistics',
+  'Handicrafts & Tailoring',
+  'Customer Support & Care'
+];
+
 export default function CompanyDashboardPage() {
   const { user } = useAuth();
-  const { selectedCity, cities } = useLocation();
+  const { cities } = useLocation();
 
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
-  // Post modal state
+  // Post modal state - CLEAN NO DUMMY VALUES (Issue #10)
   const [showPostModal, setShowPostModal] = useState(false);
   const [posting, setPosting] = useState(false);
   const [rawJobText, setRawJobText] = useState('');
@@ -41,16 +52,16 @@ export default function CompanyDashboardPage() {
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
-    category: 'Accounting & Finance',
-    required_skills: ['Accounting', 'Bookkeeping'],
-    pay_amount: 18000,
+    category: 'Culinary & Cooking',
+    required_skills: [],
+    pay_amount: '',
     pay_unit: 'month',
     work_mode: 'offline', // online, offline, both
-    schedule: 'Part-time (Evenings / 15 hrs wk)',
-    locality: 'Adyar',
-    city: selectedCity.name,
+    schedule: '',
+    locality: user?.locality || '',
+    city: user?.city || 'Chennai',
     is_festival_special: false,
-    festival_tag: 'Diwali'
+    festival_tag: ''
   });
 
   const [skillInput, setSkillInput] = useState('');
@@ -72,9 +83,11 @@ export default function CompanyDashboardPage() {
     fetchCompanyData();
   }, []);
 
+  // AI Auto-Fill Job Assistant (Issue #11)
   const handleParseJobAI = async () => {
     if (!rawJobText.trim()) return;
     setAiParsing(true);
+    setError('');
     try {
       const res = await api.post('/opportunities/parse-job', {
         raw_text: rawJobText
@@ -83,13 +96,17 @@ export default function CompanyDashboardPage() {
         ...prev,
         title: res.title || prev.title,
         description: res.summary || rawJobText,
+        category: res.category && JOB_CATEGORIES.includes(res.category) ? res.category : (res.category?.includes('Cook') || res.category?.includes('Culinary') ? 'Culinary & Cooking' : prev.category),
         required_skills: res.required_skills?.length ? res.required_skills : prev.required_skills,
-        category: res.category || prev.category
+        pay_amount: res.suggested_pay || prev.pay_amount || 15000,
+        work_mode: res.work_mode || prev.work_mode,
+        schedule: res.schedule || prev.schedule || 'Part-time (15-20 hrs/week)'
       }));
       setToastMsg('AI parsed job description into structured senior criteria!');
       setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       console.error('Job parse error:', err);
+      setError('AI parsing encountered an issue. You can fill the fields manually below.');
     } finally {
       setAiParsing(false);
     }
@@ -112,29 +129,50 @@ export default function CompanyDashboardPage() {
     }));
   };
 
+  // Submit Job Post (Issue #12)
   const handlePostJob = async (e) => {
     e.preventDefault();
     setPosting(true);
     setError('');
     try {
-      await api.post('/opportunities', jobForm);
+      const payload = {
+        title: jobForm.title.trim(),
+        description: jobForm.description.trim(),
+        type: 'job',
+        category: jobForm.category,
+        required_skills: jobForm.required_skills.length > 0 ? jobForm.required_skills : ['General Experience'],
+        locality: jobForm.locality.trim() || 'Central Area',
+        city: jobForm.city || 'Chennai',
+        work_mode: jobForm.work_mode,
+        schedule: jobForm.schedule.trim() || 'Part-time',
+        pay_amount: parseInt(jobForm.pay_amount, 10) || 15000,
+        pay_unit: jobForm.pay_unit,
+        languages: ['en', 'ta'],
+        is_festival_special: jobForm.is_festival_special,
+        festival_tag: jobForm.festival_tag || null
+      };
+
+      await api.post('/opportunities', payload);
       setShowPostModal(false);
-      setToastMsg('Opportunity published! Matched to qualified local seniors.');
+      setToastMsg('Opportunity published & matched to verified local seniors!');
       setTimeout(() => setToastMsg(''), 3500);
+      
+      // Reset form to clean state
       setJobForm({
         title: '',
         description: '',
-        category: 'Accounting & Finance',
-        required_skills: ['Accounting'],
-        pay_amount: 15000,
+        category: 'Culinary & Cooking',
+        required_skills: [],
+        pay_amount: '',
         pay_unit: 'month',
         work_mode: 'offline',
-        schedule: 'Part-time',
-        locality: 'Adyar',
-        city: selectedCity.name,
+        schedule: '',
+        locality: user?.locality || '',
+        city: user?.city || 'Chennai',
         is_festival_special: false,
-        festival_tag: 'Diwali'
+        festival_tag: ''
       });
+      setRawJobText('');
       fetchCompanyData();
     } catch (err) {
       setError(err.message || 'Failed to post opportunity.');
@@ -147,6 +185,8 @@ export default function CompanyDashboardPage() {
     setToastMsg(`Interview invitation sent to ${candidateName} for "${roleTitle}"!`);
     setTimeout(() => setToastMsg(''), 3500);
   };
+
+  const companyCity = user?.city || 'Chennai';
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -166,13 +206,13 @@ export default function CompanyDashboardPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="badge badge-primary badge-sm font-bold text-white uppercase">Corporate & MSME Hub</span>
-            <span className="badge badge-outline badge-xs font-semibold">GSTIN Verified</span>
+            <span className="badge badge-outline badge-xs font-semibold">GSTIN: {user?.gstin || 'Registered'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content mt-1">
             {user?.company_name || user?.full_name || 'Employer Dashboard'}
           </h1>
           <p className="text-xs sm:text-sm text-base-content/70">
-            Hire verified, experienced seniors for fractional bookkeeping, advisory, language tutoring, and seasonal operations.
+            Hire verified, experienced seniors for culinary catering, fractional bookkeeping, language mentoring, and seasonal operations.
           </p>
         </div>
 
@@ -186,7 +226,7 @@ export default function CompanyDashboardPage() {
 
       <ErrorAlert message={error} />
 
-      {/* Metrics Row */}
+      {/* Metrics Row (Issue #13 - Consistent company city) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl shadow-xs">
           <span className="text-xs font-bold text-base-content/60 flex items-center gap-1.5">
@@ -195,7 +235,7 @@ export default function CompanyDashboardPage() {
           <div className="text-2xl font-extrabold text-base-content mt-1">
             {postings.length}
           </div>
-          <span className="text-[11px] text-success font-semibold">Live in {selectedCity.name}</span>
+          <span className="text-[11px] text-success font-semibold">Headquarters: {companyCity}</span>
         </div>
 
         <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl shadow-xs">
@@ -205,7 +245,7 @@ export default function CompanyDashboardPage() {
           <div className="text-2xl font-extrabold text-secondary mt-1">
             {postings.reduce((sum, p) => sum + (p.matched_candidates?.length || 0), 0)}
           </div>
-          <span className="text-[11px] text-base-content/60">Over 65% skill synergy</span>
+          <span className="text-[11px] text-base-content/60">Strict skill-verified matches</span>
         </div>
 
         <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl shadow-xs">
@@ -237,7 +277,7 @@ export default function CompanyDashboardPage() {
             <Briefcase className="w-12 h-12 text-base-content/30 mx-auto" />
             <h3 className="text-lg font-bold text-base-content">No active opportunities posted yet</h3>
             <p className="text-xs text-base-content/60 max-w-md mx-auto">
-              Post your fractional roles (e.g. GST Filing, Spoken English Mentoring, Festive Logistics) to instantly match with experienced local senior citizens.
+              Post your fractional roles (e.g. Culinary Chef, GST Filing, Spoken English Mentoring) to match with qualified senior citizens.
             </p>
             <button 
               onClick={() => setShowPostModal(true)}
@@ -253,15 +293,15 @@ export default function CompanyDashboardPage() {
                 key={opp.id}
                 className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-xs space-y-5"
               >
-                {/* Posting Summary */}
+                {/* Posting Summary - Issue #13: displays opp.city explicitly */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-base-200">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="badge badge-primary badge-sm font-bold text-white uppercase text-[10px]">
-                        {opp.type}
+                        {opp.category || opp.type}
                       </span>
                       <span className="text-xs text-base-content/60 font-semibold flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-secondary" /> {opp.locality}, {opp.city}
+                        <MapPin className="w-3.5 h-3.5 text-secondary" /> {opp.locality ? `${opp.locality}, ` : ''}{opp.city}
                       </span>
                       <span className="badge badge-neutral badge-xs font-semibold uppercase">
                         {opp.work_mode}
@@ -289,18 +329,18 @@ export default function CompanyDashboardPage() {
                   ))}
                 </div>
 
-                {/* Matched Candidates Sub-Section */}
+                {/* Matched Candidates Sub-Section (Issue #8: Strict Genuine Matching) */}
                 <div className="bg-base-200/50 rounded-2xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-base-content flex items-center gap-1.5 uppercase tracking-wider">
                       <Sparkles className="w-3.5 h-3.5 text-primary" /> Matched Qualified Seniors ({opp.matched_candidates?.length || 0})
                     </h4>
-                    <span className="text-[11px] text-primary font-semibold">AI Verified Fit</span>
+                    <span className="text-[11px] text-primary font-semibold">Skill-Verified Fit</span>
                   </div>
 
                   {(!opp.matched_candidates || opp.matched_candidates.length === 0) ? (
                     <p className="text-xs text-base-content/60 py-2">
-                      Matching local seniors with {opp.required_skills?.join(', ')}... New registered seniors in {opp.city} will appear here.
+                      Matching local seniors with {opp.required_skills?.join(', ') || 'required skills'} in {opp.city}... Newly registered seniors with matching skills will automatically appear here.
                     </p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -327,7 +367,7 @@ export default function CompanyDashboardPage() {
                           </p>
 
                           <div className="flex flex-wrap gap-1">
-                            {(cand.skills || []).slice(0, 3).map((s, i) => (
+                            {(cand.skills || []).map((s, i) => (
                               <span key={i} className="badge badge-ghost badge-xs text-[9px] font-medium">
                                 {s}
                               </span>
@@ -358,11 +398,11 @@ export default function CompanyDashboardPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* POST OPPORTUNITY MODAL */}
+      {/* POST OPPORTUNITY MODAL (Issue #9, #10, #11, #12) */}
       {/* ========================================================================= */}
       {showPostModal && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-2xl rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -381,7 +421,7 @@ export default function CompanyDashboardPage() {
               </button>
             </div>
 
-            {/* AI Parsing Assist */}
+            {/* AI Parsing Assist (Issue #11) */}
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3.5 space-y-2">
               <label className="text-xs font-bold text-primary flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" /> AI Job Description Assistant
@@ -390,7 +430,7 @@ export default function CompanyDashboardPage() {
                 rows={2}
                 value={rawJobText}
                 onChange={(e) => setRawJobText(e.target.value)}
-                placeholder="Paste raw job description here (e.g. 'Looking for a retired accountant in Adyar for GST reconciliation 15 hrs a week')..."
+                placeholder="Paste raw job description here (e.g. 'Looking for a senior chef to manage authentic South Indian lunch catering 4 hours daily in Adyar')..."
                 className="textarea textarea-bordered w-full text-xs rounded-xl"
               />
               <button
@@ -413,7 +453,7 @@ export default function CompanyDashboardPage() {
                   required
                   value={jobForm.title}
                   onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
-                  placeholder="e.g. Fractional Chief Accountant & GST Advisor"
+                  placeholder="e.g. Senior Culinary Chef & Kitchen Advisor"
                   className="input input-bordered input-sm rounded-xl text-xs"
                 />
               </div>
@@ -430,6 +470,7 @@ export default function CompanyDashboardPage() {
                 />
               </div>
 
+              {/* Issue #9: Includes Culinary & Cooking */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="form-control">
                   <label className="label text-xs font-semibold">Category</label>
@@ -438,11 +479,9 @@ export default function CompanyDashboardPage() {
                     onChange={(e) => setJobForm({ ...jobForm, category: e.target.value })}
                     className="select select-bordered select-sm rounded-xl text-xs"
                   >
-                    <option value="Accounting & Finance">Accounting & Finance</option>
-                    <option value="Mentoring & Advisory">Mentoring & Advisory</option>
-                    <option value="Tutoring & Academics">Tutoring & Academics</option>
-                    <option value="Operations & Logistics">Operations & Logistics</option>
-                    <option value="Handicrafts & Tailoring">Handicrafts & Tailoring</option>
+                    {JOB_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -468,8 +507,9 @@ export default function CompanyDashboardPage() {
                     <input
                       type="number"
                       required
+                      placeholder="e.g. 18000"
                       value={jobForm.pay_amount}
-                      onChange={(e) => setJobForm({ ...jobForm, pay_amount: parseInt(e.target.value) || 0 })}
+                      onChange={(e) => setJobForm({ ...jobForm, pay_amount: e.target.value })}
                       className="input input-bordered input-sm rounded-xl text-xs w-2/3"
                     />
                     <select
@@ -489,9 +529,9 @@ export default function CompanyDashboardPage() {
                   <label className="label text-xs font-semibold">Schedule</label>
                   <input
                     type="text"
+                    placeholder="e.g. Part-time (15-20 hrs/wk)"
                     value={jobForm.schedule}
                     onChange={(e) => setJobForm({ ...jobForm, schedule: e.target.value })}
-                    placeholder="e.g. Part-time (15 hrs/wk)"
                     className="input input-bordered input-sm rounded-xl text-xs"
                   />
                 </div>
@@ -516,9 +556,9 @@ export default function CompanyDashboardPage() {
                   <label className="label text-xs font-semibold">Locality / Area</label>
                   <input
                     type="text"
+                    placeholder="e.g. Adyar, T. Nagar, Koramangala"
                     value={jobForm.locality}
                     onChange={(e) => setJobForm({ ...jobForm, locality: e.target.value })}
-                    placeholder="e.g. Adyar, Koramangala"
                     className="input input-bordered input-sm rounded-xl text-xs"
                   />
                 </div>
@@ -532,24 +572,29 @@ export default function CompanyDashboardPage() {
                     type="text"
                     value={skillInput}
                     onChange={(e) => setSkillInput(e.target.value)}
-                    placeholder="Type skill (e.g. Excel, GST, Tally)..."
+                    placeholder="Type skill (e.g. Traditional Cooking, Recipe Planning, GST, Excel)..."
                     className="input input-bordered input-sm rounded-xl text-xs flex-1"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
                   />
                   <button
                     type="button"
                     onClick={handleAddSkill}
                     className="btn btn-sm btn-outline rounded-xl text-xs"
                   >
-                    Add
+                    Add Skill
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {jobForm.required_skills.map((sk) => (
-                    <span key={sk} className="badge badge-primary badge-sm font-semibold gap-1 text-white text-[10px]">
-                      {sk}
-                      <button type="button" onClick={() => handleRemoveSkill(sk)}>✕</button>
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-1 pt-1 min-h-[28px]">
+                  {jobForm.required_skills.length === 0 ? (
+                    <span className="text-[11px] text-base-content/50 italic">Add at least one required skill for matching.</span>
+                  ) : (
+                    jobForm.required_skills.map((sk) => (
+                      <span key={sk} className="badge badge-primary badge-sm font-semibold gap-1 text-white text-[10px]">
+                        {sk}
+                        <button type="button" onClick={() => handleRemoveSkill(sk)}>✕</button>
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
 

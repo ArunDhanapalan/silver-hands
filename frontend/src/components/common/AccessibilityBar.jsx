@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Volume2, Type, Sun, Moon, Sparkles } from 'lucide-react';
+import { Eye, Volume2, Type, Sun, Moon, Sparkles, VolumeX } from 'lucide-react';
 
 export default function AccessibilityBar() {
   const [fontSizeLevel, setFontSizeLevel] = useState(() => {
@@ -23,13 +23,13 @@ export default function AccessibilityBar() {
   }, [fontSizeLevel]);
 
   useEffect(() => {
-    const body = document.body;
+    const root = document.documentElement;
     if (highContrast) {
-      body.classList.add('contrast-125', 'brightness-105');
-      document.documentElement.setAttribute('data-theme', 'autumn');
+      root.setAttribute('data-theme', 'black');
+      root.classList.add('high-contrast-mode');
     } else {
-      body.classList.remove('contrast-125', 'brightness-105');
-      document.documentElement.setAttribute('data-theme', 'silverhands');
+      root.setAttribute('data-theme', 'silverhands');
+      root.classList.remove('high-contrast-mode');
     }
     localStorage.setItem('sh_high_contrast', highContrast);
   }, [highContrast]);
@@ -42,9 +42,13 @@ export default function AccessibilityBar() {
       return;
     }
 
-    const mainText = document.querySelector('main')?.innerText || document.body.innerText;
-    const utterance = new SpeechSynthesisUtterance(mainText.slice(0, 300));
-    utterance.rate = 0.9; // Patient pace for seniors
+    const mainElement = document.querySelector('main');
+    const mainText = mainElement?.innerText || document.body.innerText;
+    const cleanText = mainText.replace(/\s+/g, ' ').slice(0, 400);
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.85; // Patient pace for seniors
+    utterance.pitch = 1.0;
     utterance.onend = () => setSpeechActive(false);
     utterance.onerror = () => setSpeechActive(false);
 
@@ -55,59 +59,60 @@ export default function AccessibilityBar() {
   return (
     <aside 
       aria-label="Senior Accessibility Controls"
-      className="fixed bottom-20 sm:bottom-4 right-4 z-40 bg-base-100/90 backdrop-blur border-2 border-primary/30 shadow-xl rounded-full px-3 py-1.5 flex items-center gap-2 text-xs"
+      style={{ position: 'fixed', bottom: '1.25rem', right: '1.25rem', zIndex: 99999 }}
+      className="bg-base-100/95 backdrop-blur-md border-2 border-primary/40 shadow-2xl rounded-full px-3.5 py-2 flex items-center gap-2 text-xs"
     >
       
-      {/* Font Size Selector */}
-      <div className="flex items-center gap-1 border-r border-base-300 pr-2">
-        <Type className="w-3.5 h-3.5 text-primary" />
+      {/* Font Size Scaler */}
+      <div className="flex items-center gap-1 border-r border-base-300 pr-2.5">
+        <Type className="w-3.5 h-3.5 text-primary shrink-0" />
         <button
           type="button"
           onClick={() => setFontSizeLevel('normal')}
-          className={`btn btn-xs rounded-full min-h-[32px] min-w-[32px] font-bold ${fontSizeLevel === 'normal' ? 'btn-primary text-white' : 'btn-ghost'}`}
-          aria-label="Set normal font size"
+          className={`btn btn-xs rounded-full min-h-[30px] min-w-[30px] font-bold ${fontSizeLevel === 'normal' ? 'btn-primary text-white shadow-xs' : 'btn-ghost'}`}
+          aria-label="Standard font size"
         >
           A
         </button>
         <button
           type="button"
           onClick={() => setFontSizeLevel('large')}
-          className={`btn btn-xs rounded-full min-h-[32px] min-w-[32px] font-bold text-sm ${fontSizeLevel === 'large' ? 'btn-primary text-white' : 'btn-ghost'}`}
-          aria-label="Set large font size"
+          className={`btn btn-xs rounded-full min-h-[30px] min-w-[30px] font-bold text-sm ${fontSizeLevel === 'large' ? 'btn-primary text-white shadow-xs' : 'btn-ghost'}`}
+          aria-label="Large font size"
         >
           A+
         </button>
         <button
           type="button"
           onClick={() => setFontSizeLevel('xlarge')}
-          className={`btn btn-xs rounded-full min-h-[32px] min-w-[32px] font-extrabold text-base ${fontSizeLevel === 'xlarge' ? 'btn-primary text-white' : 'btn-ghost'}`}
-          aria-label="Set extra large font size for senior readability"
+          className={`btn btn-xs rounded-full min-h-[30px] min-w-[30px] font-extrabold text-base ${fontSizeLevel === 'xlarge' ? 'btn-primary text-white shadow-xs' : 'btn-ghost'}`}
+          aria-label="Extra large font size for senior readability"
         >
           A++
         </button>
       </div>
 
-      {/* High Contrast Toggle */}
+      {/* High Contrast Mode Toggle */}
       <button
         type="button"
         onClick={() => setHighContrast(!highContrast)}
-        className={`btn btn-xs rounded-full min-h-[32px] px-2.5 font-bold gap-1 ${highContrast ? 'btn-secondary text-white' : 'btn-ghost'}`}
+        className={`btn btn-xs rounded-full min-h-[30px] px-2.5 font-bold gap-1 ${highContrast ? 'btn-warning text-black font-extrabold' : 'btn-ghost'}`}
         aria-label="Toggle High Contrast Mode"
       >
         <Eye className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">{highContrast ? 'High Contrast' : 'Contrast'}</span>
+        <span className="hidden sm:inline">{highContrast ? 'High Contrast On' : 'Contrast'}</span>
       </button>
 
-      {/* Text-to-Speech Reader */}
+      {/* Screen Reader Voice Assistant */}
       {window.speechSynthesis && (
         <button
           type="button"
           onClick={handleSpeakCurrentPage}
-          className={`btn btn-xs rounded-full min-h-[32px] px-2.5 font-bold gap-1 ${speechActive ? 'btn-error text-white animate-pulse' : 'btn-ghost'}`}
+          className={`btn btn-xs rounded-full min-h-[30px] px-2.5 font-bold gap-1 ${speechActive ? 'btn-error text-white animate-pulse' : 'btn-ghost'}`}
           aria-label="Read Page Out Loud Voice Assistant"
         >
-          <Volume2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{speechActive ? 'Stop Reading' : 'Read Aloud'}</span>
+          {speechActive ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+          <span className="hidden sm:inline">{speechActive ? 'Stop Voice' : 'Read Aloud'}</span>
         </button>
       )}
 

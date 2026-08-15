@@ -12,11 +12,13 @@ import {
   Check, 
   ArrowRight,
   SlidersHorizontal,
-  X
+  X,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
 import api from '../api/client';
+import AddProductModal from '../components/modals/AddProductModal';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
@@ -46,22 +48,6 @@ export default function StorePage() {
 
   // Senior Create Product Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [createIdea, setCreateIdea] = useState('');
-  const [suggesting, setSuggesting] = useState(false);
-  
-  const [productForm, setProductForm] = useState({
-    title: '',
-    description: '',
-    category: 'Food & Preserves',
-    price: 250,
-    unit: 'Jar',
-    locality: selectedCity.localities[0] || 'Mylapore',
-    city: selectedCity.name,
-    is_festival_special: false,
-    festival_tag: activeFestival,
-    images: []
-  });
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -83,11 +69,10 @@ export default function StorePage() {
   };
 
   const visibleProducts = products.filter(p => !user || p.seller_id !== user.id);
-  const myProducts = products.filter(p => user && p.seller_id === user.id);
 
   useEffect(() => {
     fetchProducts();
-  }, [selectedCity, selectedCategory, showFestivalOnly, searchQuery]);
+  }, [selectedCity?.name, selectedCategory, showFestivalOnly, searchQuery]);
 
   const handleAddToCart = (product) => {
     const existingCart = JSON.parse(localStorage.getItem('silverhands_cart') || '[]');
@@ -113,87 +98,50 @@ export default function StorePage() {
     setTimeout(() => setToastMsg(''), 3000);
   };
 
-  // AI Product Assistant
-  const handleAISuggest = async () => {
-    if (!createIdea.trim()) return;
-    setSuggesting(true);
-    try {
-      const res = await api.post('/store/products/ai-suggest', {
-        raw_idea: createIdea
-      });
-      setProductForm(prev => ({
-        ...prev,
-        title: res.title,
-        description: res.description,
-        category: res.suggested_category,
-        price: res.suggested_price
-      }));
-    } catch (err) {
-      console.error('AI suggest error:', err);
-    } finally {
-      setSuggesting(false);
-    }
-  };
-
-  const handleCreateProduct = async (e) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      await api.post('/store/products', productForm);
-      setShowCreateModal(false);
-      setToastMsg('Product published successfully!');
-      setTimeout(() => setToastMsg(''), 3000);
-      fetchProducts();
-    } catch (err) {
-      setError(err.message || 'Failed to create product.');
-    } finally {
-      setCreating(false);
-    }
-  };
-
   return (
     <div className="space-y-8 pb-12">
       
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMsg && (
         <div className="toast toast-top toast-center z-50">
           <div className="alert alert-success text-white font-bold text-xs shadow-lg rounded-xl flex items-center gap-2">
-            <Check className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4" />
             <span>{toastMsg}</span>
           </div>
         </div>
       )}
 
-      {/* Header & Festival Context */}
+      {/* Header & Seller Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="badge badge-primary badge-sm font-bold text-white">Local-First Commerce</span>
+            <span className="badge badge-secondary badge-sm font-bold text-white uppercase">Authentic Marketplace</span>
             <span className="text-xs text-base-content/60 font-semibold flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-secondary" /> {selectedCity.name} ({selectedCity.tier})
+              <MapPin className="w-3.5 h-3.5 text-secondary" /> {selectedCity?.name || 'Chennai'} Localities
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content mt-1">
-            Authentic Local Store
+            Handcrafted Traditional Treasures
           </h1>
           <p className="text-xs sm:text-sm text-base-content/70">
-            Handmade foods, heritage sweets, and bespoke tailoring from verified seniors in {selectedCity.name}
+            Support local senior citizens & homemakers directly. 100% authentic recipes, pure ingredients, and zero preservatives.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start md:self-auto">
           {user?.role === 'senior' && (
             <button
+              type="button"
               onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary btn-sm rounded-xl text-white font-bold gap-1 shadow-sm"
+              className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1 shadow-sm"
             >
-              <Plus className="w-4 h-4" /> Sell My Product
+              <Plus className="w-3.5 h-3.5" /> Sell Product with AI
             </button>
           )}
 
-          <Link to="/cart" className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold gap-1 text-xs">
-            <ShoppingBag className="w-4 h-4 text-secondary" /> View Cart
+          <Link to="/cart" className="btn btn-outline btn-neutral btn-sm rounded-xl gap-1.5 text-xs font-bold">
+            <ShoppingBag className="w-4 h-4 text-primary" /> View Cart
           </Link>
         </div>
       </div>
@@ -211,6 +159,7 @@ export default function StorePage() {
         </div>
 
         <button
+          type="button"
           onClick={() => setShowFestivalOnly(!showFestivalOnly)}
           className={`btn btn-xs rounded-lg font-bold gap-1 shrink-0 ${
             showFestivalOnly ? 'btn-secondary text-white' : 'btn-outline btn-secondary'
@@ -222,8 +171,6 @@ export default function StorePage() {
 
       {/* Search & Category Filter Bar */}
       <div className="space-y-4">
-        
-        {/* Search Bar */}
         <div className="relative max-w-xl">
           <Search className="w-4 h-4 text-base-content/40 absolute left-3.5 top-3.5" />
           <input
@@ -243,7 +190,6 @@ export default function StorePage() {
           )}
         </div>
 
-        {/* Category Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
           {CATEGORIES.map((cat) => (
             <button
@@ -259,7 +205,6 @@ export default function StorePage() {
             </button>
           ))}
         </div>
-
       </div>
 
       <ErrorAlert message={error} onRetry={fetchProducts} />
@@ -270,7 +215,7 @@ export default function StorePage() {
       ) : visibleProducts.length === 0 ? (
         <div className="bg-base-100 rounded-3xl border border-base-300 p-12 text-center space-y-3">
           <ShoppingBag className="w-12 h-12 text-base-content/30 mx-auto" />
-          <h3 className="text-lg font-bold text-base-content">No products matching your search in {selectedCity.name}</h3>
+          <h3 className="text-lg font-bold text-base-content">No products matching your search in {selectedCity?.name || 'this city'}</h3>
           <p className="text-xs text-base-content/60 max-w-sm mx-auto">
             Try choosing "All Categories" or switching your selected city in the top navigation.
           </p>
@@ -288,7 +233,7 @@ export default function StorePage() {
               key={product.id}
               className="card bg-base-100 border border-base-300 shadow-xs hover:shadow-md transition-all rounded-3xl overflow-hidden flex flex-col justify-between group"
             >
-              {/* Product Image & Festival Badge */}
+              {/* Product Image */}
               <div className="relative h-48 w-full bg-base-200 overflow-hidden">
                 <img
                   src={product.images[0] || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80'}
@@ -309,7 +254,6 @@ export default function StorePage() {
 
               {/* Card Body */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] text-base-content/60">
                     <span className="font-semibold text-primary">{product.category}</span>
@@ -367,149 +311,16 @@ export default function StorePage() {
         </div>
       )}
 
-      {/* SENIOR CREATE PRODUCT MODAL */}
-      {showCreateModal && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box rounded-3xl max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-base-200">
-              <div>
-                <h3 className="text-lg font-bold text-base-content">Create & Publish a Product</h3>
-                <p className="text-xs text-base-content/60">Share your homemade goods or crafts with nearby customers</p>
-              </div>
-              <button onClick={() => setShowCreateModal(false)} className="btn btn-sm btn-circle btn-ghost">✕</button>
-            </div>
-
-            {/* AI Assist Box */}
-            <div className="bg-primary/10 border border-primary/20 rounded-2xl p-3.5 space-y-2">
-              <label className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> AI Product Assistant (Optional):
-              </label>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={createIdea}
-                  onChange={(e) => setCreateIdea(e.target.value)}
-                  placeholder="e.g. Traditional Mysore Pak with pure ghee for Diwali"
-                  className="input input-sm input-bordered w-full text-xs rounded-xl"
-                />
-                <button 
-                  type="button"
-                  onClick={handleAISuggest}
-                  disabled={suggesting || !createIdea.trim()}
-                  className="btn btn-sm btn-primary text-white rounded-xl text-xs font-bold shrink-0"
-                >
-                  {suggesting ? 'Generating...' : 'Auto-Fill'}
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
-              <div className="form-control">
-                <label className="label text-xs font-semibold">Product Title</label>
-                <input 
-                  type="text" 
-                  required
-                  value={productForm.title}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. Authentic Thanjavur Mango Pickle"
-                  className="input input-bordered input-sm w-full rounded-xl"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label text-xs font-semibold">Description</label>
-                <textarea 
-                  rows={3}
-                  required
-                  value={productForm.description}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe your authentic family recipe, ingredients, or craftsmanship..."
-                  className="textarea textarea-bordered w-full text-xs rounded-xl"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Category</label>
-                  <select 
-                    value={productForm.category}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
-                    className="select select-bordered select-sm w-full rounded-xl"
-                  >
-                    {CATEGORIES.filter(c => c !== 'All').map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Price (₹)</label>
-                  <input 
-                    type="number" 
-                    required
-                    min={10}
-                    value={productForm.price}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                    className="input input-bordered input-sm w-full rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Unit Type</label>
-                  <input 
-                    type="text" 
-                    value={productForm.unit}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, unit: e.target.value }))}
-                    placeholder="e.g. 350g Jar / Piece / Gift Box"
-                    className="input input-bordered input-sm w-full rounded-xl"
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Area / Locality</label>
-                  <select 
-                    value={productForm.locality}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, locality: e.target.value }))}
-                    className="select select-bordered select-sm w-full rounded-xl"
-                  >
-                    {selectedCity.localities.map(loc => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-control pt-1">
-                <label className="cursor-pointer label justify-start gap-2">
-                  <input 
-                    type="checkbox"
-                    checked={productForm.is_festival_special}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, is_festival_special: e.target.checked }))}
-                    className="checkbox checkbox-sm checkbox-primary rounded"
-                  />
-                  <span className="label-text text-xs font-bold">Tag as {activeFestival} Special Offering</span>
-                </label>
-              </div>
-
-              <div className="modal-action pt-2 flex items-center justify-between">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-ghost btn-sm rounded-xl">
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={creating}
-                  className="btn btn-primary btn-sm rounded-xl text-white font-bold"
-                >
-                  {creating ? 'Publishing...' : 'Publish to Store'}
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
+      {/* Add Product Modal */}
+      <AddProductModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onProductCreated={() => {
+          setToastMsg('Homemade product published successfully!');
+          setTimeout(() => setToastMsg(''), 3500);
+          fetchProducts();
+        }}
+      />
 
     </div>
   );

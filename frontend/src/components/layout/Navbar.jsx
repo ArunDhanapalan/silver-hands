@@ -76,191 +76,203 @@ export default function Navbar() {
     }
   };
 
+  const isCompany = user?.role === 'company';
+
   return (
-    <header className="sticky top-0 z-40 bg-base-100/95 backdrop-blur border-b border-base-300 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-                🤝
-              </div>
-              <div>
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  SilverHands
-                </span>
-                <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  Livelihood 2.0
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-            <Link 
-              to="/store" 
-              className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary' : ''}`}
-            >
-              <ShoppingBag className="w-4 h-4 text-secondary" />
-              {t('nav_store')}
-            </Link>
-
-            <Link 
-              to="/services" 
-              className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary' : ''}`}
-            >
-              <Sparkles className="w-4 h-4 text-accent" />
-              {t('nav_services')}
-            </Link>
-
-            <Link 
-              to="/community" 
-              className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary' : ''}`}
-            >
-              <Users className="w-4 h-4 text-primary" />
-              {t('nav_community')}
-            </Link>
-
-            {user?.role === 'senior' && (
-              <>
-                <Link 
-                  to="/senior" 
-                  className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior' ? 'btn-active text-primary' : ''}`}
-                >
-                  <Layers className="w-4 h-4 text-warning" />
-                  {t('nav_deck')}
-                </Link>
-                <Link 
-                  to="/senior/earnings" 
-                  className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-primary' : ''}`}
-                >
-                  <TrendingUp className="w-4 h-4 text-success" />
-                  {t('nav_earnings')}
-                </Link>
-              </>
-            )}
-
-            {user?.role === 'company' && (
-              <Link 
-                to="/company" 
-                className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/company') ? 'btn-active text-primary' : ''}`}
-              >
-                <Briefcase className="w-4 h-4 text-primary" />
-                Company Hub
-              </Link>
-            )}
-          </nav>
-
-          {/* Right Controls: Festival Context, City Selector, Language Selector, User Profile */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+    <>
+      <header className="sticky top-0 z-40 bg-base-100/95 backdrop-blur border-b border-base-300 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             
-            {/* Festival Context Selector Modal Trigger */}
-            <button
-              type="button"
-              onClick={() => setFestModalOpen(true)}
-              className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
-              aria-label="Select Festival Context"
-            >
-              <span>{activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '🎄'}</span>
-              <span className="hidden sm:inline">{activeFestival}</span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </button>
-
-            {/* City Selector Modal Trigger */}
-            <button
-              type="button"
-              onClick={() => setCityModalOpen(true)}
-              className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
-              aria-label="Select City"
-            >
-              <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
-              <span className="max-w-[80px] sm:max-w-none truncate font-bold">{selectedCity.name}</span>
-              {selectedLocality && selectedLocality !== 'All Areas' && (
-                <span className="text-[10px] text-base-content/60 hidden md:inline">({selectedLocality})</span>
-              )}
-              <span className="badge badge-xs badge-neutral hidden lg:inline">{selectedCity.tier}</span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </button>
-
-            {/* Language Selector Modal Trigger */}
-            <button
-              type="button"
-              onClick={() => setLangModalOpen(true)}
-              className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
-              aria-label="Select Language"
-            >
-              <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span className="uppercase font-bold">{language}</span>
-              <span className="text-[11px] text-base-content/70 hidden sm:inline">
-                {languages.find(l => l.code === language)?.native || 'English'}
-              </span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </button>
-
-            {/* User Account / Auth */}
-            {isAuthenticated ? (
-              <div className="dropdown dropdown-end">
-                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu">
-                  <div className="bg-primary text-primary-content rounded-full w-9 shadow-inner flex items-center justify-center font-bold text-sm">
-                    {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
-                  </div>
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <Link to={isCompany ? "/company" : "/"} className="flex items-center gap-2.5 group">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
+                  🤝
                 </div>
-                <ul tabIndex={0} className="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 text-sm">
-                  <li className="px-3 py-2 border-b border-base-200">
-                    <p className="font-bold text-base-content truncate">{user?.full_name}</p>
-                    <p className="text-xs text-base-content/60 capitalize flex items-center gap-1.5 mt-0.5">
-                      <span className="w-2 h-2 rounded-full bg-success"></span>
-                      {user?.role === 'senior' ? 'Senior / Homemaker' : user?.role === 'company' ? 'Job Provider' : 'Customer'}
-                    </p>
-                  </li>
+                <div>
+                  <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    SilverHands
+                  </span>
+                  <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    {isCompany ? 'Company Portal' : 'Livelihood 2.0'}
+                  </span>
+                </div>
+              </Link>
+            </div>
+
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+              
+              {/* If Company Profile, ONLY Show Company Hub (Issue #14) */}
+              {isCompany ? (
+                <Link 
+                  to="/company" 
+                  className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/company') ? 'btn-active text-primary' : ''}`}
+                >
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  Company Hub & Postings
+                </Link>
+              ) : (
+                /* Consumer & Senior Navigation */
+                <>
+                  <Link 
+                    to="/store" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary' : ''}`}
+                  >
+                    <ShoppingBag className="w-4 h-4 text-secondary" />
+                    {t('nav_store')}
+                  </Link>
+
+                  <Link 
+                    to="/services" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary' : ''}`}
+                  >
+                    <Sparkles className="w-4 h-4 text-accent" />
+                    {t('nav_services')}
+                  </Link>
+
+                  <Link 
+                    to="/community" 
+                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary' : ''}`}
+                  >
+                    <Users className="w-4 h-4 text-primary" />
+                    {t('nav_community')}
+                  </Link>
+
                   {user?.role === 'senior' && (
                     <>
-                      <li><Link to="/senior"><Layers className="w-4 h-4 text-warning" /> Opportunity Deck</Link></li>
-                      <li><Link to="/senior/onboarding"><Sparkles className="w-4 h-4 text-primary" /> Edit AI Skills</Link></li>
-                      <li><Link to="/senior/orders"><Package className="w-4 h-4 text-secondary" /> Customer Orders</Link></li>
-                      <li><Link to="/senior/earnings"><TrendingUp className="w-4 h-4 text-success" /> Earnings</Link></li>
+                      <Link 
+                        to="/senior" 
+                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior' ? 'btn-active text-primary' : ''}`}
+                      >
+                        <Layers className="w-4 h-4 text-warning" />
+                        {t('nav_deck')}
+                      </Link>
+                      <Link 
+                        to="/senior/earnings" 
+                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-primary' : ''}`}
+                      >
+                        <TrendingUp className="w-4 h-4 text-success" />
+                        {t('nav_earnings')}
+                      </Link>
                     </>
                   )}
-                  {user?.role === 'company' && (
-                    <li><Link to="/company"><Briefcase className="w-4 h-4 text-primary" /> Manage Postings</Link></li>
-                  )}
-                  {user?.role === 'customer' && (
-                    <>
-                      <li><Link to="/cart"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart & Orders</Link></li>
-                    </>
-                  )}
-                  <li className="border-t border-base-200 mt-1">
-                    <button onClick={handleLogout} className="text-error font-medium">
-                      <LogOut className="w-4 h-4" /> {t('logout')}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Link to="/login" className="btn btn-ghost btn-sm text-xs font-semibold rounded-lg">
-                  {t('login')}
-                </Link>
-                <Link to="/register" className="btn btn-primary btn-sm text-xs font-bold rounded-lg shadow-sm">
-                  {t('register')}
-                </Link>
-              </div>
-            )}
+                </>
+              )}
+
+            </nav>
+
+            {/* Right Controls: Festival Context, City Selector, Language Selector, User Profile */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              
+              {/* Festival Context Selector Modal Trigger */}
+              {!isCompany && (
+                <button
+                  type="button"
+                  onClick={() => setFestModalOpen(true)}
+                  className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
+                  aria-label="Select Festival Context"
+                >
+                  <span>{activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '🎄'}</span>
+                  <span className="hidden sm:inline">{activeFestival}</span>
+                  <ChevronDown className="w-3 h-3 opacity-60" />
+                </button>
+              )}
+
+              {/* City Selector Modal Trigger */}
+              <button
+                type="button"
+                onClick={() => setCityModalOpen(true)}
+                className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                aria-label="Select City"
+              >
+                <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
+                <span className="max-w-[80px] sm:max-w-none truncate font-bold">{selectedCity.name}</span>
+                {selectedLocality && selectedLocality !== 'All Areas' && (
+                  <span className="text-[10px] text-base-content/60 hidden md:inline">({selectedLocality})</span>
+                )}
+                <span className="badge badge-xs badge-neutral hidden lg:inline">{selectedCity.tier}</span>
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </button>
+
+              {/* Language Selector Modal Trigger */}
+              <button
+                type="button"
+                onClick={() => setLangModalOpen(true)}
+                className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                aria-label="Select Language"
+              >
+                <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
+                <span className="uppercase font-bold">{language}</span>
+                <span className="text-[11px] text-base-content/70 hidden sm:inline">
+                  {languages.find(l => l.code === language)?.native || 'English'}
+                </span>
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </button>
+
+              {/* User Account / Auth */}
+              {isAuthenticated ? (
+                <div className="dropdown dropdown-end">
+                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu">
+                    <div className="bg-primary text-primary-content rounded-full w-9 shadow-inner flex items-center justify-center font-bold text-sm">
+                      {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  </div>
+                  <ul tabIndex={0} className="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-56 border border-base-300 text-sm">
+                    <li className="px-3 py-2 border-b border-base-200">
+                      <p className="font-bold text-base-content truncate">{user?.full_name}</p>
+                      <p className="text-xs text-base-content/60 capitalize flex items-center gap-1.5 mt-0.5">
+                        <span className="w-2 h-2 rounded-full bg-success"></span>
+                        {user?.role === 'senior' ? 'Senior / Homemaker' : user?.role === 'company' ? 'Job Provider' : 'Customer'}
+                      </p>
+                    </li>
+                    {user?.role === 'senior' && (
+                      <>
+                        <li><Link to="/senior"><Layers className="w-4 h-4 text-warning" /> Opportunity Deck</Link></li>
+                        <li><Link to="/senior/onboarding"><Sparkles className="w-4 h-4 text-primary" /> Edit AI Skills</Link></li>
+                        <li><Link to="/senior/orders"><Package className="w-4 h-4 text-secondary" /> Customer Orders</Link></li>
+                        <li><Link to="/senior/earnings"><TrendingUp className="w-4 h-4 text-success" /> Earnings</Link></li>
+                      </>
+                    )}
+                    {user?.role === 'company' && (
+                      <li><Link to="/company"><Briefcase className="w-4 h-4 text-primary" /> Manage Postings</Link></li>
+                    )}
+                    {user?.role === 'customer' && (
+                      <>
+                        <li><Link to="/cart"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart & Orders</Link></li>
+                      </>
+                    )}
+                    <li className="border-t border-base-200 mt-1">
+                      <button onClick={handleLogout} className="text-error font-medium">
+                        <LogOut className="w-4 h-4" /> {t('logout')}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Link to="/login" className="btn btn-ghost btn-sm text-xs font-semibold rounded-lg">
+                    {t('login')}
+                  </Link>
+                  <Link to="/register" className="btn btn-primary btn-sm text-xs font-bold rounded-lg shadow-sm">
+                    {t('register')}
+                  </Link>
+                </div>
+              )}
+
+            </div>
 
           </div>
-
         </div>
-      </div>
+      </header>
 
       {/* ========================================================================= */}
-      {/* CITY SELECTION POPUP MODAL */}
+      {/* CITY SELECTION POPUP MODAL (FULL SCREEN OVERLAY - FIXED OUTSIDE HEADER) */}
       {/* ========================================================================= */}
       {cityModalOpen && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-2xl rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -268,7 +280,7 @@ export default function Navbar() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-lg text-base-content">Select Your City & Area</h3>
-                  <p className="text-xs text-base-content/60">Choose your city or enter a custom locality</p>
+                  <p className="text-xs text-base-content/60">Choose your city or enter a custom locality anywhere in India</p>
                 </div>
               </div>
               <button 
@@ -343,7 +355,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => { setSelectedLocality('All Areas'); setCityModalOpen(false); }}
-                    className={`btn btn-xs rounded-xl ${selectedLocality === 'All Areas' ? 'btn-secondary text-white' : 'btn-ghost border border-base-300'}`}
+                    className={`btn btn-xs rounded-xl ${selectedLocality === 'All Areas' ? 'btn-secondary text-white font-bold' : 'btn-ghost border border-base-300'}`}
                   >
                     All Areas
                   </button>
@@ -352,7 +364,7 @@ export default function Navbar() {
                       key={loc}
                       type="button"
                       onClick={() => { setSelectedLocality(loc); setCityModalOpen(false); }}
-                      className={`btn btn-xs rounded-xl ${selectedLocality === loc ? 'btn-secondary text-white' : 'btn-ghost border border-base-300'}`}
+                      className={`btn btn-xs rounded-xl ${selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost border border-base-300'}`}
                     >
                       {loc}
                     </button>
@@ -398,8 +410,8 @@ export default function Navbar() {
       {/* LANGUAGE SELECTION POPUP MODAL (11 LANGUAGES) */}
       {/* ========================================================================= */}
       {langModalOpen && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-xl rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 max-w-xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
@@ -453,8 +465,8 @@ export default function Navbar() {
       {/* FESTIVAL SELECTION POPUP MODAL */}
       {/* ========================================================================= */}
       {festModalOpen && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-md rounded-3xl p-6 space-y-4">
+        <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-base-100 border border-base-300 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🪔</span>
@@ -511,6 +523,6 @@ export default function Navbar() {
         </div>
       )}
 
-    </header>
+    </>
   );
 }

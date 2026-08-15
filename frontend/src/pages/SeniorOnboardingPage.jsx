@@ -18,12 +18,17 @@ import {
   Volume2,
   FileText,
   ShieldCheck,
-  Lightbulb
+  Lightbulb,
+  ShoppingBag,
+  BookOpen,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useLocation } from '../context/LocationContext';
 import api from '../api/client';
+import AddServiceModal from '../components/modals/AddServiceModal';
+import AddProductModal from '../components/modals/AddProductModal';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
@@ -40,7 +45,7 @@ export default function SeniorOnboardingPage() {
   const { selectedCity, selectedLocality } = useLocation();
   const navigate = useNavigate();
 
-  // Wizard Steps: 1 = Input, 2 = AI Extraction, 3 = Review Skills, 4 = Preferences
+  // Wizard Steps: 1 = Input, 2 = AI Extraction, 3 = Review Skills, 4 = Preferences, 5 = Recommendations Hub (Issue #7)
   const [currentStep, setCurrentStep] = useState(1);
   const [inputMode, setInputMode] = useState('voice'); // voice or text
   
@@ -56,6 +61,7 @@ export default function SeniorOnboardingPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
 
   // AI Extracted Profile Data
   const [extractedData, setExtractedData] = useState({
@@ -64,7 +70,7 @@ export default function SeniorOnboardingPage() {
     keywords: [],
     bio: '',
     suggested_service_product_title: '',
-    analysis_engine: 'hybrid_nlp_engine'
+    analysis_engine: 'gemini_flash_nlp'
   });
 
   // Custom new skill input
@@ -75,6 +81,11 @@ export default function SeniorOnboardingPage() {
   const [workMode, setWorkMode] = useState('both'); // home, online, offline, both
   const [availability, setAvailability] = useState('Evenings & Weekends');
   const [locality, setLocality] = useState(selectedLocality !== 'All Areas' ? selectedLocality : 'Adyar');
+
+  // Modals for Step 5
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [modalSkillHint, setModalSkillHint] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -88,7 +99,7 @@ export default function SeniorOnboardingPage() {
     }
   }, [language]);
 
-  // Setup Web Speech Recognition if available
+  // Setup Web Speech Recognition
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -98,147 +109,142 @@ export default function SeniorOnboardingPage() {
       
       const langMap = {
         en: 'en-IN',
-        hi: 'hi-IN',
         ta: 'ta-IN',
+        hi: 'hi-IN',
         te: 'te-IN',
+        kn: 'kn-IN',
+        ml: 'ml-IN',
         bn: 'bn-IN',
         mr: 'mr-IN',
         gu: 'gu-IN',
-        kn: 'kn-IN',
-        ml: 'ml-IN',
-        or: 'or-IN',
-        pa: 'pa-IN'
+        pa: 'pa-IN',
+        or: 'or-IN'
       };
       recognition.lang = langMap[language] || 'en-IN';
 
       recognition.onresult = (event) => {
-        let interimTranscript = '';
         let finalTranscript = '';
+        let interimTranscript = '';
+
         for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript + ' ';
           } else {
-            interimTranscript += event.results[i][0].transcript;
+            interimTranscript += result[0].transcript;
           }
         }
-        const full = (finalTranscript + interimTranscript).trim();
-        if (full) {
-          setSpokenTranscript(full);
-          setStoryText(full);
+
+        const fullText = (finalTranscript + interimTranscript).trim();
+        if (fullText) {
+          setSpokenTranscript(fullText);
+          setStoryText(fullText);
         }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition status:', event.error);
       };
 
       recognitionRef.current = recognition;
     }
   }, [language]);
 
-  // Handle Recording Timer
-  useEffect(() => {
-    if (isRecording && !isPaused) {
+  const startRecording = async () => {
+    setError('');
+    audioChunksRef.current = [];
+    setRecordingTime(0);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioBlobUrl(audioUrl);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start(250);
+      setIsRecording(true);
+      setIsPaused(false);
+
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {}
+      }
+
       timerIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
-    } else {
-      clearInterval(timerIntervalRef.current);
-    }
-    return () => clearInterval(timerIntervalRef.current);
-  }, [isRecording, isPaused]);
 
-  // Recording Controls
-  const startRecording = async () => {
-    setError('');
-    setRecordingTime(0);
-    setAudioBlobUrl(null);
-    setStoryText('');
-    setSpokenTranscript('');
-    audioChunksRef.current = [];
-
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        mediaRecorder.onstop = () => {
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          setAudioBlobUrl(URL.createObjectURL(blob));
-        };
-
-        mediaRecorder.start(250);
-      }
-
-      if (recognitionRef.current) {
-        try { recognitionRef.current.start(); } catch (e) {}
-      }
-
-      setIsRecording(true);
-      setIsPaused(false);
     } catch (err) {
-      console.warn('Microphone access unavailable, using high-accuracy speech simulation:', err);
-      // Fallback: simulate audio recording
-      setIsRecording(true);
-      setIsPaused(false);
+      console.error('Audio capture error:', err);
+      setError('Microphone access unavailable. You can type or paste your story directly below.');
+      setInputMode('text');
     }
   };
 
   const pauseRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.pause();
+      setIsPaused(true);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
+      clearInterval(timerIntervalRef.current);
     }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-    }
-    setIsPaused(true);
   };
 
   const resumeRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.resume();
+      setIsPaused(false);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.start(); } catch(e) {}
+      }
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
     }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.start(); } catch (e) {}
-    }
-    setIsPaused(false);
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+      setIsPaused(false);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
+      clearInterval(timerIntervalRef.current);
     }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-    }
-    setIsRecording(false);
-    setIsPaused(false);
   };
 
   const reRecord = () => {
-    stopRecording();
     setAudioBlobUrl(null);
-    setRecordingTime(0);
-    setStoryText('');
     setSpokenTranscript('');
+    setRecordingTime(0);
   };
 
-  // Step 2: Analyze Story via AI Engine
   const handleAnalyzeStory = async () => {
     if (!storyText.trim()) {
-      setError('Please record or type a brief story about your experience.');
+      setError('Please tell or write your story first.');
       return;
     }
-    setError('');
     setAnalyzing(true);
-    setCurrentStep(2);
-
+    setError('');
     try {
-      const res = await api.post('/senior/analyze-story', {
+      const res = await api.post('/senior/extract-skills', {
         story_text: storyText,
         language
       });
@@ -246,28 +252,19 @@ export default function SeniorOnboardingPage() {
         explicit_skills: res.explicit_skills || [],
         inferred_skills: res.inferred_skills || [],
         keywords: res.keywords || [],
-        bio: res.bio || '',
+        bio: res.bio || storyText.slice(0, 150),
         suggested_service_product_title: res.suggested_service_product_title || '',
-        analysis_engine: res.analysis_engine || 'hybrid_nlp_engine'
+        analysis_engine: res.analysis_engine || 'gemini_flash_nlp'
       });
-      setCurrentStep(3); // Proceed to Review Step
+      setCurrentStep(3); // Go to Skill Review
     } catch (err) {
-      setError(err.message || 'Skill extraction failed. Please try again.');
-      setCurrentStep(1);
+      setError(err.message || 'AI skill extraction failed. Please try again.');
     } finally {
       setAnalyzing(false);
     }
   };
 
-  // Skill tag modifications
-  const handleRemoveSkill = (skillToRemove) => {
-    setExtractedData(prev => ({
-      ...prev,
-      explicit_skills: prev.explicit_skills.filter(s => s !== skillToRemove)
-    }));
-  };
-
-  const handleAddSkill = () => {
+  const handleAddCustomSkill = () => {
     if (newSkillInput.trim() && !extractedData.explicit_skills.includes(newSkillInput.trim())) {
       setExtractedData(prev => ({
         ...prev,
@@ -277,26 +274,25 @@ export default function SeniorOnboardingPage() {
     }
   };
 
-  const handleRemoveInferred = (inferredSkillToRemove) => {
-    setExtractedData(prev => ({
-      ...prev,
-      inferred_skills: prev.inferred_skills.filter(item => item.skill !== inferredSkillToRemove)
-    }));
+  const handleRemoveSkill = (skillToRemove, isExplicit = true) => {
+    if (isExplicit) {
+      setExtractedData(prev => ({
+        ...prev,
+        explicit_skills: prev.explicit_skills.filter(s => s !== skillToRemove)
+      }));
+    } else {
+      setExtractedData(prev => ({
+        ...prev,
+        inferred_skills: prev.inferred_skills.filter(s => s !== skillToRemove)
+      }));
+    }
   };
 
-  // Final Step: Save Onboarding
   const handleCompleteOnboarding = async () => {
-    if (!isAuthenticated) {
-      // If not logged in, redirect to login with state saved or auto-login as Ramesh
-      navigate('/login');
-      return;
-    }
-
     setSaving(true);
     setError('');
-
     try {
-      await api.post('/senior/onboard', {
+      await api.post('/senior/profile', {
         story_text: storyText,
         language,
         skills: extractedData.explicit_skills,
@@ -305,13 +301,13 @@ export default function SeniorOnboardingPage() {
         bio: extractedData.bio,
         travel_radius: travelRadius,
         locality,
-        city: selectedCity.name,
+        city: selectedCity?.name || 'Chennai',
         work_mode: workMode,
         availability
       });
 
-      // Navigate to Opportunity Deck
-      navigate('/senior');
+      // Move to Step 5: Recommendations & Launchpad (Issue #7)
+      setCurrentStep(5);
     } catch (err) {
       setError(err.message || 'Failed to save profile. Please try again.');
     } finally {
@@ -325,9 +321,21 @@ export default function SeniorOnboardingPage() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const allSkills = [...extractedData.explicit_skills, ...extractedData.inferred_skills];
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
       
+      {/* Toast */}
+      {toastMsg && (
+        <div className="toast toast-top toast-center z-50">
+          <div className="alert alert-success text-white font-bold text-xs shadow-lg rounded-xl flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{toastMsg}</span>
+          </div>
+        </div>
+      )}
+
       {/* Wizard Header & Progress */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
@@ -335,24 +343,28 @@ export default function SeniorOnboardingPage() {
           Life-to-Skill AI Discovery
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content">
-          Turn Your Life Story Into Livelihood
+          Turn Your Life Experience Into Dignified Livelihood
         </h1>
         <p className="text-xs sm:text-sm text-base-content/70 max-w-xl mx-auto">
-          No complicated resumes. Speak in your mother tongue and our AI will extract your skills, craft your profile, and connect you with nearby opportunities.
+          No complicated resumes. Speak in your mother tongue and our AI extracts your skills, suggests managed tuition packages, and matches local gigs.
         </p>
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center gap-2 pt-4">
           <div className={`flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-lg ${currentStep === 1 ? 'bg-primary text-white' : 'bg-base-300 text-base-content/70'}`}>
-            <span>1. Story Input</span>
+            <span>1. Story</span>
           </div>
           <div className="w-4 h-0.5 bg-base-300"></div>
           <div className={`flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-lg ${currentStep === 3 ? 'bg-primary text-white' : 'bg-base-300 text-base-content/70'}`}>
-            <span>2. AI Skills</span>
+            <span>2. Skills</span>
           </div>
           <div className="w-4 h-0.5 bg-base-300"></div>
           <div className={`flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-lg ${currentStep === 4 ? 'bg-primary text-white' : 'bg-base-300 text-base-content/70'}`}>
             <span>3. Preferences</span>
+          </div>
+          <div className="w-4 h-0.5 bg-base-300"></div>
+          <div className={`flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-lg ${currentStep === 5 ? 'bg-primary text-white' : 'bg-base-300 text-base-content/70'}`}>
+            <span>4. Launchpad</span>
           </div>
         </div>
       </div>
@@ -361,9 +373,8 @@ export default function SeniorOnboardingPage() {
 
       {/* STEP 1: Story Input (Voice / Type) */}
       {currentStep === 1 && (
-        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl p-6 space-y-6">
+        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-3xl p-6 space-y-6">
           
-          {/* Language & Input Mode Tabs */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-base-200">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-primary shrink-0" />
@@ -400,8 +411,6 @@ export default function SeniorOnboardingPage() {
           {/* Voice Interface */}
           {inputMode === 'voice' && (
             <div className="space-y-6 text-center py-4">
-              
-              {/* Voice Record Visualizer / Big Button */}
               <div className="relative inline-flex flex-col items-center justify-center">
                 <button
                   type="button"
@@ -419,7 +428,6 @@ export default function SeniorOnboardingPage() {
                   </span>
                 </button>
 
-                {/* Timer */}
                 {isRecording && (
                   <div className="mt-4 flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-error animate-ping"></span>
@@ -428,7 +436,6 @@ export default function SeniorOnboardingPage() {
                 )}
               </div>
 
-              {/* Recording Controls: Pause / Resume / Re-record */}
               {isRecording && (
                 <div className="flex items-center justify-center gap-3">
                   <button 
@@ -448,9 +455,8 @@ export default function SeniorOnboardingPage() {
                 </div>
               )}
 
-              {/* Playback player if finished */}
               {audioBlobUrl && !isRecording && (
-                <div className="bg-base-200 p-4 rounded-xl max-w-md mx-auto space-y-2 border border-base-300">
+                <div className="bg-base-200 p-4 rounded-2xl max-w-md mx-auto space-y-2 border border-base-300">
                   <div className="flex items-center justify-between text-xs font-semibold text-base-content/80">
                     <span className="flex items-center gap-1.5"><Volume2 className="w-4 h-4 text-primary" /> Audio Recorded</span>
                     <button onClick={reRecord} className="text-error hover:underline flex items-center gap-1">
@@ -461,8 +467,7 @@ export default function SeniorOnboardingPage() {
                 </div>
               )}
 
-              {/* Story Prompt Guidance */}
-              <div className="bg-base-200/60 p-4 rounded-xl text-left border border-base-300 text-xs text-base-content/75 space-y-1.5">
+              <div className="bg-base-200/60 p-4 rounded-2xl text-left border border-base-300 text-xs text-base-content/75 space-y-1.5">
                 <p className="font-bold text-base-content flex items-center gap-1.5">
                   <Lightbulb className="w-4 h-4 text-warning" /> What can you talk about?
                 </p>
@@ -472,166 +477,117 @@ export default function SeniorOnboardingPage() {
                   <li>Languages you speak fluently and willing to tutor.</li>
                 </ul>
               </div>
-
             </div>
           )}
 
           {/* Spoken Transcript / Text Area */}
           <div className="form-control">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="label-text text-xs font-bold text-base-content">
-                {inputMode === 'voice' ? 'Spoken Story Transcript (Editable):' : 'Type Your Life Story:'}
-              </label>
-              <button 
-                type="button"
-                onClick={() => setStoryText(SAMPLE_STORIES[language] || SAMPLE_STORIES.en)}
-                className="text-[11px] text-primary font-bold hover:underline"
-              >
-                Insert Sample Experience
-              </button>
-            </div>
+            <label className="label text-xs font-bold text-base-content">
+              {inputMode === 'voice' ? 'Live Transcribed Speech (Editable):' : 'Your Life Story & Career:'}
+            </label>
             <textarea
               rows={4}
               value={storyText}
               onChange={(e) => setStoryText(e.target.value)}
-              placeholder="e.g. I worked as an accountant for 35 years for local businesses. I know Excel, GST compliance, and also tutored students in mathematics..."
-              className="textarea textarea-bordered w-full text-sm rounded-xl leading-relaxed"
+              placeholder="Tell us about your background, career, cooking, tutoring, tailoring, or accounting experience..."
+              className="textarea textarea-bordered w-full text-xs sm:text-sm rounded-2xl font-normal leading-relaxed"
             />
           </div>
 
-          {/* Action to Analyze */}
-          <div className="pt-2 flex justify-end">
+          <div className="flex justify-end pt-2">
             <button
               type="button"
               onClick={handleAnalyzeStory}
               disabled={analyzing || !storyText.trim()}
-              className="btn btn-primary rounded-xl text-white font-bold gap-2 shadow-md w-full sm:w-auto"
+              className="btn btn-primary text-white rounded-2xl font-bold gap-2 text-xs sm:text-sm px-6 shadow-md"
             >
-              <Sparkles className="w-4 h-4" />
-              Discover My Skills with AI <ArrowRight className="w-4 h-4" />
+              {analyzing ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-4 h-4" />}
+              Discover My Skills with Gemini AI <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
         </div>
       )}
 
-      {/* STEP 2: Loading Analysis Animation */}
-      {currentStep === 2 && analyzing && (
-        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl p-12 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto animate-bounce">
-            <Sparkles className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-extrabold text-base-content">Analyzing Your Life Story...</h3>
-          <p className="text-xs text-base-content/70 max-w-md mx-auto">
-            Extracting explicit expertise, identifying hidden transferable skills, generating keywords, and creating your local livelihood profile.
-          </p>
-          <span className="loading loading-dots loading-lg text-primary"></span>
-        </div>
-      )}
-
-      {/* STEP 3: Review & Edit AI Extracted Skills */}
+      {/* STEP 3: Review & Refine Extracted Skills */}
       {currentStep === 3 && (
-        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl p-6 space-y-6">
+        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-3xl p-6 space-y-6">
           
-          <div className="flex items-center justify-between pb-4 border-b border-base-200">
-            <div>
-              <h2 className="text-lg font-bold text-base-content">AI Discovered Skills & Strengths</h2>
-              <p className="text-xs text-base-content/70">Review and refine your skills before publishing</p>
-            </div>
-            <span className="badge badge-success badge-sm font-bold gap-1 text-white">
-              <ShieldCheck className="w-3 h-3" /> AI Analysis Complete
-            </span>
+          <div className="border-b border-base-200 pb-3">
+            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              AI-Identified Skills & Capabilities
+            </h2>
+            <p className="text-xs text-base-content/60">
+              Verified by Gemini AI. Add or remove any skills to fine-tune your matching profile.
+            </p>
           </div>
 
-          {/* 1. Explicit Skills */}
+          {/* Primary Core Skills */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-base-content uppercase tracking-wider">
-              1. Core Practical Skills (Click × to remove):
-            </label>
+            <label className="text-xs font-bold text-base-content">Primary Core Skills:</label>
             <div className="flex flex-wrap gap-2">
-              {extractedData.explicit_skills.map((skill, idx) => (
-                <span 
-                  key={idx} 
-                  className="badge badge-lg bg-primary/15 text-primary border border-primary/30 font-semibold gap-1.5 py-3 px-3 rounded-xl text-xs"
-                >
+              {extractedData.explicit_skills.map((skill) => (
+                <span key={skill} className="badge badge-primary badge-lg text-white font-bold gap-1 text-xs py-3 px-3.5 shadow-xs">
                   {skill}
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveSkill(skill)}
-                    className="hover:text-error"
-                    aria-label={`Remove ${skill}`}
-                  >
+                  <button type="button" onClick={() => handleRemoveSkill(skill, true)} className="hover:text-error">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))}
             </div>
-
-            {/* Add Custom Skill input */}
-            <div className="flex items-center gap-2 pt-2">
-              <input 
-                type="text"
-                value={newSkillInput}
-                onChange={(e) => setNewSkillInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                placeholder="Add another skill..."
-                className="input input-sm input-bordered rounded-lg text-xs max-w-xs"
-              />
-              <button 
-                type="button"
-                onClick={handleAddSkill}
-                className="btn btn-sm btn-ghost border-base-300 rounded-lg text-xs gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Tag
-              </button>
-            </div>
           </div>
 
-          {/* 2. Inferred / Transferable Skills with Explanations */}
+          {/* Inferred & Transferable Skills */}
           {extractedData.inferred_skills.length > 0 && (
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-bold text-base-content uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-secondary" />
-                2. Hidden & Transferable Skills (AI Inferred with Reasons):
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {extractedData.inferred_skills.map((item, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl bg-secondary/10 border border-secondary/30 relative space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-secondary-content text-secondary">{item.skill}</span>
-                      <button 
-                        type="button"
-                        onClick={() => handleRemoveInferred(item.skill)}
-                        className="text-base-content/40 hover:text-error"
-                        aria-label={`Remove ${item.skill}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-base-content/75 leading-tight">
-                      💡 <em>"{item.reason}"</em>
-                    </p>
-                  </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-base-content/70">Inferred & Soft Skills:</label>
+              <div className="flex flex-wrap gap-2">
+                {extractedData.inferred_skills.map((skill) => (
+                  <span key={skill} className="badge badge-secondary badge-outline badge-md font-semibold gap-1 text-xs">
+                    {skill}
+                    <button type="button" onClick={() => handleRemoveSkill(skill, false)}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 3. Generated Bio */}
+          {/* Add Custom Skill Input */}
+          <div className="space-y-1.5 pt-2">
+            <label className="text-xs font-semibold text-base-content/70">Add Another Skill or Hobby:</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newSkillInput}
+                onChange={(e) => setNewSkillInput(e.target.value)}
+                placeholder="e.g. Spoken Telugu, Bespoke Tailoring, GST Reconciliation, Traditional Sweets..."
+                className="input input-bordered input-sm flex-1 text-xs rounded-xl"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill(); } }}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomSkill}
+                className="btn btn-sm btn-outline rounded-xl text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add
+              </button>
+            </div>
+          </div>
+
+          {/* Generated Bio */}
           <div className="form-control pt-2">
-            <label className="label-text text-xs font-bold text-base-content mb-1">
-              3. AI-Generated Dignified Profile Bio (Editable):
-            </label>
+            <label className="label text-xs font-bold text-base-content">Senior Profile Bio:</label>
             <textarea
-              rows={3}
+              rows={2}
               value={extractedData.bio}
-              onChange={(e) => setExtractedData(prev => ({ ...prev, bio: e.target.value }))}
-              className="textarea textarea-bordered w-full text-xs rounded-xl"
+              onChange={(e) => setExtractedData({ ...extractedData, bio: e.target.value })}
+              className="textarea textarea-bordered text-xs rounded-xl"
             />
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center justify-between pt-4 border-t border-base-200">
             <button 
               type="button" 
@@ -643,49 +599,47 @@ export default function SeniorOnboardingPage() {
             <button 
               type="button" 
               onClick={() => setCurrentStep(4)}
-              className="btn btn-sm btn-primary text-white rounded-xl font-bold gap-1 text-xs"
+              className="btn btn-sm btn-primary text-white rounded-xl font-bold gap-1 text-xs shadow-md"
             >
-              Set Travel & Preferences <ArrowRight className="w-3.5 h-3.5" />
+              Set Preferences <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
         </div>
       )}
 
-      {/* STEP 4: Travel Radius & Availability Preferences */}
+      {/* STEP 4: Preferences & Location */}
       {currentStep === 4 && (
-        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-2xl p-6 space-y-6">
+        <div className="card bg-base-100 border border-base-300 shadow-sm rounded-3xl p-6 space-y-6">
           
-          <div className="pb-4 border-b border-base-200">
-            <h2 className="text-lg font-bold text-base-content">Livelihood Preferences</h2>
-            <p className="text-xs text-base-content/70">Specify where and when you are comfortable taking on work</p>
+          <div className="border-b border-base-200 pb-3">
+            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-secondary" />
+              Work Mode & Travel Preferences
+            </h2>
+            <p className="text-xs text-base-content/60">
+              Control how and where you want to earn. We only suggest opportunities matching these constraints.
+            </p>
           </div>
 
           {/* Travel Radius */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-base-content flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-secondary" /> Where are you willing to work?
+              <MapPin className="w-3.5 h-3.5 text-primary" /> Maximum Travel Distance:
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-              {[
-                { id: 'At home', label: '🏡 At Home' },
-                { id: 'Online only', label: '💻 Online Only' },
-                { id: '2 km', label: '🚶 Within 2 km' },
-                { id: '5 km', label: '🛵 Within 5 km' },
-                { id: '10 km', label: '🚗 Within 10 km' },
-                { id: 'Flexible', label: '✨ Flexible' }
-              ].map(opt => (
+            <div className="grid grid-cols-4 gap-2 text-xs">
+              {['2 km', '5 km', '10 km', 'Remote only'].map(r => (
                 <button
-                  key={opt.id}
+                  key={r}
                   type="button"
-                  onClick={() => setTravelRadius(opt.id)}
-                  className={`p-2.5 rounded-xl border text-left font-medium transition-all ${
-                    travelRadius === opt.id 
+                  onClick={() => setTravelRadius(r)}
+                  className={`p-2.5 rounded-xl border text-center font-medium transition-all ${
+                    travelRadius === r 
                       ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' 
                       : 'border-base-300 bg-base-200/40 hover:bg-base-200 text-base-content/70'
                   }`}
                 >
-                  {opt.label}
+                  {r}
                 </button>
               ))}
             </div>
@@ -693,10 +647,12 @@ export default function SeniorOnboardingPage() {
 
           {/* Work Mode */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-base-content">Preferred Mode of Engagement:</label>
+            <label className="text-xs font-bold text-base-content flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-secondary" /> Preferred Work Type:
+            </label>
             <div className="grid grid-cols-3 gap-2 text-xs">
               {[
-                { id: 'both', label: '🌐 Online & In-Person' },
+                { id: 'both', label: '🌐 Online or In-Person' },
                 { id: 'online', label: '💻 Online Only' },
                 { id: 'offline', label: '📍 In-Person Only' }
               ].map(opt => (
@@ -751,7 +707,7 @@ export default function SeniorOnboardingPage() {
               <input 
                 type="text" 
                 readOnly
-                value={`${selectedCity.name} (${selectedCity.tier})`} 
+                value={`${selectedCity?.name || 'Chennai'} (${selectedCity?.tier || 'T1'})`} 
                 className="input input-bordered input-sm w-full text-xs rounded-xl bg-base-200 font-medium"
               />
             </div>
@@ -762,7 +718,7 @@ export default function SeniorOnboardingPage() {
                 onChange={(e) => setLocality(e.target.value)}
                 className="select select-bordered select-sm w-full text-xs rounded-xl font-medium"
               >
-                {selectedCity.localities.map(loc => (
+                {(selectedCity?.localities || ['Adyar', 'Mylapore', 'T. Nagar']).map(loc => (
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
               </select>
@@ -784,12 +740,134 @@ export default function SeniorOnboardingPage() {
               disabled={saving}
               className="btn btn-sm btn-primary text-white rounded-xl font-bold gap-1 text-xs shadow-md"
             >
-              {saving ? <span className="loading loading-spinner loading-xs"></span> : <>Save & Explore Opportunities <ArrowRight className="w-3.5 h-3.5" /></>}
+              {saving ? <span className="loading loading-spinner loading-xs"></span> : <>Save Profile & View Recommendations <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
           </div>
 
         </div>
       )}
+
+      {/* STEP 5: Recommendations & Launchpad (Issue #7) */}
+      {currentStep === 5 && (
+        <div className="space-y-6 animate-in fade-in zoom-in duration-200">
+          
+          <div className="bg-gradient-to-r from-success/15 via-base-100 to-primary/15 border border-success/30 rounded-3xl p-6 sm:p-7 shadow-sm text-center space-y-2">
+            <div className="w-12 h-12 rounded-full bg-success/20 text-success flex items-center justify-center mx-auto text-2xl">
+              ✓
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-base-content">
+              Your Profile is Live, {user?.full_name || 'Senior Guru'}!
+            </h2>
+            <p className="text-xs sm:text-sm text-base-content/75 max-w-lg mx-auto">
+              Based on your verified skills ({allSkills.slice(0, 3).join(', ')}), here are high-earning services & products you can start offering today:
+            </p>
+          </div>
+
+          {/* Tailored Service & Product Recommendation Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Service Recommendation Card */}
+            <div className="card bg-base-100 border-2 border-accent/30 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <span className="badge badge-accent badge-sm font-bold text-white uppercase text-[10px]">
+                  🌟 Recommended Managed Service
+                </span>
+                <h3 className="font-extrabold text-lg text-base-content">
+                  1-on-1 Personalized Coaching in {allSkills[0] || 'Language / Mentoring'}
+                </h3>
+                <p className="text-xs text-base-content/70 leading-relaxed">
+                  Teach students online or in-person. SilverHands manages student bookings, sends WhatsApp reminders, and handles video meeting rooms.
+                </p>
+                <div className="flex items-center gap-3 text-xs font-semibold text-primary pt-1">
+                  <span>₹400–₹800 / session</span>
+                  <span>•</span>
+                  <span>45 mins</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-base-200 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalSkillHint(allSkills[0] || 'Spoken Telugu Tutoring');
+                    setShowServiceModal(true);
+                  }}
+                  className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 w-full shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Launch Managed Service Offering
+                </button>
+              </div>
+            </div>
+
+            {/* Product Recommendation Card */}
+            <div className="card bg-base-100 border-2 border-secondary/30 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <span className="badge badge-secondary badge-sm font-bold text-white uppercase text-[10px]">
+                  🛍️ Recommended Product to Sell
+                </span>
+                <h3 className="font-extrabold text-lg text-base-content">
+                  Handcrafted Delicacy / Speciality Box
+                </h3>
+                <p className="text-xs text-base-content/70 leading-relaxed">
+                  List your traditional recipes, sweets, pickles, or tailored garments for {selectedCity?.name || 'Chennai'} customers. AI writes the story and sets price.
+                </p>
+                <div className="flex items-center gap-3 text-xs font-semibold text-secondary pt-1">
+                  <span>100% Direct Payout</span>
+                  <span>•</span>
+                  <span>Zero Listing Fees</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-base-200 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalSkillHint(allSkills.find(s => s.includes('Cook') || s.includes('Tailor')) || 'Traditional homemade delicacies');
+                    setShowProductModal(true);
+                  }}
+                  className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 w-full shadow-sm"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" /> List Product in Marketplace
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Go to Deck */}
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/senior')}
+              className="btn btn-primary rounded-2xl text-white font-extrabold px-8 gap-2 shadow-md"
+            >
+              Explore Nearby Opportunity Deck <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {/* Modals */}
+      <AddServiceModal
+        isOpen={showServiceModal}
+        initialSkill={modalSkillHint}
+        onClose={() => setShowServiceModal(false)}
+        onServiceCreated={() => {
+          setToastMsg('Service offering launched successfully!');
+          setTimeout(() => setToastMsg(''), 3500);
+        }}
+      />
+
+      <AddProductModal
+        isOpen={showProductModal}
+        initialSkill={modalSkillHint}
+        onClose={() => setShowProductModal(false)}
+        onProductCreated={() => {
+          setToastMsg('Homemade product listed in marketplace successfully!');
+          setTimeout(() => setToastMsg(''), 3500);
+        }}
+      />
 
     </div>
   );

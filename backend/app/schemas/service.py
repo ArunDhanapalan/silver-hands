@@ -3,16 +3,30 @@ from pydantic import BaseModel, Field
 
 class ServiceCreateRequest(BaseModel):
     title: str = Field(..., min_length=3)
-    category: str = Field(..., pattern="^(Education & Learning|Knowledge & Mentoring|Home & Practical Skills|Culture & Tradition|Family & Care)$")
+    category: str = "Education & Learning" # Education & Learning, Knowledge & Mentoring, Home & Practical Skills, Culture & Tradition, Family & Care, Language & Academics
     subcategory: str = "Language Tuition" # Language Tuition, Academic Tutoring, Bookkeeping, Culinary, Tailoring, Gardening
     description: str = Field(..., min_length=10)
-    mode: str = Field(..., pattern="^(online|offline|both)$")
+    mode: str = "online" # online, offline, both
     duration_mins: int = 45
     price_per_session: int = Field(..., gt=0)
     languages: List[str] = ["en", "ta"]
     target_audience: str = "All Ages / Beginners"
     locality: str = "Adyar"
     city: str = "Chennai"
+
+class AISuggestServiceRequest(BaseModel):
+    raw_idea: str
+
+class AISuggestServiceResponse(BaseModel):
+    title: str
+    description: str
+    category: str
+    subcategory: str
+    mode: str
+    suggested_price: int
+    duration_mins: int
+    target_audience: str
+    deliverables: List[str] = []
 
 class ServiceResponse(BaseModel):
     id: str

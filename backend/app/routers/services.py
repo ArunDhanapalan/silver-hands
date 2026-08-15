@@ -49,6 +49,18 @@ async def create_service(
     """
     return await service_booking_service.create_service(current_user, req)
 
+@router.post("/ai-suggest")
+async def suggest_service(
+    req: Any,
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    AI assistant converting senior skills into structured managed service packages.
+    """
+    from app.ai.service_ai import service_ai
+    raw_idea = getattr(req, "raw_idea", None) or (req.get("raw_idea") if isinstance(req, dict) else "")
+    return await service_ai.generate_service(raw_idea)
+
 @router.post("/bookings", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 async def create_booking(
     req: BookingCreateRequest,
