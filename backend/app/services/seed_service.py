@@ -182,3 +182,106 @@ async def seed_initial_data():
 
     logger.info("Successfully seeded users and senior profiles.")
 
+    # 3. Seed Opportunities
+    opps_col = db_manager.get_collection("opportunities")
+    opp_count = await opps_col.count_documents({})
+    if opp_count == 0:
+        opportunities = [
+            {
+                "_id": "opp_bookkeeping_01",
+                "title": "Remote MSME Bookkeeping & GST Support",
+                "type": "job",
+                "posted_by_name": "TechLocal Solutions Pvt Ltd",
+                "company_id": techlocal_id,
+                "description": "Seeking an experienced retired accountant for part-time evening bookkeeping, monthly ledger reconciliation, and GST 3B return filing in Excel.",
+                "required_skills": ["Accounting", "Bookkeeping", "Excel", "GST Basics"],
+                "locality": "T. Nagar",
+                "city": "Chennai",
+                "distance_km": 0.0,
+                "work_mode": "online",
+                "schedule": "8 hrs/week (Flexible Evenings)",
+                "pay_amount": 12000,
+                "pay_unit": "month",
+                "languages": ["en", "ta"],
+                "is_festival_special": False,
+                "created_at": now
+            },
+            {
+                "_id": "opp_shop_accounts_02",
+                "title": "Local Retail Shop Accounts & Cash Reconciliation",
+                "type": "nearby_work",
+                "posted_by_name": "Mylapore Heritage Stores",
+                "description": "Need trusted senior accountant to help balance daily physical cash books and computerize inventory counts twice a week.",
+                "required_skills": ["Accounting", "Bookkeeping", "Cash Handling"],
+                "locality": "Adyar",
+                "city": "Chennai",
+                "distance_km": 2.3,
+                "work_mode": "offline",
+                "schedule": "2 Evenings/week (5 PM – 7 PM)",
+                "pay_amount": 6500,
+                "pay_unit": "month",
+                "languages": ["ta"],
+                "is_festival_special": False,
+                "created_at": now
+            },
+            {
+                "_id": "opp_telugu_tuition_03",
+                "title": "Spoken Telugu & Reading Tuition for 2 School Students",
+                "type": "service_request",
+                "posted_by_name": "Ananya Sharma (Parent)",
+                "description": "Looking for patient senior teacher for conversational and foundational Telugu lessons for grade 4 and 6 kids via online video sessions.",
+                "required_skills": ["Telugu", "Language Tuition", "Mentoring", "Teaching"],
+                "locality": "Velachery",
+                "city": "Chennai",
+                "distance_km": 3.4,
+                "work_mode": "online",
+                "schedule": "3 Sessions/week (45 mins each)",
+                "pay_amount": 600,
+                "pay_unit": "session",
+                "languages": ["te", "en", "ta"],
+                "is_festival_special": False,
+                "created_at": now
+            },
+            {
+                "_id": "opp_diwali_sweets_04",
+                "title": "Diwali Festival Corporate Gift Hamper Sweets Preparation",
+                "type": "festival_work",
+                "posted_by_name": "Madras Artisans Guild",
+                "description": "Looking for culinary masters to prepare small-batch Mysore Pak, Ribbon Pakoda and traditional sweets for 50 handcrafted festive gift boxes.",
+                "required_skills": ["Traditional Cooking", "Diwali Sweets", "Pickles & Preserves"],
+                "locality": "Mylapore",
+                "city": "Chennai",
+                "distance_km": 1.8,
+                "work_mode": "home",
+                "schedule": "Flexible pre-Diwali batch",
+                "pay_amount": 15000,
+                "pay_unit": "project",
+                "languages": ["ta", "en"],
+                "is_festival_special": True,
+                "festival_tag": "Diwali",
+                "created_at": now
+            },
+            {
+                "_id": "opp_tailoring_festival_05",
+                "title": "Bespoke Festival Blouse Stitching & Aari Work Alterations",
+                "type": "nearby_work",
+                "posted_by_name": "Adyar Boutique & Sarees",
+                "description": "Urgent festive season orders for custom silk saree blouse tailoring and sleeve zari finishing.",
+                "required_skills": ["Bespoke Tailoring", "Aari Embroidery", "Alterations"],
+                "locality": "Adyar",
+                "city": "Chennai",
+                "distance_km": 1.2,
+                "work_mode": "home",
+                "schedule": "On-demand pieces",
+                "pay_amount": 1200,
+                "pay_unit": "project",
+                "languages": ["ta"],
+                "is_festival_special": True,
+                "festival_tag": "Diwali",
+                "created_at": now
+            }
+        ]
+        for opp in opportunities:
+            await opps_col.insert_one(opp)
+        logger.info("Successfully seeded opportunities.")
+
