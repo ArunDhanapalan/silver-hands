@@ -173,3 +173,19 @@ def _deterministic_skill_extraction(story_text: str, language: str) -> Dict[str,
         "suggested_service_product_title": primary_domain["suggested_title"],
         "analysis_engine": "hybrid_nlp_engine"
     }
+
+class LifeToSkillAIEngine:
+    async def extract_skills(self, story_text: str, language: str = "en"):
+        from app.schemas.senior import StoryAnalysisResponse, InferredSkillItem
+        res = await analyze_life_story(story_text, language)
+        return StoryAnalysisResponse(
+            explicit_skills=res["explicit_skills"],
+            inferred_skills=[InferredSkillItem(**i) if isinstance(i, dict) else i for i in res["inferred_skills"]],
+            keywords=res["keywords"],
+            bio=res["bio"],
+            recommended_categories=res["recommended_categories"],
+            suggested_service_product_title=res["suggested_service_product_title"],
+            analysis_engine=res.get("analysis_engine", "hybrid_nlp_engine")
+        )
+
+life_to_skill_ai = LifeToSkillAIEngine()
