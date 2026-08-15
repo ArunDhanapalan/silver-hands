@@ -82,6 +82,14 @@ export default function CommunityPage() {
     fetchData();
   }, [selectedType, selectedCity, user]);
 
+  useEffect(() => {
+    setPostForm(prev => ({
+      ...prev,
+      city: selectedCity.name,
+      locality: selectedLocality !== 'All Areas' ? selectedLocality : (selectedCity.localities[0] || 'Central Area')
+    }));
+  }, [selectedCity, selectedLocality]);
+
   const handleOpenComments = async (postId) => {
     if (activeCommentsPostId === postId) {
       setActiveCommentsPostId(null);

@@ -94,31 +94,44 @@ Analyze the following natural spoken or typed life story (Spoken Language: {lang
 
 "{story_text}"
 
-Extract the following JSON structure strictly with no markdown wrapper or backticks:
+Extract the following JSON structure strictly with no markdown wrapper:
 {{
-  "explicit_skills": ["Skill 1", "Skill 2", ...],
+  "explicit_skills": ["Skill 1", "Skill 2", "Skill 3"],
   "inferred_skills": [
-    {{"skill": "Skill Name", "reason": "Concise explanation of why this was inferred from their life story"}},
-    ...
+    {{"skill": "Skill Name", "reason": "Specific sentence explaining how their life experience translates to this capability"}},
+    {{"skill": "Skill Name 2", "reason": "Reason"}}
   ],
-  "keywords": ["Keyword 1", "Keyword 2", ...],
-  "bio": "A dignified, warm, 2-3 sentence first-person or third-person summary highlighting their lifelong strengths and readiness to help locally.",
+  "keywords": ["Keyword 1", "Keyword 2", "Keyword 3", "Keyword 4"],
+  "bio": "A dignified, warm, 2-3 sentence summary highlighting their lifelong strengths and readiness to help locally.",
   "recommended_categories": ["Category 1", "Category 2"],
   "suggested_service_product_title": "A short, appealing title for a service or product they could offer"
 }}
 """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.post(url, json={
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.2, "response_mime_type": "application/json"}
-        })
-        if resp.status_code == 200:
-            data = resp.json()
-            text_content = data["candidates"][0]["content"]["parts"][0]["text"]
-            clean_json = re.sub(r"^```json\s*", "", text_content.strip())
-            clean_json = re.sub(r"\s*```$", "", clean_json)
-            return json.loads(clean_json)
+    # Try gemini-1.5-flash and gemini-2.0-flash
+    models = ["gemini-1.5-flash", "gemini-2.0-flash"]
+    
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        for model in models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={settings.GEMINI_API_KEY}"
+            try:
+                resp = await client.post(url, json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.2, "response_mime_type": "application/json"}
+                })
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        text_content = candidates[0]["content"]["parts"][0]["text"]
+                        # Clean JSON regex match
+                        json_match = re.search(r"\{.*\}", text_content, re.DOTALL)
+                        if json_match:
+                            parsed = json.loads(json_match.group(0))
+                            if "explicit_skills" in parsed and "bio" in parsed:
+                                return parsed
+            except Exception as ex:
+                logger.warning(f"Error calling {model}: {ex}")
+                continue
     return None
 
 

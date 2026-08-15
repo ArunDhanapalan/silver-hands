@@ -50,11 +50,26 @@ export const LocationProvider = ({ children }) => {
       cities: CITIES,
       selectedCity,
       setSelectedCity: (city) => {
-        setSelectedCity(city);
+        if (typeof city === 'string') {
+          const matched = CITIES.find(c => c.name.toLowerCase() === city.toLowerCase());
+          if (matched) {
+            setSelectedCity(matched);
+          } else {
+            setSelectedCity({ id: city.toLowerCase().replace(/\s+/g, '-'), name: city, state: 'India', tier: 'Custom', localities: [] });
+          }
+        } else {
+          setSelectedCity(city);
+        }
         setSelectedLocality('All Areas');
       },
       selectedLocality,
       setSelectedLocality,
+      setCustomLocality: (customLoc) => {
+        setSelectedLocality(customLoc);
+        if (selectedCity && !selectedCity.localities.includes(customLoc)) {
+          setSelectedCity(prev => ({ ...prev, localities: [customLoc, ...(prev.localities || [])] }));
+        }
+      },
       activeFestival,
       setActiveFestival
     }}>

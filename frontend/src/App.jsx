@@ -6,6 +6,7 @@ import { LocationProvider } from './context/LocationContext';
 import AppShell from './components/layout/AppShell';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AccessibilityBar from './components/common/AccessibilityBar';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -51,70 +52,72 @@ export default function App() {
         <LocationProvider>
           <AuthProvider>
             <AppShell>
-              <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
-                <Routes>
-                  {/* Public & Customer Routes */}
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  
-                  {/* Store & Commerce */}
-                  <Route path="/store" element={<StorePage />} />
-                  <Route path="/store/:id" element={<ProductDetailPage />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  
-                  {/* Managed Services */}
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/services/:id" element={<ServiceDetailPage />} />
-                  
-                  {/* Community & Regional Collab */}
-                  <Route path="/community" element={<CommunityPage />} />
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
+                  <Routes>
+                    {/* Public & Customer Routes */}
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    
+                    {/* Store & Commerce */}
+                    <Route path="/store" element={<StorePage />} />
+                    <Route path="/store/:id" element={<ProductDetailPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    
+                    {/* Managed Services */}
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/services/:id" element={<ServiceDetailPage />} />
+                    
+                    {/* Community & Regional Collab */}
+                    <Route path="/community" element={<CommunityPage />} />
 
-                  {/* Senior Citizen Space */}
-                  <Route 
-                    path="/senior" 
-                    element={
-                      <ProtectedRoute allowedRoles={['senior']}>
-                        <SeniorDashboardPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/senior/onboarding" 
-                    element={<SeniorOnboardingPage />} 
-                  />
-                  <Route 
-                    path="/senior/orders" 
-                    element={
-                      <ProtectedRoute allowedRoles={['senior']}>
-                        <SeniorOrdersPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/senior/earnings" 
-                    element={
-                      <ProtectedRoute allowedRoles={['senior']}>
-                        <SeniorEarningsPage />
-                      </ProtectedRoute>
-                    } 
-                  />
+                    {/* Senior Citizen Space */}
+                    <Route 
+                      path="/senior" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorDashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/senior/onboarding" 
+                      element={<SeniorOnboardingPage />} 
+                    />
+                    <Route 
+                      path="/senior/orders" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorOrdersPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/senior/earnings" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorEarningsPage />
+                        </ProtectedRoute>
+                      } 
+                    />
 
-                  {/* Company / Job Provider Space */}
-                  <Route 
-                    path="/company" 
-                    element={
-                      <ProtectedRoute allowedRoles={['company']}>
-                        <CompanyDashboardPage />
-                      </ProtectedRoute>
-                    } 
-                  />
+                    {/* Company / Job Provider Space */}
+                    <Route 
+                      path="/company" 
+                      element={
+                        <ProtectedRoute allowedRoles={['company']}>
+                          <CompanyDashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
 
-                  {/* Fallback */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-                <AccessibilityBar />
-              </Suspense>
+                    {/* Fallback */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                  <AccessibilityBar />
+                </Suspense>
+              </ErrorBoundary>
             </AppShell>
           </AuthProvider>
         </LocationProvider>

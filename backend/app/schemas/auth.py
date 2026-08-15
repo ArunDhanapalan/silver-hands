@@ -9,14 +9,16 @@ class UserRegisterRequest(BaseModel):
     phone: Optional[str] = None
     city: str = "Chennai"
     locality: str = "Adyar"
+    preferred_language: Optional[str] = "en"
     
     # Company specific
     gstin: Optional[str] = None
     company_name: Optional[str] = None
     
-    # Senior specific
+    # Senior / Customer specific
     age: Optional[int] = None
-    id_doc_type: Optional[str] = None # e.g. "Aadhaar", "Voter ID", "Senior Card"
+    aadhaar_number: Optional[str] = None
+    id_doc_type: Optional[str] = "Aadhaar"
 
 class UserLoginRequest(BaseModel):
     email: EmailStr
@@ -30,8 +32,10 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     city: str
     locality: str
+    preferred_language: Optional[str] = "en"
     is_age_verified: bool = False
     gstin: Optional[str] = None
+    masked_aadhaar: Optional[str] = None
     created_at: Optional[str] = None
 
 class TokenResponse(BaseModel):

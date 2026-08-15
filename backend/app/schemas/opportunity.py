@@ -34,6 +34,35 @@ class SwipeActionResponse(BaseModel):
     action: str
     message: str
 
+class OpportunityCreateRequest(BaseModel):
+    title: str
+    description: str
+    type: str = "job"
+    category: Optional[str] = "General"
+    required_skills: List[str] = ["Communication"]
+    locality: str = "Adyar"
+    city: str = "Chennai"
+    work_mode: str = "both" # online, offline, both
+    schedule: str = "Part-time (Flexible)"
+    pay_amount: int = 15000
+    pay_unit: str = "month" # month, session, hour, project
+    languages: List[str] = ["en", "ta"]
+    is_festival_special: bool = False
+    festival_tag: Optional[str] = None
+
+class JobParseRequest(BaseModel):
+    raw_text: str
+
+class MatchedCandidateResponse(BaseModel):
+    senior_id: str
+    full_name: str
+    locality: str
+    city: str
+    skills: List[str]
+    match_score: int
+    bio: str
+    is_age_verified: bool = True
+
 class ApplicationItemResponse(BaseModel):
     id: str
     opportunity_id: str

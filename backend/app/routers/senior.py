@@ -36,3 +36,12 @@ async def get_my_profile(
     Retrieves authenticated senior's livelihood profile.
     """
     return await senior_service.get_senior_profile(current_user["sub"])
+
+@router.get("/earnings")
+async def get_my_earnings(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Retrieves real dynamic earnings, wallet balance, and transaction ledger for the logged-in senior.
+    """
+    return await senior_service.get_senior_earnings_ledger(current_user["sub"])

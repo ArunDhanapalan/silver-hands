@@ -158,4 +158,73 @@ class SeniorService:
             review_count=doc.get("review_count", 0)
         )
 
+    async def get_senior_earnings_ledger(self, user_id: str) -> Dict[str, Any]:
+        orders_col = db_manager.get_collection("store_orders")
+        bookings_col = db_manager.get_collection("service_bookings")
+        profile = await self.get_senior_profile(user_id)
+
+        # 1. Fetch Store Orders for this Senior
+        orders_cursor = orders_col.find({"items.seller_id": user_id})
+        orders = await orders_cursor.to_list(100)
+
+        store_earnings = 0
+        transactions = []
+        completed_orders = 0
+
+        for ord_doc in orders:
+            is_comp = ord_doc.get("status") in ["delivered", "completed"]
+            if is_comp:
+                completed_orders += 1
+            for item in ord_doc.get("items", []):
+                if item.get("seller_id") == user_id:
+                    item_total = item.get("price_per_unit", 0) * item.get("quantity", 1)
+                    if is_comp:
+                        store_earnings += item_total
+                    transactions.append({
+                        "id": f"TXN-ORD-{ord_doc.get('_id')}",
+                        "date": ord_doc.get("created_at", "")[:10] or "2026-08-15",
+                        "description": f"Store Sale: {item.get('product_title')}",
+                        "type": "store_product",
+                        "status": "Settled" if is_comp else ord_doc.get("status", "pending").capitalize(),
+                        "amount": item_total
+                    })
+
+        # 2. Fetch Service Bookings for this Senior
+        bookings_cursor = bookings_col.find({"provider_id": user_id})
+        bookings = await bookings_cursor.to_list(100)
+
+        service_earnings = 0
+        completed_services = 0
+
+        for b in bookings:
+            is_comp = b.get("status") == "completed"
+            if is_comp:
+                completed_services += 1
+                service_earnings += b.get("total_price", 0)
+            transactions.append({
+                "id": f"TXN-SRV-{b.get('_id')}",
+                "date": b.get("created_at", "")[:10] or "2026-08-15",
+                "description": f"Service Session: {b.get('service_title')}",
+                "type": "managed_service",
+                "status": "Settled" if is_comp else b.get("status", "pending").capitalize(),
+                "amount": b.get("total_price", 0)
+            })
+
+        total_earnings = store_earnings + service_earnings
+        pending_payout = sum(t["amount"] for t in transactions if t["status"] not in ["Settled", "Cancelled"])
+
+        # Sort transactions by date desc
+        transactions.sort(key=lambda x: x["date"], reverse=True)
+
+        return {
+            "senior_name": profile.full_name,
+            "total_earnings": total_earnings,
+            "store_earnings": store_earnings,
+            "service_earnings": service_earnings,
+            "pending_payout": pending_payout,
+            "completed_orders_count": completed_orders,
+            "completed_services_count": completed_services,
+            "transactions": transactions
+        }
+
 senior_service = SeniorService()

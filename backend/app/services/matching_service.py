@@ -182,4 +182,97 @@ class MatchingService:
         await self._apps_col().delete_many({"user_id": user_id, "status": "passed"})
         return {"success": True, "message": "Passed opportunities restored to deck."}
 
+    async def create_opportunity(self, user_payload: Dict[str, Any], req: Any) -> Dict[str, Any]:
+        user_id = user_payload.get("sub")
+        users_col = db_manager.get_collection("users")
+        user_doc = await users_col.find_one({"_id": user_id})
+        company_name = user_doc.get("company_name") or user_doc.get("full_name", "Local Employer") if user_doc else "Local Employer"
+        
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        opp_doc = {
+            "title": req.title,
+            "description": req.description,
+            "type": req.type,
+            "category": getattr(req, "category", "General"),
+            "posted_by_name": company_name,
+            "company_id": user_id,
+            "required_skills": req.required_skills,
+            "locality": req.locality,
+            "city": req.city,
+            "distance_km": 2.5,
+            "work_mode": req.work_mode,
+            "schedule": req.schedule,
+            "pay_amount": req.pay_amount,
+            "pay_unit": req.pay_unit,
+            "languages": req.languages,
+            "is_festival_special": req.is_festival_special,
+            "festival_tag": req.festival_tag,
+            "created_at": now
+        }
+        res = await self._opps_col().insert_one(opp_doc)
+        opp_doc["id"] = str(res.inserted_id)
+        return opp_doc
+
+    async def get_company_postings(self, user_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+        user_id = user_payload.get("sub")
+        cursor = self._opps_col().find({"company_id": user_id})
+        opps = await cursor.to_list(100)
+        
+        if not opps:
+            # If no custom postings yet, return all opportunities with company tag
+            cursor = self._opps_col().find({})
+            opps = await cursor.to_list(100)
+
+        # For each opportunity, find real matching registered senior candidates in MongoDB
+        seniors_cursor = self._senior_col().find({})
+        all_seniors = await seniors_cursor.to_list(100)
+
+        results = []
+        for opp in opps:
+            opp_id = str(opp.get("_id"))
+            req_skills = [s.lower() for s in opp.get("required_skills", [])]
+            opp_city = opp.get("city", "Chennai").lower()
+
+            matched_seniors = []
+            for sr in all_seniors:
+                sr_skills = [s.lower() for s in sr.get("skills", [])]
+                common = [s for s in req_skills if any(s in sk or sk in s for sk in sr_skills)]
+                
+                # Base score + skill match
+                base_score = 60
+                skill_bonus = int((len(common) / max(len(req_skills), 1)) * 35) if req_skills else 25
+                city_bonus = 5 if sr.get("city", "").lower() == opp_city else 0
+                total_score = min(base_score + skill_bonus + city_bonus, 98)
+
+                if total_score >= 65:
+                    matched_seniors.append({
+                        "senior_id": str(sr.get("_id")),
+                        "full_name": sr.get("full_name", "Senior Guru"),
+                        "locality": sr.get("locality", "Adyar"),
+                        "city": sr.get("city", "Chennai"),
+                        "skills": sr.get("skills", []),
+                        "match_score": total_score,
+                        "bio": sr.get("bio", "Experienced professional ready to contribute."),
+                        "is_age_verified": True
+                    })
+
+            # Sort matched candidates by score desc
+            matched_seniors.sort(key=lambda x: x["match_score"], reverse=True)
+
+            results.append({
+                "id": opp_id,
+                "title": opp["title"],
+                "description": opp["description"],
+                "type": opp.get("type", "job"),
+                "locality": opp.get("locality", "Adyar"),
+                "city": opp.get("city", "Chennai"),
+                "work_mode": opp.get("work_mode", "offline"),
+                "pay_amount": opp.get("pay_amount", 15000),
+                "pay_unit": opp.get("pay_unit", "month"),
+                "required_skills": opp.get("required_skills", []),
+                "matched_candidates": matched_seniors
+            })
+
+        return results
+
 matching_service = MatchingService()

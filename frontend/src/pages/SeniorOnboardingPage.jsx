@@ -112,13 +112,19 @@ export default function SeniorOnboardingPage() {
       recognition.lang = langMap[language] || 'en-IN';
 
       recognition.onresult = (event) => {
-        let currentText = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentText += event.results[i][0].transcript;
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
         }
-        if (currentText) {
-          setSpokenTranscript(prev => prev ? `${prev} ${currentText}` : currentText);
-          setStoryText(prev => prev ? `${prev} ${currentText}` : currentText);
+        const full = (finalTranscript + interimTranscript).trim();
+        if (full) {
+          setSpokenTranscript(full);
+          setStoryText(full);
         }
       };
 
@@ -143,6 +149,8 @@ export default function SeniorOnboardingPage() {
     setError('');
     setRecordingTime(0);
     setAudioBlobUrl(null);
+    setStoryText('');
+    setSpokenTranscript('');
     audioChunksRef.current = [];
 
     try {

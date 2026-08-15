@@ -63,6 +63,8 @@ export default function ServicesPage() {
     }
   };
 
+  const visibleServices = services.filter(s => !user || s.provider_id !== user.id);
+
   useEffect(() => {
     fetchServices();
   }, [selectedCategory, selectedMode, searchQuery, selectedCity]);
@@ -188,7 +190,7 @@ export default function ServicesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {services.map((service) => (
+          {visibleServices.map((service) => (
             <div 
               key={service.id}
               className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"

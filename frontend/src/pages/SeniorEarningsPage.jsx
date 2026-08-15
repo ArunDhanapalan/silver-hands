@@ -10,7 +10,9 @@ import {
   ShieldCheck, 
   ShoppingBag, 
   Sparkles,
-  Download
+  Download,
+  DollarSign,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
@@ -19,9 +21,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 
 export default function SeniorEarningsPage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [sessions, setSessions] = useState([]);
+  const [earningsData, setEarningsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -30,17 +30,10 @@ export default function SeniorEarningsPage() {
       setLoading(true);
       setError('');
       try {
-        const [profData, orderData, sessData] = await Promise.allSettled([
-          api.get('/senior/profile'),
-          api.get('/store/orders/senior-orders'),
-          api.get('/services/bookings/senior-sessions')
-        ]);
-
-        if (profData.status === 'fulfilled') setProfile(profData.value);
-        if (orderData.status === 'fulfilled') setOrders(orderData.value || []);
-        if (sessData.status === 'fulfilled') setSessions(sessData.value || []);
+        const data = await api.get('/senior/earnings');
+        setEarningsData(data);
       } catch (err) {
-        setError(err.message || 'Failed to fetch earnings details.');
+        setError(err.message || 'Failed to fetch personal earnings details.');
       } finally {
         setLoading(false);
       }
@@ -48,16 +41,11 @@ export default function SeniorEarningsPage() {
     fetchEarningsData();
   }, []);
 
-  const totalStoreEarnings = orders
-    .filter(o => o.status === 'completed' || o.status === 'delivered')
-    .reduce((sum, o) => sum + o.total_amount, 0);
-
-  const totalServiceEarnings = sessions
-    .filter(s => s.status === 'completed')
-    .reduce((sum, s) => sum + s.total_amount, 0);
-
-  const totalEarnings = (profile?.earnings_total || 0) + totalStoreEarnings + totalServiceEarnings;
-  const completedJobs = (profile?.completed_jobs_count || 0) + orders.length + sessions.length;
+  const totalEarnings = earningsData?.total_earnings || 0;
+  const storeEarnings = earningsData?.store_earnings || 0;
+  const serviceEarnings = earningsData?.service_earnings || 0;
+  const pendingPayout = earningsData?.pending_payout || 0;
+  const transactions = earningsData?.transactions || [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
@@ -73,15 +61,15 @@ export default function SeniorEarningsPage() {
             My Earnings & Livelihood Ledger
           </h1>
           <p className="text-xs sm:text-sm text-base-content/70">
-            Real-time tracking of your store product payouts, tuition session fees, and weekly bank settlements.
+            Real-time tracking of {earningsData?.senior_name || user?.full_name || 'Senior'}'s verified store product sales, tuition fees, and settlements.
           </p>
         </div>
 
         <button 
-          onClick={() => alert('Earnings statement downloaded successfully!')}
+          onClick={() => alert('Statement for ' + (user?.full_name || 'Senior') + ' downloaded!')}
           className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold gap-1 text-xs self-start sm:self-auto"
         >
-          <Download className="w-3.5 h-3.5" /> Download Tax Statement
+          <Download className="w-3.5 h-3.5" /> Download Statement
         </button>
       </div>
 
@@ -99,119 +87,121 @@ export default function SeniorEarningsPage() {
               <span className="text-xs font-bold text-base-content/70 flex items-center gap-1.5">
                 <Wallet className="w-4 h-4 text-primary" /> Total Lifetime Earnings
               </span>
-              <div className="text-3xl font-black text-base-content">
-                ₹{Math.max(14500, totalEarnings).toLocaleString('en-IN')}
+              <div className="text-3xl font-black text-primary">
+                ₹{totalEarnings.toLocaleString('en-IN')}
               </div>
-              <span className="text-[11px] text-success font-bold flex items-center gap-1">
-                <ArrowUpRight className="w-3.5 h-3.5" /> Direct to UPI / Bank Account
-              </span>
-            </div>
-
-            <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl shadow-xs space-y-2">
-              <span className="text-xs font-bold text-base-content/70 flex items-center gap-1.5">
-                <ShoppingBag className="w-4 h-4 text-secondary" /> Store Product Sales
-              </span>
-              <div className="text-2xl font-extrabold text-secondary">
-                ₹{Math.max(6800, totalStoreEarnings).toLocaleString('en-IN')}
-              </div>
-              <span className="text-[11px] text-base-content/60 font-medium">
-                {orders.length} orders fulfilled
-              </span>
-            </div>
-
-            <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl shadow-xs space-y-2">
-              <span className="text-xs font-bold text-base-content/70 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-accent" /> Managed Service Sessions
-              </span>
-              <div className="text-2xl font-extrabold text-accent">
-                ₹{Math.max(7700, totalServiceEarnings).toLocaleString('en-IN')}
-              </div>
-              <span className="text-[11px] text-base-content/60 font-medium">
-                {sessions.length} sessions taught
-              </span>
-            </div>
-
-          </div>
-
-          {/* Senior Reputation Scorecard */}
-          <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h4 className="font-bold text-base text-base-content">Senior Trust & Reputation Score</h4>
-                <span className="badge badge-success badge-sm text-white font-bold text-[10px] gap-1">
-                  <ShieldCheck className="w-3 h-3" /> Age Verified
-                </span>
-              </div>
-              <p className="text-xs text-base-content/70">
-                Your verified track record ensures high priority matching for high-paying corporate roles and students.
+              <p className="text-[11px] text-base-content/60 font-medium">
+                Verified direct payout to linked bank account
               </p>
             </div>
 
-            <div className="flex items-center gap-6 self-start sm:self-auto">
-              <div className="text-center">
-                <span className="text-2xl font-extrabold text-warning flex items-center justify-center gap-1">
-                  <Star className="w-5 h-5 fill-warning text-warning" /> 4.96
-                </span>
-                <span className="text-[10px] text-base-content/60 font-bold uppercase block mt-0.5">Rating</span>
+            <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl shadow-xs space-y-2">
+              <span className="text-xs font-bold text-base-content/70 flex items-center gap-1.5">
+                <ShoppingBag className="w-4 h-4 text-secondary" /> Store Products Sales
+              </span>
+              <div className="text-2xl font-extrabold text-base-content">
+                ₹{storeEarnings.toLocaleString('en-IN')}
               </div>
-              <div className="text-center">
-                <span className="text-2xl font-extrabold text-primary">
-                  {Math.max(28, completedJobs)}
-                </span>
-                <span className="text-[10px] text-base-content/60 font-bold uppercase block mt-0.5">Completed Jobs</span>
+              <p className="text-[11px] text-base-content/60">
+                {earningsData?.completed_orders_count || 0} completed product orders
+              </p>
+            </div>
+
+            <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl shadow-xs space-y-2">
+              <span className="text-xs font-bold text-base-content/70 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-accent" /> Managed Services & Tuition
+              </span>
+              <div className="text-2xl font-extrabold text-base-content">
+                ₹{serviceEarnings.toLocaleString('en-IN')}
               </div>
+              <p className="text-[11px] text-base-content/60">
+                {earningsData?.completed_services_count || 0} online/offline sessions completed
+              </p>
+            </div>
+
+          </div>
+
+          {/* Settlement Status Banner */}
+          <div className="bg-base-100 border border-success/30 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-success/20 text-success flex items-center justify-center font-bold">
+                ✓
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-base-content uppercase tracking-wider">Weekly Settlement Cycle</h4>
+                <p className="text-xs text-base-content/70">
+                  Direct NEFT/UPI transfer every Monday. Next batch: <span className="font-semibold text-primary">Coming Monday</span>
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-base-content/60 uppercase font-bold block">Pending In-Flight</span>
+              <span className="text-base font-extrabold text-warning">₹{pendingPayout.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
-          {/* Recent Payout Settlements Ledger */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-base text-base-content">Recent Settlement Ledger</h3>
+          {/* Itemized Transactions Table */}
+          <div className="bg-base-100 border border-base-300 rounded-3xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-base text-base-content flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" /> Itemized Income Ledger
+              </h3>
+              <span className="text-xs text-base-content/60 font-semibold">
+                {transactions.length} Transactions
+              </span>
+            </div>
 
-            <div className="card bg-base-100 border border-base-300 rounded-3xl overflow-hidden shadow-xs">
+            {transactions.length === 0 ? (
+              <div className="text-center py-10 space-y-2">
+                <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center mx-auto text-base-content/40">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-sm text-base-content">No transactions recorded yet</h4>
+                <p className="text-xs text-base-content/60 max-w-sm mx-auto">
+                  When customers purchase your handcrafted store items or book language tuition sessions, your itemized payouts will appear here in real-time.
+                </p>
+              </div>
+            ) : (
               <div className="overflow-x-auto">
                 <table className="table table-zebra w-full text-xs">
                   <thead>
-                    <tr className="bg-base-200 text-base-content/70 font-bold">
-                      <th>Reference</th>
+                    <tr className="text-base-content/70 font-bold border-b border-base-300">
+                      <th>Date</th>
                       <th>Activity / Item</th>
-                      <th>Category</th>
-                      <th>Amount</th>
-                      <th>Payout Status</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th className="text-right">Earnings</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="font-mono font-semibold">SH-PAY-8821</td>
-                      <td>1-on-1 Telugu Tuition (3 Sessions)</td>
-                      <td>Managed Services</td>
-                      <td className="font-extrabold text-success">₹1,500</td>
-                      <td><span className="badge badge-success badge-xs text-white font-bold">Settled (UPI)</span></td>
-                    </tr>
-                    <tr>
-                      <td className="font-mono font-semibold">SH-PAY-8819</td>
-                      <td>Authentic Mango Pickle (2 Jars)</td>
-                      <td>Store Sales</td>
-                      <td className="font-extrabold text-success">₹560</td>
-                      <td><span className="badge badge-success badge-xs text-white font-bold">Settled (UPI)</span></td>
-                    </tr>
-                    <tr>
-                      <td className="font-mono font-semibold">SH-PAY-8812</td>
-                      <td>Pure Ghee Mysore Pak Gift Box</td>
-                      <td>Festive Store</td>
-                      <td className="font-extrabold text-success">₹900</td>
-                      <td><span className="badge badge-success badge-xs text-white font-bold">Settled (UPI)</span></td>
-                    </tr>
-                    <tr>
-                      <td className="font-mono font-semibold">SH-PAY-8798</td>
-                      <td>MSME Bookkeeping Mentoring</td>
-                      <td>Corporate Role</td>
-                      <td className="font-extrabold text-success">₹2,400</td>
-                      <td><span className="badge badge-success badge-xs text-white font-bold">Settled (UPI)</span></td>
-                    </tr>
+                    {transactions.map((txn, idx) => (
+                      <tr key={idx} className="hover">
+                        <td className="font-mono text-base-content/70">{txn.date}</td>
+                        <td className="font-bold text-base-content">{txn.description}</td>
+                        <td>
+                          <span className={`badge badge-xs font-semibold ${
+                            txn.type === 'store_product' ? 'badge-secondary' : 'badge-accent'
+                          }`}>
+                            {txn.type === 'store_product' ? 'Product' : 'Tuition / Service'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge badge-xs font-bold ${
+                            txn.status === 'Settled' ? 'badge-success text-white' : 'badge-warning'
+                          }`}>
+                            {txn.status}
+                          </span>
+                        </td>
+                        <td className="text-right font-extrabold text-success text-sm">
+                          +₹{txn.amount.toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            )}
+
           </div>
 
         </div>

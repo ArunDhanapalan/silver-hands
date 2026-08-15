@@ -39,6 +39,15 @@ class AuthService:
 
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         
+        # Mask Aadhaar if provided
+        masked_aadhaar = None
+        if req.aadhaar_number:
+            clean_aadhaar = req.aadhaar_number.replace(" ", "").replace("-", "")
+            if len(clean_aadhaar) >= 4:
+                masked_aadhaar = f"XXXX-XXXX-{clean_aadhaar[-4:]}"
+            else:
+                masked_aadhaar = "XXXX-XXXX-Verified"
+
         user_doc = {
             "email": req.email.lower(),
             "hashed_password": hash_password(req.password),
@@ -47,9 +56,11 @@ class AuthService:
             "phone": req.phone,
             "city": req.city,
             "locality": req.locality,
+            "preferred_language": req.preferred_language or "en",
             "is_age_verified": True if req.role == "senior" else False,
-            "gstin": req.gstin if req.role == "company" else None,
+            "gstin": req.gstin.strip().upper() if req.role == "company" and req.gstin else None,
             "company_name": req.company_name or req.full_name if req.role == "company" else None,
+            "masked_aadhaar": masked_aadhaar,
             "created_at": now,
             "updated_at": now
         }

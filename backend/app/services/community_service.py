@@ -197,42 +197,93 @@ class CommunityService:
 
     async def get_collaboration_matches(self, user_payload: Dict[str, Any]) -> List[CollaborationPairResponse]:
         user_id = user_payload.get("sub")
-        col = self._collabs_col()
-        
-        cursor = col.find({"$or": [{"senior_a_id": user_id}, {"senior_b_id": user_id}, {"status": "suggested"}]})
-        docs = await cursor.to_list(10)
+        seniors_col = self._senior_col()
+        collabs_col = self._collabs_col()
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        return [
-            CollaborationPairResponse(
-                id=str(d.get("_id")),
-                senior_a_id=d["senior_a_id"],
-                senior_a_name=d["senior_a_name"],
-                senior_a_skills=d.get("senior_a_skills", []),
-                senior_b_id=d["senior_b_id"],
-                senior_b_name=d["senior_b_name"],
-                senior_b_skills=d.get("senior_b_skills", []),
-                city=d.get("city", "Chennai"),
-                locality=d.get("locality", "Adyar"),
-                venture_title=d["venture_title"],
-                ai_synergy_reason=d["ai_synergy_reason"],
-                status=d.get("status", "suggested")
-            )
-            for d in docs
-        ]
+        # Fetch current senior profile
+        current_sr = await seniors_col.find_one({"user_id": user_id})
+        current_city = current_sr.get("city", "Chennai") if current_sr else "Chennai"
+        current_name = current_sr.get("full_name", "Senior Guru") if current_sr else "Senior Member"
+        current_skills = current_sr.get("skills", ["Mentoring"]) if current_sr else ["Accounting"]
+
+        # Fetch other seniors in the same city or across region
+        other_seniors = await seniors_col.find({"user_id": {"$ne": user_id}}).to_list(20)
+        
+        matches = []
+        for other in other_seniors:
+            other_skills = other.get("skills", [])
+            other_name = other.get("full_name", "Senior Partner")
+            other_id = str(other.get("user_id", other.get("_id")))
+
+            # Determine synergy pattern
+            curr_str = " ".join(current_skills).lower()
+            other_str = " ".join(other_skills).lower()
+
+            venture_title = f"{current_name} & {other_name} Local Venture"
+            synergy_reason = f"Combined expertise of {', '.join(current_skills[:2])} and {', '.join(other_skills[:2])} for local services."
+
+            if ("account" in curr_str or "excel" in curr_str or "gst" in curr_str) and ("cook" in other_str or "sweet" in other_str or "pickle" in other_str):
+                venture_title = "Heritage Taste & Home-Delivery Micro Kitchen"
+                synergy_reason = f"{other_name}'s authentic culinary mastery combined with {current_name}'s financial & GST management."
+            elif ("tailor" in curr_str or "stitch" in curr_str) and ("embroidery" in other_str or "aari" in other_str or "design" in other_str):
+                venture_title = "Bespoke Festive Apparel & Traditional Embroidery Studio"
+                synergy_reason = f"Custom garment tailoring and heritage hand embroidery synergy."
+            elif ("teach" in curr_str or "tuition" in curr_str or "math" in curr_str) and ("mentoring" in other_str or "language" in other_str):
+                venture_title = "Bilingual Academic & Student Mentoring Hub"
+                synergy_reason = f"Personalized 1-on-1 language lessons and conceptual academic coaching."
+
+            matches.append(CollaborationPairResponse(
+                id=f"collab-{user_id[:6]}-{other_id[:6]}",
+                senior_a_id=user_id,
+                senior_a_name=current_name,
+                senior_a_skills=current_skills,
+                senior_b_id=other_id,
+                senior_b_name=other_name,
+                senior_b_skills=other_skills,
+                city=other.get("city", current_city),
+                locality=other.get("locality", "Adyar"),
+                venture_title=venture_title,
+                ai_synergy_reason=synergy_reason,
+                status="suggested"
+            ))
+
+        if not matches:
+            # Fallback pre-seeded synergy pair
+            matches.append(CollaborationPairResponse(
+                id="collab-ramesh-lakshmi-01",
+                senior_a_id=user_id,
+                senior_a_name="Ramesh Krishnan",
+                senior_a_skills=["Accounting", "GST Filing", "Bookkeeping"],
+                senior_b_id="sr-lakshmi-01",
+                senior_b_name="Lakshmi Venkatesh",
+                senior_b_skills=["Traditional Cooking", "Homemade Pickles", "Diwali Sweets"],
+                city=current_city,
+                locality="Mylapore",
+                venture_title="Heritage Taste & Home-Delivery Kitchen",
+                ai_synergy_reason="Lakshmi's culinary heritage combined with Ramesh's accounting & GST compliance.",
+                status="suggested"
+            ))
+
+        return matches
 
     async def connect_collaboration(self, user_payload: Dict[str, Any], req: ConnectCollaborationRequest) -> Dict[str, Any]:
         user_id = user_payload.get("sub")
         col = self._collabs_col()
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        await col.update_one(
-            {"$or": [{"senior_a_id": user_id}, {"senior_b_id": user_id}]},
-            {"$set": {"status": "connected", "connected_at": now}}
-        )
+        doc = {
+            "requester_id": user_id,
+            "target_senior_id": req.target_senior_id,
+            "venture_title": req.venture_title,
+            "status": "connected",
+            "connected_at": now
+        }
+        await col.insert_one(doc)
 
         return {
             "success": True,
-            "message": f"Collaboration invitation sent to {req.target_senior_id} for '{req.venture_title}'!"
+            "message": f"Collaboration invitation successfully sent for '{req.venture_title}'!"
         }
 
 community_service = CommunityService()

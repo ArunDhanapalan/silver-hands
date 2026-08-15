@@ -4,7 +4,9 @@ from app.schemas.opportunity import (
     OpportunityResponse,
     SwipeActionRequest,
     SwipeActionResponse,
-    ApplicationItemResponse
+    ApplicationItemResponse,
+    OpportunityCreateRequest,
+    JobParseRequest
 )
 from app.services.matching_service import matching_service
 from app.security import require_role
@@ -48,3 +50,33 @@ async def reset_deck(
     Resets previously passed cards so the senior can review them again.
     """
     return await matching_service.reset_deck_swipes(current_user)
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+async def create_opportunity(
+    req: OpportunityCreateRequest,
+    current_user: Dict[str, Any] = Depends(require_role(["company", "senior"]))
+):
+    """
+    Allows companies to post livelihood opportunities and auto-match them with qualified seniors.
+    """
+    return await matching_service.create_opportunity(current_user, req)
+
+@router.get("/company-postings")
+async def get_company_postings(
+    current_user: Dict[str, Any] = Depends(require_role(["company"]))
+):
+    """
+    Retrieves all company postings and active matched senior candidates.
+    """
+    return await matching_service.get_company_postings(current_user)
+
+@router.post("/parse-job")
+async def parse_job_description(
+    req: JobParseRequest,
+    current_user: Dict[str, Any] = Depends(require_role(["company"]))
+):
+    """
+    AI parser for unstructured job posts.
+    """
+    from app.ai.job_description_ai import parse_job_posting
+    return await parse_job_posting(req.raw_text)

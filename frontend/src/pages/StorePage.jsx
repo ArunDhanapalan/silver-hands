@@ -82,6 +82,9 @@ export default function StorePage() {
     }
   };
 
+  const visibleProducts = products.filter(p => !user || p.seller_id !== user.id);
+  const myProducts = products.filter(p => user && p.seller_id === user.id);
+
   useEffect(() => {
     fetchProducts();
   }, [selectedCity, selectedCategory, showFestivalOnly, searchQuery]);
@@ -264,7 +267,7 @@ export default function StorePage() {
       {/* Products Grid */}
       {loading ? (
         <LoadingSpinner message="Fetching verified local products..." />
-      ) : products.length === 0 ? (
+      ) : visibleProducts.length === 0 ? (
         <div className="bg-base-100 rounded-3xl border border-base-300 p-12 text-center space-y-3">
           <ShoppingBag className="w-12 h-12 text-base-content/30 mx-auto" />
           <h3 className="text-lg font-bold text-base-content">No products matching your search in {selectedCity.name}</h3>
@@ -280,7 +283,7 @@ export default function StorePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <div 
               key={product.id}
               className="card bg-base-100 border border-base-300 shadow-xs hover:shadow-md transition-all rounded-3xl overflow-hidden flex flex-col justify-between group"
