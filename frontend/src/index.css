@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Accessible touch targets */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Custom utility classes */
+.font-serif-title {
+  font-family: 'Lora', Georgia, serif;
+}
+
+/* Card deck container */
+.swipe-deck-container {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+.swipe-card-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Smooth transition utility */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
