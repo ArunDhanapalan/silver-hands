@@ -314,7 +314,18 @@ export default function ServiceDetailPage() {
         {/* Right: Booking Form or Active Booking State Tracker */}
         <div className="lg:col-span-5 space-y-6">
           
-          {!activeBooking ? (
+          {user?.role === 'senior' ? (
+            <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-sm space-y-3 text-center">
+              <span className="badge badge-accent badge-sm font-bold text-white uppercase mx-auto">Senior Guru Mode</span>
+              <h3 className="font-bold text-base text-base-content">Service Catalog View</h3>
+              <p className="text-xs text-base-content/70 leading-relaxed">
+                Learner enrollment is enabled for customers and parents. To manage your active class batches and student rosters, visit your <strong>Manage Services</strong> hub.
+              </p>
+              <Link to="/senior/services" className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1 mt-2">
+                Go to Manage Services Hub
+              </Link>
+            </div>
+          ) : !activeBooking ? (
             /* Booking Form */
             <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-base-200">

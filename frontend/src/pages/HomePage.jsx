@@ -145,30 +145,30 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 2. REAL-TIME SOCIAL IMPACT COUNTER */}
+      {/* 2. REAL VERIFIED VALUE PILLARS */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl text-center shadow-xs space-y-1">
-          <Clock className="w-6 h-6 text-primary mx-auto" />
-          <span className="text-2xl sm:text-3xl font-extrabold text-base-content">4,820+</span>
-          <p className="text-xs text-base-content/60 font-medium">Hours of Senior Engagement</p>
+        <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl text-center shadow-xs space-y-1">
+          <ShieldCheck className="w-6 h-6 text-primary mx-auto" />
+          <span className="text-xl sm:text-2xl font-extrabold text-base-content">100% Direct</span>
+          <p className="text-xs text-base-content/60 font-medium">Proceeds directly to Senior Sellers</p>
         </div>
 
-        <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl text-center shadow-xs space-y-1">
+        <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl text-center shadow-xs space-y-1">
           <TrendingUp className="w-6 h-6 text-success mx-auto" />
-          <span className="text-2xl sm:text-3xl font-extrabold text-success">₹18.4L+</span>
-          <p className="text-xs text-base-content/60 font-medium">Transferred to Seniors</p>
+          <span className="text-xl sm:text-2xl font-extrabold text-success">0% Cut</span>
+          <p className="text-xs text-base-content/60 font-medium">Zero Platform Commission</p>
         </div>
 
-        <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl text-center shadow-xs space-y-1">
-          <Award className="w-6 h-6 text-secondary mx-auto" />
-          <span className="text-2xl sm:text-3xl font-extrabold text-base-content">1,250+</span>
-          <p className="text-xs text-base-content/60 font-medium">Artisans & Homemakers</p>
+        <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl text-center shadow-xs space-y-1">
+          <Sparkles className="w-6 h-6 text-secondary mx-auto" />
+          <span className="text-xl sm:text-2xl font-extrabold text-base-content">Authentic</span>
+          <p className="text-xs text-base-content/60 font-medium">Handcrafted & Pure Recipes</p>
         </div>
 
-        <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl text-center shadow-xs space-y-1">
-          <ShieldCheck className="w-6 h-6 text-accent mx-auto" />
-          <span className="text-2xl sm:text-3xl font-extrabold text-base-content">99.4%</span>
-          <p className="text-xs text-base-content/60 font-medium">Verified Trust & Safety Rating</p>
+        <div className="card bg-base-100 border border-base-300 p-5 rounded-3xl text-center shadow-xs space-y-1">
+          <Award className="w-6 h-6 text-accent mx-auto" />
+          <span className="text-xl sm:text-2xl font-extrabold text-base-content">Age Verified</span>
+          <p className="text-xs text-base-content/60 font-medium">Trusted Elder Community</p>
         </div>
       </section>
 
@@ -315,7 +315,7 @@ export default function HomePage() {
       </section>
 
       {/* 5. PROMINENT CULTURAL GIFTING SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-secondary/20 via-primary/10 to-accent/20 border-2 border-secondary/40 rounded-3xl p-8 sm:p-12 shadow-lg space-y-8">
+      <section className="relative overflow-hidden bg-gradient-to-br from-secondary/20 via-primary/10 to-accent/20 border-2 border-secondary/40 rounded-3xl p-8 sm:p-12 shadow-lg space-y-6">
         
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
@@ -336,89 +336,13 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Quick Category Action Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto shrink-0">
-            
-            {/* Gift Products Card */}
-            <Link 
-              to="/store" 
-              className="bg-base-100/95 hover:bg-base-100 border-2 border-secondary/30 hover:border-secondary transition-all rounded-2xl p-5 shadow-sm space-y-2.5 group flex flex-col justify-between"
-            >
-              <div>
-                <span className="text-2xl block mb-1">🪔</span>
-                <h4 className="font-extrabold text-sm text-base-content group-hover:text-secondary transition-colors">
-                  Festive Sweets & Hampers
-                </h4>
-                <p className="text-[11px] text-base-content/70">
-                  Pure ghee sweets, crunchy podis, and silk gift pouches.
-                </p>
-              </div>
-              <span className="text-xs font-bold text-secondary flex items-center gap-1 mt-2">
-                Explore Gift Hampers <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-
-            {/* Gift Services Card */}
-            <Link 
-              to="/services" 
-              className="bg-base-100/95 hover:bg-base-100 border-2 border-accent/30 hover:border-accent transition-all rounded-2xl p-5 shadow-sm space-y-2.5 group flex flex-col justify-between"
-            >
-              <div>
-                <span className="text-2xl block mb-1">📖</span>
-                <h4 className="font-extrabold text-sm text-base-content group-hover:text-accent transition-colors">
-                  Gift a Learning Class
-                </h4>
-                <p className="text-[11px] text-base-content/70">
-                  Telugu language, Carnatic music, or MSME financial mentoring.
-                </p>
-              </div>
-              <span className="text-xs font-bold text-accent flex items-center gap-1 mt-2">
-                Book Guru Class <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-
-          </div>
-        </div>
-
-        {/* 1-Click Personalized Hamper Customizer */}
-        <div className="bg-base-100/90 backdrop-blur border border-base-300 rounded-2xl p-6 shadow-sm">
-          <form onSubmit={handleSendGiftCard} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-            <div className="sm:col-span-4 form-control">
-              <label className="label text-xs font-bold py-1 text-base-content">Recipient Name & Contact</label>
-              <input 
-                type="text" 
-                required
-                value={giftRecipient}
-                onChange={(e) => setGiftRecipient(e.target.value)}
-                placeholder="e.g. Priya Sharma (+91 98840...)"
-                className="input input-bordered min-h-[44px] w-full rounded-xl text-xs"
-              />
-            </div>
-
-            <div className="sm:col-span-5 form-control">
-              <label className="label text-xs font-bold py-1 text-base-content">Custom Festive Message</label>
-              <input 
-                type="text" 
-                value={giftMessage}
-                onChange={(e) => setGiftMessage(e.target.value)}
-                placeholder="e.g. Wishing you sweetness and prosperity with love!"
-                className="input input-bordered min-h-[44px] w-full rounded-xl text-xs"
-              />
-            </div>
-
-            <div className="sm:col-span-3">
-              <button 
-                type="submit"
-                className="btn btn-secondary min-h-[44px] w-full rounded-xl text-white font-bold text-xs gap-1.5 shadow-md"
-              >
-                {giftSuccess ? (
-                  <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Redirecting to Store...</span>
-                ) : (
-                  <><Gift className="w-4 h-4" /> Pick Hamper Items <ArrowRight className="w-3.5 h-3.5" /></>
-                )}
-              </button>
-            </div>
-          </form>
+          {/* Quick Action Link */}
+          <Link 
+            to="/store" 
+            className="btn btn-secondary btn-md rounded-2xl text-white font-bold text-sm px-8 gap-2 shadow-md hover:scale-105 transition-transform shrink-0"
+          >
+            <Gift className="w-5 h-5" /> Explore Gift Hampers in Store <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
       </section>

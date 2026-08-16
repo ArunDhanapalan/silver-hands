@@ -97,7 +97,6 @@ export default function SeniorDashboardPage() {
   };
 
   const handleCancelApplication = async (appId) => {
-    if (!window.confirm('Withdraw this job application?')) return;
     try {
       setActiveApps(prev => prev.filter(a => a.id !== appId && a.opportunity_id !== appId));
       await api.put(`/opportunities/applications/${appId}/cancel`);

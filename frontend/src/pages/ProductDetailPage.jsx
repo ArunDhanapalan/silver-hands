@@ -239,23 +239,32 @@ export default function ProductDetailPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="btn btn-outline btn-neutral min-h-[48px] rounded-2xl font-bold text-sm gap-2"
-              >
-                <ShoppingBag className="w-5 h-5" /> Add to Cart
-              </button>
+            {user?.role === 'senior' ? (
+              <div className="p-4 rounded-2xl bg-base-200 border border-base-300 text-center space-y-1">
+                <span className="badge badge-secondary badge-sm font-bold text-white">Senior Artisan Mode</span>
+                <p className="text-xs text-base-content/70">
+                  Product purchasing is for customers. Manage your listed products and orders in your <strong>Senior Storefront</strong>.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="btn btn-outline btn-neutral min-h-[48px] rounded-2xl font-bold text-sm gap-2"
+                >
+                  <ShoppingBag className="w-5 h-5" /> Add to Cart
+                </button>
 
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="btn btn-primary min-h-[48px] rounded-2xl text-white font-bold text-sm gap-2 shadow-md"
-              >
-                Instant Buy (₹{(product.price * quantity).toLocaleString('en-IN')})
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="btn btn-primary min-h-[48px] rounded-2xl text-white font-bold text-sm gap-2 shadow-md"
+                >
+                  Instant Buy (₹{(product.price * quantity).toLocaleString('en-IN')})
+                </button>
+              </div>
+            )}
 
           </div>
 

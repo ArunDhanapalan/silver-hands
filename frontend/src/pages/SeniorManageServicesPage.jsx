@@ -128,7 +128,6 @@ export default function SeniorManageServicesPage() {
 
   // Mark student session completed and credit senior payout
   const handleCompleteStudent = async (bookingId, studentName, amount) => {
-    if (!window.confirm(`Mark entire session completed for ${studentName}? ₹${amount} will be settled into your earnings ledger.`)) return;
     setUpdatingId(bookingId);
     try {
       await api.put(`/services/bookings/${bookingId}/status`, { status: 'completed' });
@@ -143,7 +142,6 @@ export default function SeniorManageServicesPage() {
 
   // Decline / Cancel student booking
   const handleCancelStudent = async (bookingId, studentName) => {
-    if (!window.confirm(`Decline / cancel booking for ${studentName}? The seat will be reopened in the batch.`)) return;
     setUpdatingId(bookingId);
     try {
       await api.put(`/services/bookings/${bookingId}/cancel`, {});
