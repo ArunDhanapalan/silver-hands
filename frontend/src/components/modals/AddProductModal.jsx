@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Sparkles, 
@@ -19,10 +19,11 @@ const PRODUCT_CATEGORIES = [
   'Tailoring & Apparel',
   'Handicrafts & Decor',
   'Plants & Gardening',
+  'Digital Products',
   'Gifting'
 ];
 
-export default function AddProductModal({ isOpen, onClose, onProductCreated, initialSkill = '' }) {
+export default function AddProductModal({ isOpen, onClose, onProductCreated, initialSkill = '', initialData = null }) {
   const [rawIdea, setRawIdea] = useState(initialSkill);
   const [aiLoading, setAiLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +44,27 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
     festival_tag: 'Diwali'
   });
 
+  // Pre-populate form from launchpad AI data when modal opens
+  useEffect(() => {
+    if (isOpen && initialData && initialData.title) {
+      const priceNum = typeof initialData.price === 'string'
+        ? parseInt(initialData.price.replace(/[^\d]/g, '')) || 350
+        : (initialData.price || initialData.suggested_price || 350);
+
+      setProductForm(prev => ({
+        ...prev,
+        title: initialData.title || prev.title,
+        description: initialData.description || prev.description,
+        category: initialData.category && PRODUCT_CATEGORIES.includes(initialData.category) ? initialData.category : (prev.category || 'Festive Sweets & Snacks'),
+        price: priceNum,
+        unit: initialData.unit || prev.unit || '500g Box'
+      }));
+      setRawIdea(initialData.title || initialSkill);
+    } else if (isOpen && initialSkill) {
+      setRawIdea(initialSkill);
+    }
+  }, [isOpen, initialData, initialSkill]);
+
   if (!isOpen) return null;
 
   const handleAiSuggest = async () => {
@@ -55,7 +77,7 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
         ...prev,
         title: res.title || prev.title,
         description: res.description || prev.description,
-        category: res.suggested_category || prev.category,
+        category: res.suggested_category && PRODUCT_CATEGORIES.includes(res.suggested_category) ? res.suggested_category : (res.category || prev.category),
         price: res.suggested_price || res.price || prev.price,
         unit: res.unit || prev.unit
       }));

@@ -6,7 +6,9 @@ from app.schemas.service import (
     BookingCreateRequest,
     BookingResponse,
     BookingStatusUpdateRequest,
-    BookingReviewRequest
+    BookingReviewRequest,
+    AISuggestServiceRequest,
+    AISuggestServiceResponse
 )
 from app.services.service_booking_service import service_booking_service
 from app.security import get_current_user, require_role
@@ -32,6 +34,15 @@ async def list_services(
         search=search
     )
 
+@router.get("/my-offerings", response_model=List[ServiceResponse])
+async def get_my_offerings(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior views all their offered managed services.
+    """
+    return await service_booking_service.get_senior_services(current_user)
+
 @router.get("/{id}", response_model=ServiceResponse)
 async def get_service(id: str):
     """
@@ -49,17 +60,13 @@ async def create_service(
     """
     return await service_booking_service.create_service(current_user, req)
 
-@router.post("/ai-suggest")
-async def suggest_service(
-    req: Any,
-    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
-):
+@router.post("/ai-suggest", response_model=AISuggestServiceResponse)
+async def suggest_service(req: AISuggestServiceRequest):
     """
     AI assistant converting senior skills into structured managed service packages.
     """
     from app.ai.service_ai import service_ai
-    raw_idea = getattr(req, "raw_idea", None) or (req.get("raw_idea") if isinstance(req, dict) else "")
-    return await service_ai.generate_service(raw_idea)
+    return await service_ai.generate_service(req.raw_idea)
 
 @router.post("/bookings", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 async def create_booking(
@@ -99,15 +106,6 @@ async def update_booking_status(
     Senior accepts booking or updates session status: requested -> accepted -> scheduled -> in_progress -> completed.
     """
     return await service_booking_service.update_booking_status(current_user, id, req)
-
-@router.get("/my-offerings", response_model=List[ServiceResponse])
-async def get_my_offerings(
-    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
-):
-    """
-    Senior views all their offered managed services.
-    """
-    return await service_booking_service.get_senior_services(current_user)
 
 @router.put("/bookings/{id}/progress", response_model=BookingResponse)
 async def mark_session_progress(

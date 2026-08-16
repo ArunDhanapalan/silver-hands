@@ -1,13 +1,33 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
+
 class StoryAnalysisRequest(BaseModel):
     story_text: str = Field(..., min_length=2)
     language: str = "en"
 
+
 class InferredSkillItem(BaseModel):
     skill: str
     reason: str
+
+
+class LaunchpadServiceIdea(BaseModel):
+    title: str
+    description: str
+    category: str = "Education & Learning"
+    price_range: str = "₹400–₹800 / session"
+    duration: str = "45 mins"
+    mode: str = "online"
+
+
+class LaunchpadProductIdea(BaseModel):
+    title: str
+    description: str
+    category: str = "Food & Preserves"
+    price: int = 350
+    unit: str = "Pack"
+
 
 class StoryAnalysisResponse(BaseModel):
     explicit_skills: List[str]
@@ -16,7 +36,10 @@ class StoryAnalysisResponse(BaseModel):
     bio: str
     recommended_categories: List[str]
     suggested_service_product_title: Optional[str] = None
+    launchpad_service_idea: Optional[LaunchpadServiceIdea] = None
+    launchpad_product_idea: Optional[LaunchpadProductIdea] = None
     analysis_engine: str = "hybrid_nlp_engine"
+
 
 class SeniorOnboardRequest(BaseModel):
     full_name: Optional[str] = None
@@ -31,6 +54,7 @@ class SeniorOnboardRequest(BaseModel):
     city: str = "Chennai"
     work_mode: str = "both" # home, online, offline, both
     availability: str = "Flexible"
+
 
 class SeniorProfileResponse(BaseModel):
     id: Optional[str] = None
@@ -52,11 +76,13 @@ class SeniorProfileResponse(BaseModel):
     rating: float = 5.0
     review_count: int = 0
 
+
 class SkillPassportBadge(BaseModel):
     id: str
     title: str
     icon: str
     description: str
+
 
 class SkillPassportResponse(BaseModel):
     passport_id: str
@@ -76,6 +102,7 @@ class SkillPassportResponse(BaseModel):
     keywords: List[str]
     badges: List[SkillPassportBadge]
     credential_hash: str
+
 
 class SeniorTwinResponse(BaseModel):
     senior_id: str

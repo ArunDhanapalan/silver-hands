@@ -154,17 +154,17 @@ export default function SeniorDashboardPage() {
 
           {/* Quick Action Buttons with accessible 44px min height */}
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
-            <Link to="/senior/passport" className="btn btn-outline btn-warning min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2 shadow-xs">
-              <Award className="w-4 h-4 text-warning" /> Skill Passport
-            </Link>
-            <Link to="/senior/services" className="btn btn-outline btn-accent min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2">
-              <BookOpen className="w-4 h-4 text-accent" /> Manage Classes
-            </Link>
-            <Link to="/senior/earnings" className="btn btn-outline btn-neutral min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2">
-              <TrendingUp className="w-4 h-4 text-success" /> View Earnings
+            <Link to="/senior/storefront" className="btn btn-secondary min-h-[44px] px-4 rounded-2xl font-extrabold text-white text-xs sm:text-sm gap-2 shadow-xs">
+              <ShoppingBag className="w-4 h-4" /> My Storefront
             </Link>
             <Link to="/senior/orders" className="btn btn-outline btn-primary min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2">
               <Package className="w-4 h-4 text-primary" /> Store Orders
+            </Link>
+            <Link to="/senior/passport" className="btn btn-outline btn-warning min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2 shadow-xs">
+              <Award className="w-4 h-4 text-warning" /> Skill Passport
+            </Link>
+            <Link to="/senior/earnings" className="btn btn-outline btn-neutral min-h-[44px] px-4 rounded-2xl font-bold text-xs sm:text-sm gap-2">
+              <TrendingUp className="w-4 h-4 text-success" /> Earnings
             </Link>
           </div>
 

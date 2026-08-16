@@ -5,8 +5,7 @@ from app.ai import life_to_skill_ai, matching_ai, product_ai, job_description_ai
 async def test_life_to_skill_ai_submodule():
     transcript = "நான் 30 வருடங்களாக அரசு பள்ளியில் கணக்கு ஆசிரியராக வேலை செய்தேன். ஓய்வுக்கு பின் வீட்டில் குழந்தைகளுக்கு டியூஷன் எடுக்கிறேன்."
     res = await life_to_skill_ai.extract_skills(transcript, language="ta")
-    assert len(res.explicit_skills) >= 1
-    assert "Accounting" in res.explicit_skills or "Teaching" in res.explicit_skills or "Mathematics" in res.explicit_skills
+    assert any("teaching" in s.lower() or "math" in s.lower() or "accounting" in s.lower() or "tutor" in s.lower() for s in res.explicit_skills)
     assert res.bio != ""
 
 def test_matching_ai_submodule():

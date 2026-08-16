@@ -109,6 +109,9 @@ class StoreService:
         if not doc:
             raise HTTPException(status_code=404, detail="Product not found in store")
 
+        return self._format_product(doc)
+
+    def _format_product(self, doc: Dict[str, Any]) -> ProductResponse:
         return ProductResponse(
             id=str(doc.get("_id")),
             seller_id=doc.get("seller_id", ""),
@@ -134,6 +137,25 @@ class StoreService:
             reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])],
             created_at=doc.get("created_at", "")
         )
+
+    async def get_senior_products(self, user_payload: Dict[str, Any]) -> List[ProductResponse]:
+        user_id = user_payload.get("sub")
+        col = self._products_col()
+        cursor = col.find({"seller_id": user_id}).sort("created_at", -1)
+        docs = await cursor.to_list(100)
+        return [self._format_product(d) for d in docs]
+
+    async def delete_product(self, user_payload: Dict[str, Any], product_id: str) -> Dict[str, Any]:
+        user_id = user_payload.get("sub")
+        col = self._products_col()
+        filter_doc = self._build_id_filter(product_id)
+        prod = await col.find_one(filter_doc)
+        if not prod:
+            raise HTTPException(status_code=404, detail="Product not found")
+        if prod.get("seller_id") != user_id:
+            raise HTTPException(status_code=403, detail="You are not authorized to delete this product")
+        await col.delete_one({"_id": prod["_id"]})
+        return {"message": "Product removed successfully", "id": product_id}
 
     async def create_product(self, user_payload: Dict[str, Any], req: ProductCreateRequest) -> ProductResponse:
         user_id = user_payload.get("sub")
@@ -206,8 +228,10 @@ class StoreService:
             title=res.get("title", "Authentic Handcrafted Local Specialty"),
             description=res.get("description", "Prepared with traditional care."),
             suggested_category=res.get("suggested_category", res.get("category", "Food & Preserves")),
-            suggested_price=res.get("suggested_price", 350),
-            keywords=res.get("keywords", ["Handmade", "Traditional"])
+            suggested_price=res.get("suggested_price", res.get("price", 350)),
+            unit=res.get("unit", "Pack"),
+            keywords=res.get("keywords", ["Handmade", "Traditional"]),
+            engine=res.get("engine", "gemini_live")
         )
 
     suggest_product_ai = suggest_product

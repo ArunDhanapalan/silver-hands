@@ -24,9 +24,11 @@ class AISuggestServiceResponse(BaseModel):
     subcategory: str
     mode: str
     suggested_price: int
+    price_per_session: Optional[int] = None
     duration_mins: int
     target_audience: str
     deliverables: List[str] = []
+    engine: Optional[str] = "gemini_live"
 
 class ServiceResponse(BaseModel):
     id: str

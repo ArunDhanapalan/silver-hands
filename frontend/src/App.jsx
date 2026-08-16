@@ -21,6 +21,7 @@ const SeniorOrdersPage = lazy(() => import('./pages/SeniorOrdersPage'));
 const SeniorEarningsPage = lazy(() => import('./pages/SeniorEarningsPage'));
 const SkillPassportPage = lazy(() => import('./pages/SkillPassportPage'));
 const SeniorManageServicesPage = lazy(() => import('./pages/SeniorManageServicesPage'));
+const SeniorStorefrontPage = lazy(() => import('./pages/SeniorStorefrontPage'));
 const CustomerServicesPage = lazy(() => import('./pages/CustomerServicesPage'));
 const CustomerOrdersPage = lazy(() => import('./pages/CustomerOrdersPage'));
 const StorePage = lazy(() => import('./pages/StorePage'));
@@ -95,6 +96,22 @@ export default function App() {
                       element={
                         <ProtectedRoute allowedRoles={['senior']}>
                           <SeniorDashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/senior/storefront" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorStorefrontPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/storefront" 
+                      element={
+                        <ProtectedRoute allowedRoles={['senior']}>
+                          <SeniorStorefrontPage />
                         </ProtectedRoute>
                       } 
                     />

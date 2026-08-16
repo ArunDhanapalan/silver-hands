@@ -1,14 +1,18 @@
+import json
 import logging
 import re
 from typing import Dict, Any, List
+import httpx
+from app.config import settings
 from app.ai.nlp_utils import capitalize_title, capitalize_sentences
 
 logger = logging.getLogger("silverhands.ai.service")
 
+
 class ServiceNLPEngine:
     """
-    High-accuracy domain ontology NLP engine for managed senior services:
-    Language tuition, academic tutoring, accounting advisory, music, and crafts.
+    AI-powered managed service generator for senior citizens.
+    Uses Gemini API for intelligent service packaging; falls back to deterministic ontology.
     """
 
     SERVICE_ONTOLOGY = [
@@ -87,7 +91,87 @@ class ServiceNLPEngine:
     ]
 
     @classmethod
-    def generate_service(cls, raw_input: str) -> Dict[str, Any]:
+    async def generate_service(cls, raw_input: str) -> Dict[str, Any]:
+        """Generate a managed service listing. Tries Gemini AI first, falls back to ontology."""
+        # Try Gemini API first
+        if settings.GEMINI_API_KEY:
+            try:
+                result = await cls._call_gemini_service(raw_input)
+                if result:
+                    logger.info("Service listing generated via Gemini API")
+                    return result
+            except Exception as e:
+                logger.warning("Gemini service AI failed: %s. Using ontology fallback.", str(e))
+
+        # Deterministic fallback
+        logger.warning("Gemini API unavailable for service AI, using ontology fallback")
+        return cls._generate_service_fallback(raw_input)
+
+    @classmethod
+    async def _call_gemini_service(cls, raw_input: str) -> Dict[str, Any]:
+        """Call Gemini API to generate a rich managed service listing."""
+        prompt = f"""You are a managed service packaging expert for SilverHands, an Indian platform empowering senior citizens to offer teaching, mentoring, and consulting services.
+
+Given the raw service idea or skill: "{raw_input}"
+
+Generate a compelling, professional managed service listing as JSON (no markdown wrapper):
+{{
+  "title": "A compelling service title (max 15 words, e.g. '1-on-1 Conversational Telugu Fluency & Cultural Mentoring Masterclass')",
+  "description": "A rich 2-3 sentence description of what the student/customer gets, the teaching methodology, and why this service is valuable.",
+  "category": "One of: Education & Learning, Knowledge & Mentoring, Home & Practical Skills, Culture & Tradition, Family & Care",
+  "subcategory": "A specific subcategory (e.g. Language Tuition, Academic Tutoring, Bookkeeping & Finance, Music & Performing Arts)",
+  "mode": "online or offline or both",
+  "suggested_price": price_per_session_in_INR_integer,
+  "duration_mins": session_duration_in_minutes_integer,
+  "target_audience": "Who this service is for (e.g. School Students Age 6-16, Small Business Owners)",
+  "deliverables": ["Deliverable 1", "Deliverable 2", "Deliverable 3"]
+}}
+
+RULES:
+- Prices should be realistic for Indian market (₹300-₹1500 per session)
+- Duration should be 30, 45, 60, or 90 minutes
+- Make the title premium and appealing
+- Description should highlight the senior's unique value proposition"""
+
+        models = ["gemini-2.5-flash", "gemini-2.5-pro"]
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            for model in models:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={settings.GEMINI_API_KEY}"
+                try:
+                    resp = await client.post(url, json={
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "generationConfig": {"temperature": 0.3, "response_mime_type": "application/json"}
+                    })
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            text_content = candidates[0]["content"]["parts"][0]["text"]
+                            json_match = re.search(r"\{.*\}", text_content, re.DOTALL)
+                            if json_match:
+                                parsed = json.loads(json_match.group(0))
+                                if "title" in parsed and "description" in parsed:
+                                    return {
+                                        "title": capitalize_title(str(parsed["title"])),
+                                        "description": capitalize_sentences(str(parsed["description"])),
+                                        "category": parsed.get("category", "Education & Learning"),
+                                        "subcategory": parsed.get("subcategory", "Personal Mentoring"),
+                                        "mode": parsed.get("mode", "online"),
+                                        "suggested_price": int(parsed.get("suggested_price", 400)),
+                                        "price_per_session": int(parsed.get("suggested_price", 400)),
+                                        "duration_mins": int(parsed.get("duration_mins", 45)),
+                                        "target_audience": parsed.get("target_audience", "All Learners"),
+                                        "deliverables": parsed.get("deliverables", ["Personalized learning roadmap", "Live guided practice", "Post-session summary notes"]),
+                                        "engine": "gemini_live"
+                                    }
+                except Exception as ex:
+                    logger.warning("Gemini service AI (%s): %s", model, ex)
+                    continue
+        return None
+
+    @classmethod
+    def _generate_service_fallback(cls, raw_input: str) -> Dict[str, Any]:
+        """Deterministic ontology fallback."""
         text_clean = (raw_input or "").strip()
         lower_t = text_clean.lower()
 
@@ -126,7 +210,6 @@ class ServiceNLPEngine:
             target = "All Learners & Beginners"
             deliverables = ["Personalized learning roadmap", "Live guided practice", "Post-session summary notes"]
 
-        # CAPITALISE TITLE AND DESCRIPTIONS
         title = capitalize_title(title_raw)
         description = capitalize_sentences(desc_raw)
 
@@ -140,7 +223,8 @@ class ServiceNLPEngine:
             "price_per_session": price,
             "duration_mins": duration,
             "target_audience": target,
-            "deliverables": deliverables
+            "deliverables": deliverables,
+            "engine": "ontology_fallback"
         }
 
 service_ai = ServiceNLPEngine()

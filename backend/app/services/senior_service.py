@@ -12,6 +12,8 @@ from app.schemas.senior import (
     SeniorOnboardRequest,
     SeniorProfileResponse,
     InferredSkillItem,
+    LaunchpadServiceIdea,
+    LaunchpadProductIdea,
     SkillPassportResponse,
     SkillPassportBadge,
     SeniorTwinResponse
@@ -29,6 +31,19 @@ class SeniorService:
     async def extract_skills_from_story(self, req: StoryAnalysisRequest) -> StoryAnalysisResponse:
         result = await analyze_life_story(req.story_text, req.language)
         inferred = [InferredSkillItem(**item) for item in result.get("inferred_skills", [])]
+
+        # Build launchpad service idea from AI result
+        service_idea = None
+        raw_service = result.get("launchpad_service_idea")
+        if raw_service and isinstance(raw_service, dict) and raw_service.get("title"):
+            service_idea = LaunchpadServiceIdea(**raw_service)
+
+        # Build launchpad product idea from AI result
+        product_idea = None
+        raw_product = result.get("launchpad_product_idea")
+        if raw_product and isinstance(raw_product, dict) and raw_product.get("title"):
+            product_idea = LaunchpadProductIdea(**raw_product)
+
         return StoryAnalysisResponse(
             explicit_skills=result.get("explicit_skills", []),
             inferred_skills=inferred,
@@ -36,6 +51,8 @@ class SeniorService:
             bio=result.get("bio", ""),
             recommended_categories=result.get("recommended_categories", []),
             suggested_service_product_title=result.get("suggested_service_product_title"),
+            launchpad_service_idea=service_idea,
+            launchpad_product_idea=product_idea,
             analysis_engine=result.get("analysis_engine", "hybrid_nlp_engine")
         )
 

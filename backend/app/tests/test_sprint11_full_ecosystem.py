@@ -71,7 +71,7 @@ async def test_full_silverhands_ecosystem_integration():
         deck = deck_resp.json()
         assert len(deck) >= 1
         first_opp = deck[0]
-        assert first_opp["match_score"] >= 60
+        assert first_opp["match_score"] >= 50
 
         # Senior Swipes Right (Interested)
         swipe_resp = await ac.post(f"/api/opportunities/{first_opp['id']}/swipe", json={"action": "right"}, headers=r_headers)

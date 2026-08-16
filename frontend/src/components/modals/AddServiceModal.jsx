@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Sparkles, 
@@ -21,7 +21,7 @@ const SERVICE_CATEGORIES = [
   'Family & Care'
 ];
 
-export default function AddServiceModal({ isOpen, onClose, onServiceCreated, initialSkill = '' }) {
+export default function AddServiceModal({ isOpen, onClose, onServiceCreated, initialSkill = '', initialData = null }) {
   const [rawIdea, setRawIdea] = useState(initialSkill);
   const [aiLoading, setAiLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,6 +41,33 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
     languages: ['en', 'ta']
   });
 
+  // Pre-populate form from launchpad AI data when modal opens
+  useEffect(() => {
+    if (isOpen && initialData && initialData.title) {
+      const priceNum = typeof initialData.price_range === 'string'
+        ? parseInt(initialData.price_range.replace(/[^\d]/g, '')) || 400
+        : initialData.suggested_price || initialData.price_per_session || 400;
+      const durationNum = typeof initialData.duration === 'string'
+        ? parseInt(initialData.duration.replace(/[^\d]/g, '')) || 45
+        : initialData.duration_mins || 45;
+
+      setServiceForm(prev => ({
+        ...prev,
+        title: initialData.title || prev.title,
+        description: initialData.description || prev.description,
+        category: initialData.category && SERVICE_CATEGORIES.includes(initialData.category) ? initialData.category : prev.category,
+        subcategory: initialData.subcategory || prev.subcategory,
+        mode: initialData.mode || prev.mode,
+        price_per_session: priceNum,
+        duration_mins: durationNum,
+        target_audience: initialData.target_audience || prev.target_audience
+      }));
+      setRawIdea(initialData.title || initialSkill);
+    } else if (isOpen && initialSkill) {
+      setRawIdea(initialSkill);
+    }
+  }, [isOpen, initialData, initialSkill]);
+
   if (!isOpen) return null;
 
   const handleAiSuggest = async () => {
@@ -56,7 +83,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
         category: res.category && SERVICE_CATEGORIES.includes(res.category) ? res.category : prev.category,
         subcategory: res.subcategory || prev.subcategory,
         mode: res.mode || prev.mode,
-        price_per_session: res.suggested_price || prev.price_per_session,
+        price_per_session: res.suggested_price || res.price_per_session || prev.price_per_session,
         duration_mins: res.duration_mins || prev.duration_mins,
         target_audience: res.target_audience || prev.target_audience
       }));

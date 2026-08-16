@@ -85,8 +85,8 @@ Generate a compelling, authentic product listing as JSON (no markdown wrapper):
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"]
 }}"""
 
-    models = ["gemini-2.0-flash", "gemini-1.5-flash"]
-    async with httpx.AsyncClient(timeout=12.0) as client:
+    models = ["gemini-2.5-flash", "gemini-2.5-pro"]
+    async with httpx.AsyncClient(timeout=20.0) as client:
         for model in models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={settings.GEMINI_API_KEY}"
             try:

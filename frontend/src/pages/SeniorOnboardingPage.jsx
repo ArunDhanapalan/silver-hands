@@ -70,6 +70,8 @@ export default function SeniorOnboardingPage() {
     keywords: [],
     bio: '',
     suggested_service_product_title: '',
+    launchpad_service_idea: null,
+    launchpad_product_idea: null,
     analysis_engine: 'gemini_flash_nlp'
   });
 
@@ -265,6 +267,8 @@ export default function SeniorOnboardingPage() {
         keywords: Array.isArray(res.keywords) ? res.keywords : ['Experience', 'Advisory'],
         bio: res.bio || storyText.slice(0, 150),
         suggested_service_product_title: res.suggested_service_product_title || '',
+        launchpad_service_idea: res.launchpad_service_idea || null,
+        launchpad_product_idea: res.launchpad_product_idea || null,
         analysis_engine: res.analysis_engine || 'gemini_flash_nlp'
       });
       setCurrentStep(3); // Go to Skill Review
@@ -774,37 +778,49 @@ export default function SeniorOnboardingPage() {
               Your Profile is Live, {user?.full_name || 'Senior Guru'}!
             </h2>
             <p className="text-xs sm:text-sm text-base-content/75 max-w-lg mx-auto">
-              Based on your verified skills ({allSkills.slice(0, 3).join(', ')}), here are high-earning services & products you can start offering today:
+              Based on your verified skills ({allSkills.slice(0, 3).join(', ')}), here are AI-personalized services & products you can start offering today:
             </p>
+            {extractedData.analysis_engine === 'gemini_live' && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+                <Sparkles className="w-3 h-3" /> Powered by Gemini AI
+              </span>
+            )}
           </div>
 
           {/* Tailored Service & Product Recommendation Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Service Recommendation Card */}
+            {/* Service Recommendation Card — AI Generated */}
             <div className="card bg-base-100 border-2 border-accent/30 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <span className="badge badge-accent badge-sm font-bold text-white uppercase text-[10px]">
-                  🌟 Recommended Managed Service
+                  🌟 AI-Recommended Managed Service
                 </span>
                 <h3 className="font-extrabold text-lg text-base-content">
-                  1-on-1 Personalized Coaching in {allSkills[0] || 'Language / Mentoring'}
+                  {extractedData.launchpad_service_idea?.title || `1-on-1 Personalized Coaching in ${allSkills[0] || 'Language / Mentoring'}`}
                 </h3>
                 <p className="text-xs text-base-content/70 leading-relaxed">
-                  Teach students online or in-person. SilverHands manages student bookings, sends WhatsApp reminders, and handles video meeting rooms.
+                  {extractedData.launchpad_service_idea?.description || 'Teach students online or in-person. SilverHands manages student bookings, sends WhatsApp reminders, and handles video meeting rooms.'}
                 </p>
                 <div className="flex items-center gap-3 text-xs font-semibold text-primary pt-1">
-                  <span>₹400–₹800 / session</span>
+                  <span>{extractedData.launchpad_service_idea?.price_range || '₹400–₹800 / session'}</span>
                   <span>•</span>
-                  <span>45 mins</span>
+                  <span>{extractedData.launchpad_service_idea?.duration || '45 mins'}</span>
+                  <span>•</span>
+                  <span className="capitalize">{extractedData.launchpad_service_idea?.mode || 'online'}</span>
                 </div>
+                {extractedData.launchpad_service_idea?.category && (
+                  <div className="text-[10px] font-medium text-accent/80 pt-0.5">
+                    Category: {extractedData.launchpad_service_idea.category}
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 border-t border-base-200 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    setModalSkillHint(allSkills[0] || 'Spoken Telugu Tutoring');
+                    setModalSkillHint(extractedData.launchpad_service_idea?.title || allSkills[0] || 'Spoken Telugu Tutoring');
                     setShowServiceModal(true);
                   }}
                   className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1.5 w-full shadow-sm"
@@ -814,30 +830,45 @@ export default function SeniorOnboardingPage() {
               </div>
             </div>
 
-            {/* Product Recommendation Card */}
+            {/* Product Recommendation Card — AI Generated */}
             <div className="card bg-base-100 border-2 border-secondary/30 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <span className="badge badge-secondary badge-sm font-bold text-white uppercase text-[10px]">
-                  🛍️ Recommended Product to Sell
+                  🛍️ AI-Recommended Product to Sell
                 </span>
                 <h3 className="font-extrabold text-lg text-base-content">
-                  Handcrafted Delicacy / Speciality Box
+                  {extractedData.launchpad_product_idea?.title || 'Handcrafted Delicacy / Speciality Box'}
                 </h3>
                 <p className="text-xs text-base-content/70 leading-relaxed">
-                  List your traditional recipes, sweets, pickles, or tailored garments for {selectedCity?.name || 'Chennai'} customers. AI writes the story and sets price.
+                  {extractedData.launchpad_product_idea?.description || `List your traditional recipes, sweets, pickles, or tailored garments for ${selectedCity?.name || 'Chennai'} customers. AI writes the story and sets price.`}
                 </p>
                 <div className="flex items-center gap-3 text-xs font-semibold text-secondary pt-1">
-                  <span>100% Direct Payout</span>
-                  <span>•</span>
-                  <span>Zero Listing Fees</span>
+                  {extractedData.launchpad_product_idea?.price ? (
+                    <>
+                      <span>₹{extractedData.launchpad_product_idea.price}</span>
+                      <span>•</span>
+                      <span>{extractedData.launchpad_product_idea.unit || 'Pack'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>100% Direct Payout</span>
+                      <span>•</span>
+                      <span>Zero Listing Fees</span>
+                    </>
+                  )}
                 </div>
+                {extractedData.launchpad_product_idea?.category && (
+                  <div className="text-[10px] font-medium text-secondary/80 pt-0.5">
+                    Category: {extractedData.launchpad_product_idea.category}
+                  </div>
+                )}
               </div>
 
               <div className="pt-3 border-t border-base-200 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    setModalSkillHint(allSkills.find(s => s.includes('Cook') || s.includes('Tailor')) || 'Traditional homemade delicacies');
+                    setModalSkillHint(extractedData.launchpad_product_idea?.title || allSkills.find(s => typeof s === 'string' && (s.includes('Cook') || s.includes('Tailor'))) || 'Traditional homemade delicacies');
                     setShowProductModal(true);
                   }}
                   className="btn btn-secondary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 w-full shadow-sm"
@@ -867,6 +898,7 @@ export default function SeniorOnboardingPage() {
       <AddServiceModal
         isOpen={showServiceModal}
         initialSkill={modalSkillHint}
+        initialData={extractedData.launchpad_service_idea}
         onClose={() => setShowServiceModal(false)}
         onServiceCreated={() => {
           setToastMsg('Service offering launched successfully!');
@@ -877,6 +909,7 @@ export default function SeniorOnboardingPage() {
       <AddProductModal
         isOpen={showProductModal}
         initialSkill={modalSkillHint}
+        initialData={extractedData.launchpad_product_idea}
         onClose={() => setShowProductModal(false)}
         onProductCreated={() => {
           setToastMsg('Homemade product listed in marketplace successfully!');

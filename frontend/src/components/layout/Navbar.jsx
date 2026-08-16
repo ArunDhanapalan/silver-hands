@@ -105,24 +105,76 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Desktop Navigation Links */}
+              {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
               
-              {/* If Company Profile, ONLY Show Company Hub */}
+              {/* If Company Profile */}
               {isCompany ? (
-                <Link 
-                  to="/company" 
-                  className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/company') ? 'btn-active text-primary' : ''}`}
-                >
-                  <Briefcase className="w-4 h-4 text-primary" />
-                  Company Hub & Postings
-                </Link>
+                <>
+                  <Link 
+                    to="/company" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/company') ? 'btn-active text-primary font-bold' : ''}`}
+                  >
+                    <Briefcase className="w-4 h-4 text-primary" />
+                    Company Hub & Postings
+                  </Link>
+                  <Link 
+                    to="/community" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-bold' : ''}`}
+                  >
+                    <Users className="w-4 h-4 text-secondary" />
+                    {t('nav_community')}
+                  </Link>
+                </>
+              ) : isSenior ? (
+                /* Senior Navigation — Cleanly Segregated */
+                <>
+                  <Link 
+                    to="/senior" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior' || routerLocation.pathname === '/opportunities' ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
+                  >
+                    <Briefcase className="w-4 h-4 text-warning" />
+                    Opportunities
+                  </Link>
+
+                  <Link 
+                    to="/senior/storefront" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront') ? 'btn-active text-secondary font-extrabold bg-secondary/10' : ''}`}
+                  >
+                    <ShoppingBag className="w-4 h-4 text-secondary" />
+                    My Storefront
+                  </Link>
+
+                  <Link 
+                    to="/senior/orders" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/orders') ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
+                  >
+                    <Package className="w-4 h-4 text-primary" />
+                    Orders
+                  </Link>
+
+                  <Link 
+                    to="/senior/earnings" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-success font-extrabold bg-success/10' : ''}`}
+                  >
+                    <TrendingUp className="w-4 h-4 text-success" />
+                    {t('nav_earnings')}
+                  </Link>
+
+                  <Link 
+                    to="/community" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
+                  >
+                    <Users className="w-4 h-4 text-primary" />
+                    {t('nav_community')}
+                  </Link>
+                </>
               ) : (
-                /* Consumer & Senior Navigation */
+                /* Consumer & Guest Navigation */
                 <>
                   <Link 
                     to="/store" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary' : ''}`}
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
                     {t('nav_store')}
@@ -130,7 +182,7 @@ export default function Navbar() {
 
                   <Link 
                     to="/services" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary' : ''}`}
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Sparkles className="w-4 h-4 text-accent" />
                     {t('nav_services')}
@@ -138,30 +190,11 @@ export default function Navbar() {
 
                   <Link 
                     to="/community" 
-                    className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary' : ''}`}
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Users className="w-4 h-4 text-primary" />
                     {t('nav_community')}
                   </Link>
-
-                  {isSenior && (
-                    <>
-                      <Link 
-                        to="/senior" 
-                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior' ? 'btn-active text-primary' : ''}`}
-                      >
-                        <Layers className="w-4 h-4 text-warning" />
-                        {t('nav_deck')}
-                      </Link>
-                      <Link 
-                        to="/senior/earnings" 
-                        className={`btn btn-ghost btn-sm rounded-lg gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-primary' : ''}`}
-                      >
-                        <TrendingUp className="w-4 h-4 text-success" />
-                        {t('nav_earnings')}
-                      </Link>
-                    </>
-                  )}
                 </>
               )}
 
@@ -175,7 +208,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setFestModalOpen(true)}
-                  className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
+                  className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
                   aria-label="Select Festival Context"
                 >
                   <span>{activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '🎄'}</span>
@@ -188,7 +221,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setCityModalOpen(true)}
-                className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
                 aria-label="Select City"
               >
                 <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
@@ -204,7 +237,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setLangModalOpen(true)}
-                className="btn btn-ghost btn-sm rounded-xl px-2.5 gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
                 aria-label="Select Language"
               >
                 <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
@@ -218,52 +251,88 @@ export default function Navbar() {
               {/* User Account / Auth */}
               {isAuthenticated ? (
                 <div className="dropdown dropdown-end relative">
-                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu">
-                    <div className="bg-primary text-primary-content rounded-full w-9 shadow-inner flex items-center justify-center font-bold text-sm">
+                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder min-h-[44px] min-w-[44px]" aria-label="User menu">
+                    <div className="bg-primary text-primary-content rounded-full w-10 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   </div>
-                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-2.5 shadow-2xl bg-base-100 rounded-3xl w-64 right-0 max-w-[calc(100vw-2rem)] border border-base-300 text-xs space-y-1">
-                    <li className="px-3 py-2 bg-base-200/60 rounded-2xl mb-1">
-                      <div className="flex flex-col gap-0.5 pointer-events-none p-0">
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-3 shadow-2xl bg-base-100 rounded-3xl w-72 right-0 max-w-[calc(100vw-2rem)] border border-base-300 text-xs space-y-1.5">
+                    <li className="px-3.5 py-2.5 bg-base-200/70 rounded-2xl mb-1.5 border border-base-300/60">
+                      <div className="flex flex-col gap-1 pointer-events-none p-0">
                         <span className="font-extrabold text-sm text-base-content truncate">{user?.company_name || user?.full_name}</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="badge badge-xs badge-primary font-bold text-white uppercase">{user?.role}</span>
+                          <span className="badge badge-xs badge-primary font-bold text-white uppercase">{user?.role === 'senior' ? 'Senior Guru' : user?.role}</span>
                           <span className="text-[10px] text-base-content/60 truncate">{user?.email}</span>
                         </div>
+                        <span className="text-[10px] text-base-content/50 font-medium">{selectedCity?.name || 'Chennai'} • {selectedLocality || 'All Areas'}</span>
                       </div>
                     </li>
                     
                     {user?.role === 'senior' && (
                       <>
-                        <li><Link to="/senior" className="py-2 rounded-xl font-semibold"><Layers className="w-4 h-4 text-primary" /> Opportunities Deck</Link></li>
-                        <li><Link to="/senior/passport" className="py-2 rounded-xl font-semibold text-warning"><Award className="w-4 h-4 text-warning" /> My Skill Passport</Link></li>
-                        <li><Link to="/senior/services" className="py-2 rounded-xl font-semibold"><BookOpen className="w-4 h-4 text-accent" /> Manage Live Classes</Link></li>
-                        <li><Link to="/senior/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> Store Orders</Link></li>
-                        <li><Link to="/senior/earnings" className="py-2 rounded-xl font-semibold"><TrendingUp className="w-4 h-4 text-success" /> Earnings & Ledger</Link></li>
-                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Senior Community</Link></li>
-                        <li><Link to="/senior/onboarding" className="py-2 rounded-xl font-semibold"><Sparkles className="w-4 h-4 text-secondary" /> Edit Life Story</Link></li>
+                        <li>
+                          <Link to="/senior" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Briefcase className="w-4 h-4 text-warning shrink-0" />
+                            <span>Job Opportunities</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/senior/storefront" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
+                            <ShoppingBag className="w-4 h-4 text-secondary shrink-0" />
+                            <span>My Storefront & Catalogs</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/senior/orders" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Package className="w-4 h-4 text-primary shrink-0" />
+                            <span>Orders & Teaching Sessions</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/senior/earnings" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-success active:bg-success active:text-white">
+                            <TrendingUp className="w-4 h-4 text-success shrink-0" />
+                            <span>Earnings & Payout Ledger</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/senior/passport" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-warning active:bg-warning active:text-white">
+                            <Award className="w-4 h-4 text-warning shrink-0" />
+                            <span>My Skill Passport</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/community" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Users className="w-4 h-4 text-primary shrink-0" />
+                            <span>Senior Community</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link to="/senior/onboarding" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Sparkles className="w-4 h-4 text-secondary shrink-0" />
+                            <span>Edit Life Story & AI Skills</span>
+                          </Link>
+                        </li>
                       </>
                     )}
 
                     {user?.role === 'customer' && (
                       <>
-                        <li><Link to="/orders" className="py-2 rounded-xl font-semibold"><Package className="w-4 h-4 text-primary" /> My Store Orders</Link></li>
-                        <li><Link to="/customer/services" className="py-2 rounded-xl font-semibold"><BookOpen className="w-4 h-4 text-accent" /> My Booked Classes</Link></li>
-                        <li><Link to="/cart" className="py-2 rounded-xl font-semibold"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart</Link></li>
-                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-primary" /> Community Feed</Link></li>
+                        <li><Link to="/orders" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Package className="w-4 h-4 text-primary" /> My Store Orders</Link></li>
+                        <li><Link to="/customer/services" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><BookOpen className="w-4 h-4 text-accent" /> My Booked Classes</Link></li>
+                        <li><Link to="/cart" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart</Link></li>
+                        <li><Link to="/community" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Community Feed</Link></li>
                       </>
                     )}
 
                     {user?.role === 'company' && (
                       <>
-                        <li><Link to="/company" className="py-2 rounded-xl font-semibold"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
-                        <li><Link to="/community" className="py-2 rounded-xl font-semibold"><Users className="w-4 h-4 text-secondary" /> Community Feed</Link></li>
+                        <li><Link to="/company" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
+                        <li><Link to="/community" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-secondary" /> Community Feed</Link></li>
                       </>
                     )}
 
-                    <li className="border-t border-base-200 pt-1 mt-1">
-                      <button onClick={logout} className="text-error font-bold py-2 rounded-xl hover:bg-error/10">
+                    <li className="border-t border-base-200 pt-1.5 mt-1.5">
+                      <button onClick={logout} className="text-error font-bold min-h-[44px] px-3.5 py-2.5 rounded-2xl hover:bg-error/10 flex items-center gap-2">
                         <LogOut className="w-4 h-4" /> Logout
                       </button>
                     </li>

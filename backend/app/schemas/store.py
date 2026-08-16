@@ -96,7 +96,9 @@ class AISuggestProductResponse(BaseModel):
     description: str
     suggested_category: str
     suggested_price: int
-    keywords: List[str]
+    unit: Optional[str] = "Pack"
+    keywords: List[str] = []
+    engine: Optional[str] = "gemini_live"
 
 class ProductReviewRequest(BaseModel):
     rating: int = Field(..., ge=1, le=5)

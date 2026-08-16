@@ -35,12 +35,31 @@ async def list_products(
         max_price=max_price
     )
 
+@router.get("/my-products", response_model=List[ProductResponse])
+async def get_my_products(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior seller lists all products they have published in store.
+    """
+    return await store_service.get_senior_products(current_user)
+
 @router.get("/products/{id}", response_model=ProductResponse)
 async def get_product(id: str):
     """
     Public product detail endpoint.
     """
     return await store_service.get_product_by_id(id)
+
+@router.delete("/products/{id}")
+async def delete_product(
+    id: str,
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior seller deletes a product from store.
+    """
+    return await store_service.delete_product(current_user, id)
 
 @router.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(
@@ -53,10 +72,7 @@ async def create_product(
     return await store_service.create_product(current_user, req)
 
 @router.post("/products/ai-suggest", response_model=AISuggestProductResponse)
-async def suggest_product(
-    req: AISuggestProductRequest,
-    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
-):
+async def suggest_product(req: AISuggestProductRequest):
     """
     AI title, description, category, and pricing generator for seniors.
     """
