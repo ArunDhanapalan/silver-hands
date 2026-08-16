@@ -134,7 +134,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior' || routerLocation.pathname === '/opportunities' ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
                   >
                     <Briefcase className="w-4 h-4 text-warning" />
-                    Opportunities
+                    <span>Opportunities</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5 animate-pulse">NEW</span>
                   </Link>
 
                   <Link 
@@ -142,7 +143,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront') ? 'btn-active text-secondary font-extrabold bg-secondary/10' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
-                    My Storefront
+                    <span>My Storefront</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -150,7 +152,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/services') ? 'btn-active text-accent font-extrabold bg-accent/10' : ''}`}
                   >
                     <BookOpen className="w-4 h-4 text-accent" />
-                    Service Hub
+                    <span>Service Hub</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -158,7 +161,7 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-success font-extrabold bg-success/10' : ''}`}
                   >
                     <TrendingUp className="w-4 h-4 text-success" />
-                    {t('nav_earnings')}
+                    <span>{t('nav_earnings')}</span>
                   </Link>
 
                   <Link 
@@ -166,7 +169,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
                   >
                     <Users className="w-4 h-4 text-primary" />
-                    {t('nav_community')}
+                    <span>{t('nav_community')}</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
                 </>
               ) : (
@@ -177,7 +181,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
-                    {t('nav_store')}
+                    <span>{t('nav_store')}</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -185,7 +190,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Sparkles className="w-4 h-4 text-accent" />
-                    {t('nav_services')}
+                    <span>{t('nav_services')}</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -193,7 +199,8 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Users className="w-4 h-4 text-primary" />
-                    {t('nav_community')}
+                    <span>{t('nav_community')}</span>
+                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
                 </>
               )}

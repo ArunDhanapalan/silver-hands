@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingBag, Sparkles, Users, Layers, Briefcase, User, Package, TrendingUp, BookOpen } from 'lucide-react';
+import { Home, ShoppingBag, Sparkles, Users, Briefcase, User, TrendingUp, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function MobileNav() {
@@ -18,35 +18,38 @@ export default function MobileNav() {
           <>
             <Link 
               to="/senior" 
-              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname === '/senior' || location.pathname === '/opportunities' ? 'text-primary font-black' : 'text-base-content/70'
               }`}
               aria-label="Opportunities"
             >
               <Briefcase className="w-5 h-5 mb-0.5 text-warning" />
               <span>Gigs</span>
+              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100 animate-pulse"></span>
             </Link>
 
             <Link 
               to="/senior/storefront" 
-              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/storefront') || location.pathname.startsWith('/storefront') ? 'text-secondary font-black' : 'text-base-content/70'
               }`}
               aria-label="My Storefront"
             >
               <ShoppingBag className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Store</span>
+              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
               to="/senior/services" 
-              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/services') ? 'text-accent font-black' : 'text-base-content/70'
               }`}
               aria-label="Service Hub"
             >
               <BookOpen className="w-5 h-5 mb-0.5 text-accent" />
               <span>Classes</span>
+              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
@@ -62,13 +65,14 @@ export default function MobileNav() {
 
             <Link 
               to="/community" 
-              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-black' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-primary" />
               <span>Community</span>
+              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
           </>
         ) : user?.role === 'company' ? (
@@ -83,15 +87,17 @@ export default function MobileNav() {
               <Briefcase className="w-5 h-5 mb-0.5 text-primary" />
               <span>Postings</span>
             </Link>
+            
             <Link 
               to="/community" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Community</span>
+              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
           </>
         ) : (
@@ -109,35 +115,38 @@ export default function MobileNav() {
 
             <Link 
               to="/store" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/store') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Store"
             >
               <ShoppingBag className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Store</span>
+              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
               to="/services" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/services') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Services"
             >
               <Sparkles className="w-5 h-5 mb-0.5 text-accent" />
               <span>Classes</span>
+              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
               to="/community" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-primary" />
               <span>Community</span>
+              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
