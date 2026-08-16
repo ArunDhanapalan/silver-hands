@@ -1,23 +1,14 @@
 {
-  "services": {
-    "frontend": {
-      "root": "frontend",
-      "framework": "vite"
-    },
-    "backend": {
-      "root": "backend",
-      "framework": "fastapi",
-      "entrypoint": "app/main.py"
-    }
-  },
-  "routes": [
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend"
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

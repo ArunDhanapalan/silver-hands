@@ -5,6 +5,7 @@
   "scripts": {
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "cd backend && venv/Scripts/uvicorn app.main:app --reload --port 8000",
+    "postinstall": "npm install --prefix frontend",
     "build": "npm run build --prefix frontend",
     "test": "cd backend && venv/Scripts/pytest"
   }
