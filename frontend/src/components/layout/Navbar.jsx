@@ -22,7 +22,8 @@ import {
   SlidersHorizontal, 
   Home, 
   Award, 
-  BookOpen 
+  BookOpen,
+  MessageSquare 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
