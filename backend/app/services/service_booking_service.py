@@ -389,7 +389,7 @@ class ServiceBookingService:
             b_docs = await cursor.to_list(100)
             student_bookings = [self._format_booking(b) for b in b_docs]
             
-            active_students = [b for b in student_bookings if b.status != "cancelled"]
+            active_students = [b for b in student_bookings if b.status in ("requested", "accepted", "scheduled", "in_progress")]
             completed_students = [b for b in student_bookings if b.status == "completed"]
             total_earnings = sum(b.total_amount for b in completed_students)
 

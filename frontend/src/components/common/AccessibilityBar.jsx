@@ -19,9 +19,9 @@ export default function AccessibilityBar() {
   useEffect(() => {
     const root = document.documentElement;
     if (fontSizeLevel === 'large') {
-      root.style.fontSize = '18px';
+      root.style.fontSize = '17px';
     } else if (fontSizeLevel === 'xlarge') {
-      root.style.fontSize = '20px';
+      root.style.fontSize = '18px';
     } else {
       root.style.fontSize = '16px';
     }
@@ -44,7 +44,7 @@ export default function AccessibilityBar() {
   return (
     /* Floating Container: Positioned at bottom-20 on mobile to cleanly avoid MobileNav bar (bottom-0) */
     <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[99999] flex flex-col items-center gap-3">
-      
+
       {/* 1. Help Desk Button (Positioned directly above Accessibility) */}
       <SeniorHelpWidget />
 
@@ -63,7 +63,7 @@ export default function AccessibilityBar() {
         {/* Compact Popover Panel (Clean, bounded, strictly within screen) */}
         {isOpen && (
           <div className="absolute bottom-16 right-0 w-72 max-w-[calc(100vw-2.5rem)] bg-base-100 border-2 border-base-300 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-150 z-[99999]">
-            
+
             <div className="flex items-center justify-between pb-2 border-b border-base-200">
               <span className="text-xs font-bold text-base-content flex items-center gap-1.5">
                 <Accessibility className="w-4 h-4 text-primary" /> Vision & Text Comfort
@@ -87,33 +87,30 @@ export default function AccessibilityBar() {
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('normal')}
-                  className={`join-item btn min-h-[42px] ${
-                    fontSizeLevel === 'normal' 
-                      ? 'btn-primary text-white font-bold text-sm' 
+                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'normal'
+                      ? 'btn-primary text-white font-bold text-sm'
                       : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-sm font-semibold'
-                  }`}
+                    }`}
                 >
                   A
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('large')}
-                  className={`join-item btn min-h-[42px] ${
-                    fontSizeLevel === 'large' 
-                      ? 'btn-primary text-white font-bold text-base' 
+                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'large'
+                      ? 'btn-primary text-white font-bold text-base'
                       : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-base font-bold'
-                  }`}
+                    }`}
                 >
                   A+
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('xlarge')}
-                  className={`join-item btn min-h-[42px] ${
-                    fontSizeLevel === 'xlarge' 
-                      ? 'btn-primary text-white font-black text-lg' 
+                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'xlarge'
+                      ? 'btn-primary text-white font-black text-lg'
                       : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-lg font-black'
-                  }`}
+                    }`}
                 >
                   A++
                 </button>
@@ -131,11 +128,10 @@ export default function AccessibilityBar() {
               <button
                 type="button"
                 onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`btn min-h-[44px] w-full rounded-2xl text-xs font-bold gap-2 ${
-                  isDarkMode 
-                    ? 'btn-secondary text-white shadow-md hover:bg-secondary/90 hover:text-white' 
+                className={`btn min-h-[44px] w-full rounded-2xl text-xs font-bold gap-2 ${isDarkMode
+                    ? 'btn-secondary text-white shadow-md hover:bg-secondary/90 hover:text-white'
                     : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content'
-                }`}
+                  }`}
               >
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}

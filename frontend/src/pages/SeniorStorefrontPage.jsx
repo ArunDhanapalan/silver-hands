@@ -221,25 +221,25 @@ export default function SeniorStorefrontPage() {
 
       <ErrorAlert message={error} onRetry={fetchStorefrontData} />
 
-      {/* FESTIVAL SHOWCASE BANNER */}
-      <div className="bg-gradient-to-r from-warning/15 via-secondary/15 to-primary/15 border border-warning/30 rounded-3xl p-4 sm:p-5 shadow-sm relative overflow-hidden">
+      {/* FESTIVAL SHOWCASE BANNER WITH AI RECOMMENDATIONS */}
+      <div className="bg-gradient-to-r from-warning/15 via-secondary/15 to-primary/15 border border-warning/30 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div className="flex items-start sm:items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-warning/20 text-warning flex items-center justify-center text-xl shrink-0">
-              {activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '✨'}
+              {activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' || activeFestival?.includes('Milad') ? '🌙' : '✨'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-warning">
-                  Festival Spotlight
+                  Active Festival Spotlight
                 </span>
                 <span className="badge badge-warning badge-xs font-bold text-white">{activeFestival}</span>
               </div>
               <h2 className="text-sm sm:text-base font-bold text-base-content">
-                {activeFestival} Festive Edition
+                {activeFestival} High-Demand Recommendations for Seniors
               </h2>
               <p className="text-xs text-base-content/75 max-w-xl">
-                Tag your homemade delicacies and festive crafts to get featured for {activeFestival}.
+                Prepare seasonal specialties to earn directly during {activeFestival}.
               </p>
             </div>
           </div>
@@ -264,10 +264,27 @@ export default function SeniorStorefrontPage() {
               }}
               className="btn btn-warning btn-sm min-h-[38px] px-3.5 rounded-xl text-white font-bold text-xs gap-1 shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Tag {activeFestival} Item
+              <Plus className="w-3.5 h-3.5" /> + List Festive Item
             </button>
           </div>
         </div>
+
+        {/* Actionable Suggestions for Senior */}
+        {currentFestivalInfo?.senior_suggestions && currentFestivalInfo.senior_suggestions.length > 0 && (
+          <div className="pt-2 border-t border-warning/20">
+            <span className="text-[11px] font-black uppercase text-warning tracking-wide block mb-1.5">
+              💡 Recommended Activities to Earn During {activeFestival}:
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {currentFestivalInfo.senior_suggestions.map((sugg, idx) => (
+                <div key={idx} className="bg-base-100/90 border border-warning/30 rounded-xl p-2.5 text-xs flex items-start gap-2 shadow-2xs">
+                  <span className="text-warning font-bold shrink-0">{idx + 1}.</span>
+                  <span className="text-base-content/80 font-medium">{sugg}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Navigation Button Bar */}

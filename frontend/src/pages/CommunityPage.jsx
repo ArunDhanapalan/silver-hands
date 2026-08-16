@@ -531,14 +531,19 @@ export default function CommunityPage() {
                   />
                 </div>
                 <div className="form-control">
-                  <label className="label text-[11px] font-semibold">Locality</label>
-                  <select 
+                  <label className="label text-[11px] font-semibold">Locality / Area</label>
+                  <input 
+                    type="text" 
+                    required
+                    list="community-localities"
                     value={postForm.locality}
                     onChange={(e) => setPostForm(prev => ({ ...prev, locality: e.target.value }))}
-                    className="select select-bordered select-sm w-full rounded-xl text-xs"
-                  >
-                    {(selectedCity?.localities || []).map(loc => <option key={loc} value={loc}>{loc}</option>)}
-                  </select>
+                    placeholder="e.g. Adyar, Sector 5..."
+                    className="input input-bordered input-sm w-full rounded-xl text-xs"
+                  />
+                  <datalist id="community-localities">
+                    {(selectedCity?.localities || []).map(loc => <option key={loc} value={loc} />)}
+                  </datalist>
                 </div>
               </div>
 

@@ -169,7 +169,7 @@ export default function Navbar() {
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront') ? 'btn-active text-secondary font-extrabold bg-secondary/10' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
-                    <span>My Storefront</span>
+                    <span>Storefront</span>
                     {getCount('storefront') > 0 && (
                       <span className="min-w-[20px] h-[20px] px-1.5 bg-error text-white font-black text-[11px] rounded-full flex items-center justify-center shadow-xs">
                         {getCount('storefront')}
@@ -270,31 +270,31 @@ export default function Navbar() {
               {/* User Account / Auth */}
               {isAuthenticated ? (
                 <div className="dropdown dropdown-end relative">
-                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder min-h-[44px] min-w-[44px] relative" aria-label="User menu">
-                    <div className="bg-primary text-primary-content rounded-full w-10 shadow-inner flex items-center justify-center font-bold text-sm">
+                  <div tabIndex={0} role="button" className="relative cursor-pointer p-0.5 rounded-full hover:opacity-90 transition-opacity" aria-label="User menu">
+                    <div className="bg-primary text-primary-content rounded-full w-10 h-10 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     {totalUnreadCount > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 min-w-[18px] min-h-[18px] text-[10px] font-black animate-pulse"
+                        className="absolute -top-1 -right-1 z-30 bg-error text-white w-5 h-5 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 text-[10px] font-black animate-pulse"
                         title={`${totalUnreadCount} unread message(s)`}
                       >
                         <Bell className="w-2.5 h-2.5 fill-current" />
                       </span>
                     )}
                   </div>
-                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[99999] p-2 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
-                    <li className="menu-title px-2.5 py-1.5 border-b border-base-200 mb-1">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-sm text-base-content truncate">{user?.full_name || 'User'}</span>
-                          <span className={`badge badge-xs font-bold uppercase ${
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[99999] p-2.5 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                    <li className="menu-title px-2.5 py-2 border-b border-base-200 mb-1 w-full">
+                      <div className="flex flex-col gap-1 w-full">
+                        <div className="flex items-center justify-between gap-1.5 w-full">
+                          <span className="font-extrabold text-sm text-base-content truncate flex-1 min-w-0">{user?.full_name || 'User'}</span>
+                          <span className={`badge badge-xs font-bold uppercase shrink-0 whitespace-nowrap ${
                             user?.role === 'senior' ? 'badge-primary text-white' : user?.role === 'company' ? 'badge-secondary text-white' : 'badge-accent text-white'
                           }`}>
                             {user?.role === 'senior' ? 'Senior' : user?.role === 'company' ? 'Company' : 'Customer'}
                           </span>
                         </div>
-                        <span className="text-[11px] text-base-content/60 font-medium truncate">{user?.email}</span>
+                        <span className="text-[11px] text-base-content/60 font-medium truncate w-full block">{user?.email}</span>
                       </div>
                     </li>
 
@@ -338,7 +338,7 @@ export default function Navbar() {
                           <Link to="/senior/storefront" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
                             <span className="flex items-center gap-2">
                               <ShoppingBag className="w-3.5 h-3.5 text-secondary shrink-0" />
-                              <span>My Storefront</span>
+                              <span>Storefront</span>
                             </span>
                             {getCount('storefront') > 0 && (
                               <span className="badge badge-error badge-xs text-white font-black text-[10px]">

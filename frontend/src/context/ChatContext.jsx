@@ -47,6 +47,9 @@ export function ChatProvider({ children }) {
       const convList = Array.isArray(data) ? data : [];
       setConversations(convList);
       
+      const unreadTotal = convList.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+      setTotalUnreadCount(unreadTotal);
+
       // Maintain active conversation without wiping unread count on startup
       setActiveConversation(prev => {
         if (prev && convList.some(c => String(c.id) === String(prev.id))) {
@@ -85,6 +88,8 @@ export function ChatProvider({ children }) {
       clearChatState();
     } else {
       fetchConversations();
+      const interval = setInterval(fetchConversations, 5000);
+      return () => clearInterval(interval);
     }
   }, [isAuthenticated, currentUserId]);
 

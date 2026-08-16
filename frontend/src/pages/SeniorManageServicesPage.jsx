@@ -326,7 +326,7 @@ export default function SeniorManageServicesPage() {
           ) : (
             rosters.map((roster) => {
               const srv = roster.service;
-              const activeInBatch = (roster.students || []).filter(s => s.status !== 'cancelled');
+              const activeInBatch = (roster.students || []).filter(s => ['requested', 'accepted', 'scheduled', 'in_progress'].includes(s.status));
               const capacityPct = Math.min(100, Math.round((activeInBatch.length / 10) * 100));
               const remainingSeats = Math.max(0, 10 - activeInBatch.length);
 
