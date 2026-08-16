@@ -6,7 +6,7 @@ import {
   Users, 
   Briefcase, 
   Wallet, 
-  BookOpen, 
+  Layers, 
   ShoppingCart,
   User
 } from 'lucide-react';
