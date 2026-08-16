@@ -32,7 +32,7 @@ class ProductResponse(BaseModel):
     seller_name: str
     seller_locality: str
     seller_city: str
-    seller_rating: float = 4.9
+    seller_rating: Optional[float] = None
     is_age_verified: bool = True
     title: str
     description: str
@@ -49,8 +49,8 @@ class ProductResponse(BaseModel):
     total_sold: int = 0
     is_out_of_stock: bool = False
     max_order_limit: int = 10
-    rating: float = 4.9
-    total_reviews: int = 1
+    rating: Optional[float] = None
+    total_reviews: int = 0
     reviews: List[ProductReviewItem] = []
     created_at: str
 

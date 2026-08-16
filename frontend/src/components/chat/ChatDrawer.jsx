@@ -108,8 +108,8 @@ export default function ChatDrawer() {
         {/* Body: Split View (Conversations List on Left, Active Chat on Right) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 relative">
           
-          {/* Left Sidebar: Threads List (Full width on mobile when no chat active, hidden on mobile when chat is active) */}
-          <div className={`w-full md:w-80 border-r border-base-300 bg-base-100 flex-col shrink-0 min-h-0 ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
+          {/* Left Sidebar: Threads List (Always visible on desktop md:flex, toggled on mobile) */}
+          <div className={`border-r border-base-300 bg-base-100 flex-col shrink-0 min-h-0 md:flex md:w-80 ${activeConversation ? 'hidden' : 'flex w-full'}`}>
             <div className="p-3.5 border-b border-base-200 text-xs font-extrabold text-base-content/70 uppercase tracking-wider flex items-center justify-between bg-base-200/50 shrink-0">
               <span>Direct Threads</span>
               <span className="badge badge-neutral badge-xs font-bold px-2 py-0.5">{conversations.length}</span>

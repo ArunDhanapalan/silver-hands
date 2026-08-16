@@ -52,6 +52,17 @@ async def get_product(id: str):
     """
     return await store_service.get_product_by_id(id)
 
+@router.post("/products/{id}/reviews", response_model=ProductResponse)
+async def submit_product_review(
+    id: str,
+    req: ProductReviewRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Customer submits verified rating & review for a handcrafted product.
+    """
+    return await store_service.submit_product_review(current_user, id, req)
+
 @router.delete("/products/{id}")
 async def delete_product(
     id: str,

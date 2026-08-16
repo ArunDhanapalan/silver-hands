@@ -73,7 +73,7 @@ class SeniorProfileResponse(BaseModel):
     is_age_verified: bool = True
     earnings_total: float = 0.0
     completed_jobs_count: int = 0
-    rating: float = 5.0
+    rating: Optional[float] = None
     review_count: int = 0
 
 
@@ -92,8 +92,8 @@ class SkillPassportResponse(BaseModel):
     city: str
     member_since: str
     is_age_verified: bool = True
-    dignity_score: int = 100
-    trust_score: float = 4.95
+    trust_score: Optional[float] = None
+    review_count: int = 0
     completed_orders_count: int = 0
     completed_sessions_count: int = 0
     total_earnings: float = 0.0
@@ -101,6 +101,7 @@ class SkillPassportResponse(BaseModel):
     inferred_skills: List[InferredSkillItem]
     keywords: List[str]
     badges: List[SkillPassportBadge]
+    reviews: List[Dict[str, Any]] = []
     credential_hash: str
 
 

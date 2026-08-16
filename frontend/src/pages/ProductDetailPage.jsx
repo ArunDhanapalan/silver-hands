@@ -10,8 +10,11 @@ import {
   Check, 
   Heart,
   Truck,
-  RotateCcw
+  RotateCcw,
+  MessageSquarePlus,
+  Send
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -19,25 +22,34 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
 
+  // Review Form
+  const [ratingInput, setRatingInput] = useState(5);
+  const [commentInput, setCommentInput] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get(`/store/products/${id}`);
+      setProduct(data);
+    } catch (err) {
+      setError(err.message || 'Product not found');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await api.get(`/store/products/${id}`);
-        setProduct(data);
-      } catch (err) {
-        setError(err.message || 'Product not found');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProduct();
   }, [id]);
 
@@ -47,7 +59,7 @@ export default function ProductDetailPage() {
     const existingIndex = existingCart.findIndex(item => item.product_id === product.id);
 
     if (existingIndex > -1) {
-      existingCart[existingIndex].quantity += quantity;
+      existingCart[existingIndex].quantity = Math.min(10, existingCart[existingIndex].quantity + quantity);
     } else {
       existingCart.push({
         product_id: product.id,
@@ -71,25 +83,44 @@ export default function ProductDetailPage() {
     navigate('/cart');
   };
 
-  if (loading) {
-    return <LoadingSpinner message="Loading authentic product details..." />;
-  }
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      alert('Please sign in to submit customer feedback.');
+      return;
+    }
+    if (!commentInput.trim()) {
+      setReviewError('Please write a brief comment with your review.');
+      return;
+    }
 
-  if (error || !product) {
-    return (
-      <div className="space-y-4 max-w-xl mx-auto py-8">
-        <Link to="/store" className="btn btn-ghost btn-sm gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to Store
-        </Link>
-        <ErrorAlert message={error || "Product not found"} />
-      </div>
-    );
-  }
+    setSubmittingReview(true);
+    setReviewError('');
+    try {
+      await api.post(`/store/products/${id}/reviews`, {
+        rating: Number(ratingInput),
+        comment: commentInput.trim()
+      });
+      setToastMsg('Thank you! Your verified review and rating were published.');
+      setTimeout(() => setToastMsg(''), 3500);
+      setCommentInput('');
+      setRatingInput(5);
+      fetchProduct();
+    } catch (err) {
+      setReviewError(err.message || 'Failed to submit review.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  if (loading) return <LoadingSpinner message="Fetching handcrafted product details..." />;
+  if (error) return <ErrorAlert message={error} onRetry={fetchProduct} />;
+  if (!product) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-8 pb-16">
       
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMsg && (
         <div className="toast toast-top toast-center z-50">
           <div className="alert alert-success text-white font-bold text-xs shadow-lg rounded-xl flex items-center gap-2">
@@ -99,24 +130,30 @@ export default function ProductDetailPage() {
         </div>
       )}
 
-      {/* Breadcrumb Back */}
-      <Link to="/store" className="btn btn-ghost btn-sm rounded-xl gap-1 text-xs">
-        <ArrowLeft className="w-4 h-4" /> Back to Store Catalog
-      </Link>
+      {/* Back to Store Nav */}
+      <div>
+        <Link 
+          to="/store" 
+          className="btn btn-ghost btn-sm gap-2 rounded-2xl text-xs font-bold text-base-content/70 hover:text-base-content"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Storefront
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-base-100 border border-base-300 rounded-3xl p-6 sm:p-8 shadow-sm">
+      {/* Product Hero Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-base-100 p-6 sm:p-8 rounded-3xl border border-base-300 shadow-sm">
         
-        {/* Left: Image Container */}
-        <div className="space-y-3">
-          <div className="relative h-72 sm:h-96 w-full rounded-2xl overflow-hidden bg-base-200 shadow-inner">
+        {/* Left: Product Images */}
+        <div className="space-y-4">
+          <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-base-200 border border-base-300">
             <img 
-              src={product.images[0] || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80'}
+              src={product.images[0] || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80'} 
               alt={product.title}
               className="w-full h-full object-cover"
             />
             {product.is_festival_special && (
-              <span className="badge badge-secondary badge-md font-bold text-white absolute top-4 left-4 shadow-md gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> {product.festival_tag || 'Festival Special'}
+              <span className="badge badge-secondary badge-lg font-bold text-white absolute top-4 left-4 shadow-md gap-1.5">
+                <Sparkles className="w-4 h-4" /> {product.festival_tag || 'Festive Special'}
               </span>
             )}
           </div>
@@ -133,9 +170,13 @@ export default function ProductDetailPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="badge badge-primary badge-outline text-xs font-bold">{product.category}</span>
-              <span className="flex items-center gap-1 font-bold text-sm text-base-content/80">
-                <Star className="w-4 h-4 text-warning fill-warning" /> {product.seller_rating} Seller Rating
-              </span>
+              {(product.seller_rating || product.rating) ? (
+                <span className="flex items-center gap-1 font-bold text-sm text-base-content/80">
+                  <Star className="w-4 h-4 text-warning fill-warning" /> {product.seller_rating || product.rating} Seller Rating
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-base-content/60">New Seller</span>
+              )}
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content leading-tight">
@@ -236,14 +277,66 @@ export default function ProductDetailPage() {
 
           <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 px-4 py-2 rounded-2xl">
             <span className="text-2xl font-black text-warning flex items-center gap-1">
-              <Star className="w-6 h-6 fill-warning" /> {product.rating || 4.9}
+              {product.rating ? (
+                <>
+                  <Star className="w-6 h-6 fill-warning" /> {product.rating}
+                </>
+              ) : (
+                <span className="text-xs font-bold text-base-content/60">No ratings</span>
+              )}
             </span>
             <div className="text-left">
-              <span className="text-xs font-bold text-base-content block">Average Rating</span>
-              <span className="text-[10px] text-base-content/60 font-semibold">{product.total_reviews || 1} Verified Review(s)</span>
+              <span className="text-xs font-bold text-base-content block">Verified Score</span>
+              <span className="text-[10px] text-base-content/60 font-semibold">{product.total_reviews || 0} Review(s)</span>
             </div>
           </div>
         </div>
+
+        {/* Review Submission Form */}
+        {isAuthenticated && user?.id !== product.seller_id && (
+          <form onSubmit={handleSubmitReview} className="bg-base-200/50 border border-base-300 rounded-2xl p-4 sm:p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-base-content flex items-center gap-1.5">
+                <MessageSquarePlus className="w-4 h-4 text-primary" /> Leave Your Feedback for {product.seller_name}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] font-bold text-base-content/70 mr-1">Your Rating:</span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRatingInput(star)}
+                    className="btn btn-ghost btn-xs btn-circle text-warning p-0"
+                  >
+                    <Star className={`w-4 h-4 ${star <= ratingInput ? 'fill-warning text-warning' : 'text-base-content/30'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <textarea
+              rows={2}
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              placeholder="Share what you loved about this homemade product..."
+              className="textarea textarea-bordered w-full rounded-xl text-xs bg-base-100"
+            />
+
+            {reviewError && (
+              <p className="text-xs text-error font-semibold">{reviewError}</p>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-xs"
+              >
+                <Send className="w-3.5 h-3.5" /> Submit Review
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Review List */}
         {(!product.reviews || product.reviews.length === 0) ? (

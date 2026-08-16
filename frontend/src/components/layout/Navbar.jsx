@@ -117,12 +117,9 @@ export default function Navbar() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
                   🤝
                 </div>
-                <div>
-                  <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <div className="flex items-center">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                     SilverHands
-                  </span>
-                  <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    {isCompany ? 'Company Portal' : isSenior ? 'Senior Guru' : 'Livelihood 2.0'}
                   </span>
                 </div>
               </Link>
@@ -248,16 +245,17 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setCityModalOpen(true)}
-                className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                className="btn btn-ghost btn-sm rounded-xl px-2 sm:px-2.5 min-h-[38px] sm:min-h-[40px] gap-1 sm:gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
                 aria-label="Select City"
+                title={`City: ${selectedCity?.name || 'Chennai'}`}
               >
                 <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
-                <span className="max-w-[80px] sm:max-w-none truncate font-bold">{selectedCity.name}</span>
+                <span className="hidden sm:inline max-w-[80px] sm:max-w-none truncate font-bold">{selectedCity?.name || 'Chennai'}</span>
                 {selectedLocality && selectedLocality !== 'All Areas' && (
                   <span className="text-[10px] text-base-content/60 hidden md:inline">({selectedLocality})</span>
                 )}
-                <span className="badge badge-xs badge-neutral hidden lg:inline">{selectedCity.tier}</span>
-                <ChevronDown className="w-3 h-3 opacity-60" />
+                <span className="badge badge-xs badge-neutral hidden lg:inline">{selectedCity?.tier || 'Metro'}</span>
+                <ChevronDown className="w-3 h-3 opacity-60 hidden sm:inline" />
               </button>
 
               {/* Language Selector Modal Trigger */}

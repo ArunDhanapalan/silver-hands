@@ -29,10 +29,17 @@ export function ChatProvider({ children }) {
 
   const currentUserId = user?.id || user?.sub || user?._id;
 
+  const clearChatState = () => {
+    setConversations([]);
+    setActiveConversation(null);
+    setMessages([]);
+    setTotalUnreadCount(0);
+    setIsChatDrawerOpen(false);
+  };
+
   const fetchConversations = async () => {
-    if (!isAuthenticated) {
-      setConversations([]);
-      setTotalUnreadCount(0);
+    if (!isAuthenticated || !currentUserId) {
+      clearChatState();
       return;
     }
     try {
@@ -43,7 +50,7 @@ export function ChatProvider({ children }) {
       const unreadTotal = convList.reduce((acc, c) => acc + (c.unread_count || 0), 0);
       setTotalUnreadCount(unreadTotal);
 
-      // Auto-select first conversation if none selected
+      // Auto-select first conversation if none selected or if active is no longer in list
       setActiveConversation(prev => {
         if (prev && convList.some(c => String(c.id) === String(prev.id))) {
           return prev;
@@ -73,21 +80,27 @@ export function ChatProvider({ children }) {
     }
   };
 
+  // When user logs out or switches accounts, immediately wipe all existing messages and state
   useEffect(() => {
-    fetchConversations();
+    if (!isAuthenticated || !currentUserId) {
+      clearChatState();
+    } else {
+      fetchConversations();
+    }
   }, [isAuthenticated, currentUserId]);
 
   useEffect(() => {
-    if (activeConversation?.id) {
+    if (activeConversation?.id && isAuthenticated) {
       fetchMessages(activeConversation.id);
       const interval = setInterval(() => {
         fetchMessages(activeConversation.id);
       }, 4000);
       return () => clearInterval(interval);
     }
-  }, [activeConversation?.id]);
+  }, [activeConversation?.id, isAuthenticated]);
 
   const openChatDrawer = async (initialConv = null) => {
+    if (!isAuthenticated) return;
     setIsChatDrawerOpen(true);
     try {
       const data = await api.get('/chat/conversations').catch(() => []);

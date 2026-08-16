@@ -267,11 +267,16 @@ export default function ServicesPage() {
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="flex items-center gap-1 font-bold text-base-content justify-end">
-                      <Star className="w-4 h-4 text-warning fill-warning" /> {service.senior_rating}
-                    </span>
+                    {(service.senior_rating || service.rating) ? (
+                      <span className="flex items-center gap-1 font-bold text-base-content justify-end">
+                        <Star className="w-4 h-4 text-warning fill-warning" /> {service.senior_rating || service.rating}
+                        {service.total_reviews > 0 && <span className="text-[10px] text-base-content/60 font-normal">({service.total_reviews})</span>}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-base-content/50 font-bold block">New Guru</span>
+                    )}
                     <span className="text-[11px] text-base-content/60 block mt-0.5">
-                      {service.total_sessions_conducted} sessions conducted
+                      {service.total_sessions_conducted ? `${service.total_sessions_conducted} sessions conducted` : 'Available for booking'}
                     </span>
                   </div>
                 </div>

@@ -87,7 +87,10 @@ class StoreService:
     def _format_product(self, doc: Dict[str, Any]) -> ProductResponse:
         total_sold = doc.get("total_sold", 0)
         stock_quantity = doc.get("stock_quantity", 100)
-        is_out_of_stock = doc.get("is_out_of_stock", False)
+        
+        raw_reviews = [ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])]
+        ratings_list = [r.rating for r in raw_reviews if hasattr(r, 'rating') and r.rating]
+        calc_rating = round(sum(ratings_list) / len(ratings_list), 2) if len(ratings_list) > 0 else None
 
         return ProductResponse(
             id=str(doc.get("_id")),
@@ -95,7 +98,7 @@ class StoreService:
             seller_name=doc.get("seller_name", "Senior Artisan"),
             seller_locality=doc.get("seller_locality", "Mylapore"),
             seller_city=doc.get("seller_city", "Chennai"),
-            seller_rating=doc.get("seller_rating", 4.9),
+            seller_rating=calc_rating,
             is_age_verified=doc.get("is_age_verified", True),
             title=doc["title"],
             description=doc["description"],
@@ -110,11 +113,11 @@ class StoreService:
             festival_tag=doc.get("festival_tag"),
             stock_quantity=stock_quantity,
             total_sold=total_sold,
-            is_out_of_stock=is_out_of_stock,
+            is_out_of_stock=False,
             max_order_limit=10,
-            rating=doc.get("rating", 4.9),
-            total_reviews=doc.get("total_reviews", 1),
-            reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])],
+            rating=calc_rating,
+            total_reviews=len(raw_reviews),
+            reviews=raw_reviews,
             created_at=doc.get("created_at", "")
         )
 
@@ -413,12 +416,6 @@ class StoreService:
         customer_name = user_payload.get("full_name", "Customer")
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        current_rating = float(doc.get("rating", 4.9))
-        current_count = int(doc.get("total_reviews", 1))
-
-        new_count = current_count + 1
-        new_avg_rating = round(((current_rating * current_count) + req.rating) / new_count, 2)
-
         new_review = {
             "customer_id": customer_id,
             "customer_name": customer_name,
@@ -426,6 +423,12 @@ class StoreService:
             "comment": req.comment,
             "created_at": now
         }
+
+        reviews = doc.get("reviews", [])
+        reviews.append(new_review)
+        ratings_list = [r["rating"] for r in reviews if isinstance(r, dict) and "rating" in r]
+        new_count = len(ratings_list)
+        new_avg_rating = round(sum(ratings_list) / new_count, 2) if new_count > 0 else req.rating
 
         await col.update_one(
             filter_q,
@@ -438,35 +441,9 @@ class StoreService:
         doc["rating"] = new_avg_rating
         doc["total_reviews"] = new_count
         doc["seller_rating"] = new_avg_rating
-        reviews = doc.get("reviews", [])
-        reviews.append(new_review)
         doc["reviews"] = reviews
 
-        return ProductResponse(
-            id=str(doc.get("_id")),
-            seller_id=doc.get("seller_id", ""),
-            seller_name=doc.get("seller_name", "Senior Artisan"),
-            seller_locality=doc.get("seller_locality", "Mylapore"),
-            seller_city=doc.get("seller_city", "Chennai"),
-            seller_rating=doc.get("seller_rating", 4.9),
-            is_age_verified=doc.get("is_age_verified", True),
-            title=doc["title"],
-            description=doc["description"],
-            category=doc["category"],
-            price=doc["price"],
-            unit=doc.get("unit", "piece"),
-            images=doc.get("images", []),
-            keywords=doc.get("keywords", []),
-            locality=doc.get("locality", "Mylapore"),
-            city=doc.get("city", "Chennai"),
-            is_festival_special=doc.get("is_festival_special", False),
-            festival_tag=doc.get("festival_tag"),
-            stock_quantity=doc.get("stock_quantity", 20),
-            rating=new_avg_rating,
-            total_reviews=new_count,
-            reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in reviews],
-            created_at=doc.get("created_at", "")
-        )
+        return self._format_product(doc)
 
     async def cancel_order(self, user_payload: Dict[str, Any], order_id: str) -> OrderResponse:
         col = self._orders_col()

@@ -112,8 +112,7 @@ export default function PostPersonalGigModal({ isOpen, onClose, onGigPosted }) {
         work_type: 'part_time',
         city: gigForm.city,
         locality: gigForm.locality,
-        duration_weeks: 4,
-        dignity_score: 95
+        duration_weeks: 4
       };
 
       const res = await api.post('/opportunities', payload);

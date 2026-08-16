@@ -8,7 +8,9 @@ import {
   DollarSign, 
   CheckCircle2, 
   X, 
-  BookOpen 
+  BookOpen,
+  Calendar,
+  Users
 } from 'lucide-react';
 import api from '../../api/client';
 import ErrorAlert from '../common/ErrorAlert';
@@ -19,6 +21,20 @@ const SERVICE_CATEGORIES = [
   'Home & Practical Skills',
   'Culture & Tradition',
   'Family & Care'
+];
+
+const DAYS_OPTIONS = [
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+];
+
+const TIME_SLOT_OPTIONS = [
+  'Morning (9:00 AM – 10:00 AM)',
+  'Morning (10:00 AM – 11:00 AM)',
+  'Afternoon (2:00 PM – 3:00 PM)',
+  'Evening (4:00 PM – 5:00 PM)',
+  'Evening (5:00 PM – 6:00 PM)',
+  'Evening (6:00 PM – 7:00 PM)',
+  'Night (7:00 PM – 8:00 PM)'
 ];
 
 export default function AddServiceModal({ isOpen, onClose, onServiceCreated, initialSkill = '', initialData = null }) {
@@ -36,12 +52,14 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
     duration_mins: 45,
     price_per_session: 400,
     target_audience: 'Children & Working Adults',
+    available_days: ['Monday', 'Wednesday', 'Friday'],
+    time_slot: 'Evening (5:00 PM – 6:00 PM)',
+    venue_address: '',
     locality: 'Adyar',
     city: 'Chennai',
     languages: ['en', 'ta']
   });
 
-  // Pre-populate form from launchpad AI data when modal opens
   useEffect(() => {
     if (isOpen && initialData && initialData.title) {
       const priceNum = typeof initialData.price_range === 'string'
@@ -60,7 +78,9 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
         mode: initialData.mode || prev.mode,
         price_per_session: priceNum,
         duration_mins: durationNum,
-        target_audience: initialData.target_audience || prev.target_audience
+        target_audience: initialData.target_audience || prev.target_audience,
+        available_days: initialData.available_days || prev.available_days,
+        time_slot: initialData.time_slot || prev.time_slot
       }));
       setRawIdea(initialData.title || initialSkill);
     } else if (isOpen && initialSkill) {
@@ -85,7 +105,9 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
         mode: res.mode || prev.mode,
         price_per_session: res.suggested_price || res.price_per_session || prev.price_per_session,
         duration_mins: res.duration_mins || prev.duration_mins,
-        target_audience: res.target_audience || prev.target_audience
+        target_audience: res.target_audience || prev.target_audience,
+        available_days: res.available_days || prev.available_days,
+        time_slot: res.time_slot || prev.time_slot
       }));
     } catch (err) {
       console.error('Service AI suggest error:', err);
@@ -93,6 +115,18 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const toggleDay = (day) => {
+    setServiceForm(prev => {
+      const exists = prev.available_days.includes(day);
+      if (exists) {
+        if (prev.available_days.length <= 1) return prev; // keep at least 1 day
+        return { ...prev, available_days: prev.available_days.filter(d => d !== day) };
+      } else {
+        return { ...prev, available_days: [...prev.available_days, day] };
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -114,6 +148,9 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
         duration_mins: parseInt(serviceForm.duration_mins, 10) || 45,
         price_per_session: parseInt(serviceForm.price_per_session, 10) || 400,
         target_audience: serviceForm.target_audience.trim() || 'All Ages',
+        available_days: serviceForm.available_days,
+        time_slot: serviceForm.time_slot,
+        venue_address: serviceForm.venue_address.trim() || undefined,
         locality: serviceForm.locality || 'Adyar',
         city: serviceForm.city || 'Chennai',
         languages: serviceForm.languages
@@ -139,8 +176,8 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-xl text-base-content">Offer a Managed Service</h3>
-              <p className="text-xs text-base-content/60">Teach languages, share wisdom, mentor students, or teach arts</p>
+              <h3 className="font-extrabold text-xl text-base-content">Offer a Managed Class or Service</h3>
+              <p className="text-xs text-base-content/60">Teach languages, share wisdom, mentor students, or teach arts (Max 10 students/batch)</p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
@@ -186,7 +223,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
               required
               value={serviceForm.title}
               onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
-              placeholder="e.g. 1-on-1 Spoken Telugu & Cultural Storytelling for Children"
+              placeholder="e.g. 1-on-1 & Small Group Spoken Telugu for Children"
               className="input input-bordered min-h-[44px] w-full rounded-xl font-semibold text-sm"
             />
           </div>
@@ -218,7 +255,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
           </div>
 
           <div className="form-control">
-            <label className="label text-xs font-bold py-1">Detailed Description & What Students Will Learn</label>
+            <label className="label text-xs font-bold py-1">Detailed Description & Syllabus</label>
             <textarea
               rows={3}
               required
@@ -229,6 +266,48 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
             />
           </div>
 
+          {/* Days of Week Selection */}
+          <div className="space-y-1.5">
+            <label className="label text-xs font-bold py-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> Class Days of the Week:</span>
+              <span className="text-[11px] text-base-content/60 font-normal">Select active teaching days</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {DAYS_OPTIONS.map((day) => {
+                const active = serviceForm.available_days.includes(day);
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    className={`btn btn-xs rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                      active ? 'btn-primary text-white shadow-xs' : 'btn-ghost bg-base-200 text-base-content/70 hover:bg-base-300'
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Time Slot Selection */}
+          <div className="form-control">
+            <label className="label text-xs font-bold py-1 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-secondary" /> Daily Schedule Time Slot:
+            </label>
+            <select
+              value={serviceForm.time_slot}
+              onChange={(e) => setServiceForm({ ...serviceForm, time_slot: e.target.value })}
+              className="select select-bordered min-h-[44px] rounded-xl text-sm font-semibold"
+            >
+              {TIME_SLOT_OPTIONS.map((slot) => (
+                <option key={slot} value={slot}>{slot}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Mode, Duration & Pricing */}
           <div className="grid grid-cols-3 gap-2.5">
             <div className="form-control">
               <label className="label text-xs font-bold py-1">Delivery Mode</label>
@@ -256,7 +335,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
             </div>
 
             <div className="form-control">
-              <label className="label text-xs font-bold py-1">Fee / Session (₹)</label>
+              <label className="label text-xs font-bold py-1">Fee / Student (₹)</label>
               <input
                 type="number"
                 min="100"
@@ -267,6 +346,31 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
               />
             </div>
           </div>
+
+          {/* Max Capacity Notice */}
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-3 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="font-bold text-base-content">Max Class Batch Capacity:</span>
+            </div>
+            <span className="badge badge-primary badge-sm font-black text-white">10 Students Max</span>
+          </div>
+
+          {/* Physical Venue Address (if offline or both) */}
+          {serviceForm.mode !== 'online' && (
+            <div className="form-control">
+              <label className="label text-xs font-bold py-1 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-secondary" /> Physical Studio / Venue Address:
+              </label>
+              <input
+                type="text"
+                value={serviceForm.venue_address}
+                onChange={(e) => setServiceForm({ ...serviceForm, venue_address: e.target.value })}
+                placeholder="e.g. Flat 4B, 2nd Main Road, Gandhi Nagar, Adyar"
+                className="input input-bordered min-h-[44px] rounded-xl text-sm"
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-control">
@@ -304,7 +408,7 @@ export default function AddServiceModal({ isOpen, onClose, onServiceCreated, ini
               disabled={submitting}
               className="btn btn-accent min-h-[44px] px-6 rounded-2xl text-white font-extrabold shadow-sm text-sm"
             >
-              {submitting ? <span className="loading loading-spinner loading-xs"></span> : 'Publish Managed Service'}
+              {submitting ? <span className="loading loading-spinner loading-xs"></span> : 'Publish Class / Service'}
             </button>
           </div>
 

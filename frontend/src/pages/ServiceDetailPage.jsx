@@ -15,7 +15,8 @@ import {
   BookOpen, 
   ExternalLink,
   RotateCcw,
-  MessageSquare
+  MessageSquare,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
@@ -24,8 +25,11 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TIME_SLOTS = [
   'Morning (9:00 AM – 10:00 AM)',
+  'Morning (10:00 AM – 11:00 AM)',
   'Afternoon (2:00 PM – 3:00 PM)',
+  'Evening (4:00 PM – 5:00 PM)',
   'Evening (5:00 PM – 6:00 PM)',
+  'Evening (6:00 PM – 7:00 PM)',
   'Night (7:00 PM – 8:00 PM)'
 ];
 
@@ -52,10 +56,10 @@ export default function ServiceDetailPage() {
   const [studentName, setStudentName] = useState(user?.full_name || 'Ananya Sharma');
   const [studentAgeGroup, setStudentAgeGroup] = useState('Child (Age 6-12)');
   const [selectedDays, setSelectedDays] = useState(['Monday', 'Wednesday', 'Friday']);
-  const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[2]);
-  const [sessionsCount, setSessionsCount] = useState(3);
+  const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[4]);
+  const [sessionsCount, setSessionsCount] = useState(1);
   const [contactPhone, setContactPhone] = useState(user?.phone || '+91 98840 56789');
-  const [specialGoals, setSpecialGoals] = useState('Spoken Telugu conversation practice for school & conversational fluency');
+  const [specialGoals, setSpecialGoals] = useState('Spoken language conversation practice & conversational fluency');
 
   // Review State
   const [reviewRating, setReviewRating] = useState(5);
@@ -69,6 +73,8 @@ export default function ServiceDetailPage() {
       try {
         const data = await api.get(`/services/${id}`);
         setService(data);
+        if (data.available_days?.length) setSelectedDays(data.available_days);
+        if (data.time_slot) setSelectedSlot(data.time_slot);
       } catch (err) {
         setError(err.message || 'Service not found');
       } finally {
@@ -110,8 +116,8 @@ export default function ServiceDetailPage() {
 
       const res = await api.post('/services/bookings', payload);
       setActiveBooking(res);
-      setToastMsg('Managed service session requested successfully!');
-      setTimeout(() => setToastMsg(''), 3000);
+      setToastMsg('Student enrolled into class batch successfully!');
+      setTimeout(() => setToastMsg(''), 3500);
     } catch (err) {
       setError(err.message || 'Failed to submit booking.');
     } finally {
@@ -119,13 +125,11 @@ export default function ServiceDetailPage() {
     }
   };
 
-  // Senior Accept / Advance state simulation for interactive testing
   const handleSimulateState = async (nextStatus) => {
     if (!activeBooking) return;
     try {
       const res = await api.put(`/services/bookings/${activeBooking.id}/status`, {
-        status: nextStatus,
-        meeting_link: `https://meet.silverhands.in/session-${activeBooking.booking_reference.toLowerCase()}`
+        status: nextStatus
       });
       setActiveBooking(res);
       setToastMsg(`Status updated to: ${nextStatus.toUpperCase()}`);
@@ -155,7 +159,7 @@ export default function ServiceDetailPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading managed service details..." />;
+    return <LoadingSpinner message="Loading managed class details..." />;
   }
 
   if (error || !service) {
@@ -169,6 +173,9 @@ export default function ServiceDetailPage() {
     );
   }
 
+  const enrolledCount = service.enrolled_students_count || 0;
+  const isBatchFull = enrolledCount >= (service.max_students_capacity || 10);
+  const remainingSeats = Math.max(0, (service.max_students_capacity || 10) - enrolledCount);
   const totalPrice = service.price_per_session * sessionsCount;
 
   return (
@@ -198,15 +205,47 @@ export default function ServiceDetailPage() {
             <div className="flex items-center justify-between">
               <span className="badge badge-accent badge-sm font-bold text-white uppercase">{service.category}</span>
               <span className={`badge badge-sm font-bold uppercase text-[10px] ${
-                service.mode === 'online' ? 'badge-info text-white' : 'badge-neutral'
+                service.mode === 'online' ? 'badge-primary text-white' : service.mode === 'offline' ? 'badge-neutral' : 'badge-secondary text-white'
               }`}>
-                {service.mode === 'online' ? '💻 Online 1-on-1 Video' : '📍 In-Person'}
+                {service.mode === 'online' ? '💻 Online Video Class' : service.mode === 'offline' ? '📍 In-Person Studio' : '🔄 Hybrid (Both)'}
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content leading-tight">
               {service.title}
             </h1>
+
+            {/* Class Schedule & Days */}
+            <div className="bg-base-200/60 rounded-2xl p-3.5 space-y-2 border border-base-300">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="flex items-center gap-1.5 font-bold text-primary">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {(service.available_days || []).join(', ') || 'Mon, Wed, Fri'}
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-base-content/80">
+                  <Clock className="w-3.5 h-3.5 text-secondary" />
+                  {service.time_slot || 'Evening (5:00 PM – 6:00 PM)'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-base-300">
+                <span className="flex items-center gap-1.5 font-bold text-base-content">
+                  <Users className="w-3.5 h-3.5 text-accent" /> Batch Capacity: {enrolledCount} / 10 Students
+                </span>
+                <span className={`badge badge-sm font-bold text-[10px] ${
+                  isBatchFull ? 'badge-error text-white' : 'badge-success text-white'
+                }`}>
+                  {isBatchFull ? 'Batch Full' : `${remainingSeats} Seats Available`}
+                </span>
+              </div>
+
+              {service.mode !== 'online' && service.venue_address && (
+                <p className="text-[11px] text-base-content/70 flex items-center gap-1 pt-1 border-t border-base-300">
+                  <MapPin className="w-3 h-3 text-secondary shrink-0" />
+                  <span>Physical Venue: <strong>{service.venue_address}</strong></span>
+                </p>
+              )}
+            </div>
 
             <div className="flex items-center gap-4 text-xs font-semibold text-base-content/70">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-primary" /> {service.duration_mins} Minutes / Session</span>
@@ -234,12 +273,17 @@ export default function ServiceDetailPage() {
               </div>
 
               <div className="flex items-center gap-4 text-xs pt-1">
-                <span className="flex items-center gap-1 font-bold text-base-content">
-                  <Star className="w-3.5 h-3.5 text-warning fill-warning" /> {service.senior_rating} Rating
-                </span>
+                {(service.senior_rating || service.rating) ? (
+                  <span className="flex items-center gap-1 font-bold text-base-content">
+                    <Star className="w-3.5 h-3.5 text-warning fill-warning" /> {service.senior_rating || service.rating} Rating
+                    {service.total_reviews > 0 && <span className="text-base-content/60 font-normal">({service.total_reviews} reviews)</span>}
+                  </span>
+                ) : (
+                  <span className="text-base-content/60 font-bold">New Guru (Awaiting 1st review)</span>
+                )}
                 <span>•</span>
                 <span className="text-base-content/60 font-medium">
-                  {service.total_sessions_conducted} Verified Sessions Delivered
+                  {service.total_sessions_conducted ? `${service.total_sessions_conducted} Verified Sessions Delivered` : 'Open for enrollments'}
                 </span>
               </div>
             </div>
@@ -248,7 +292,7 @@ export default function ServiceDetailPage() {
             <div className="bg-accent/10 border border-accent/20 rounded-2xl p-3.5 text-xs text-accent-content flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
               <div>
-                <strong className="text-base-content block">SilverHands Managed Workflow Guarantee</strong>
+                <strong className="text-base-content block">SilverHands Managed Class Guarantee</strong>
                 <span className="text-[11px] text-base-content/75 leading-tight">
                   We handle the entire journey: automatic matching, scheduling, HD video room generation, reminder alerts, and post-session review.
                 </span>
@@ -266,114 +310,123 @@ export default function ServiceDetailPage() {
             /* Booking Form */
             <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-base-200">
-                <h3 className="font-bold text-base text-base-content">Schedule a Managed Session</h3>
+                <h3 className="font-bold text-base text-base-content">Enroll into Class Batch</h3>
                 <span className="text-base font-extrabold text-primary">
                   ₹{service.price_per_session} <span className="text-xs font-normal text-base-content/60">/ session</span>
                 </span>
               </div>
 
-              <form onSubmit={handleCreateBooking} className="space-y-4 text-sm">
-                
-                <div className="form-control">
-                  <label className="label text-xs font-bold py-1">Student / Learner Name</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
-                  />
+              {isBatchFull ? (
+                <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-center space-y-2">
+                  <span className="badge badge-error text-white font-extrabold">Batch Full</span>
+                  <p className="text-xs font-bold text-error">
+                    This class batch has reached its maximum limit of 10 students. Please check back later or explore other guru classes.
+                  </p>
                 </div>
-
-                <div className="form-control">
-                  <label className="label text-xs font-bold py-1">Age Group</label>
-                  <select 
-                    value={studentAgeGroup}
-                    onChange={(e) => setStudentAgeGroup(e.target.value)}
-                    className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
-                  >
-                    {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
-                  </select>
-                </div>
-
-                {/* Preferred Days */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-base-content block py-1">Preferred Days</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => handleToggleDay(day)}
-                        className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                          selectedDays.includes(day)
-                            ? 'bg-accent text-white border-accent shadow-xs'
-                            : 'bg-base-200 border-base-300 text-base-content/70'
-                        }`}
-                      >
-                        {day.slice(0, 3)}
-                      </button>
-                    ))}
+              ) : (
+                <form onSubmit={handleCreateBooking} className="space-y-4 text-sm">
+                  
+                  <div className="form-control">
+                    <label className="label text-xs font-bold py-1">Student / Learner Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={studentName}
+                      onChange={(e) => setStudentName(e.target.value)}
+                      className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
+                    />
                   </div>
-                </div>
 
-                {/* Preferred Time Slot */}
-                <div className="form-control">
-                  <label className="label text-xs font-bold py-1">Preferred Time Slot</label>
-                  <select 
-                    value={selectedSlot}
-                    onChange={(e) => setSelectedSlot(e.target.value)}
-                    className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
-                  >
-                    {TIME_SLOTS.map(slot => <option key={slot} value={slot}>{slot}</option>)}
-                  </select>
-                </div>
-
-                {/* Number of Sessions */}
-                <div className="form-control">
-                  <label className="label text-xs font-bold py-1">Number of Sessions</label>
-                  <div className="join w-full">
-                    {[1, 3, 5, 10].map(cnt => (
-                      <button
-                        key={cnt}
-                        type="button"
-                        onClick={() => setSessionsCount(cnt)}
-                        className={`join-item btn min-h-[44px] flex-1 text-xs sm:text-sm ${sessionsCount === cnt ? 'btn-accent text-white font-bold shadow-xs' : 'btn-ghost border-base-300'}`}
-                      >
-                        {cnt} {cnt === 1 ? 'Session' : 'Sessions'}
-                      </button>
-                    ))}
+                  <div className="form-control">
+                    <label className="label text-xs font-bold py-1">Age Group</label>
+                    <select 
+                      value={studentAgeGroup}
+                      onChange={(e) => setStudentAgeGroup(e.target.value)}
+                      className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
+                    >
+                      {AGE_GROUPS.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                    </select>
                   </div>
-                </div>
 
-                {/* Contact Phone */}
-                <div className="form-control">
-                  <label className="label text-xs font-bold py-1">WhatsApp / Phone for Meeting Link</label>
-                  <input 
-                    type="tel" 
-                    required
-                    value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
-                  />
-                </div>
+                  {/* Preferred Days */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-base-content block py-1">Select Teaching Days</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => handleToggleDay(day)}
+                          className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                            selectedDays.includes(day)
+                              ? 'bg-accent text-white border-accent shadow-xs'
+                              : 'bg-base-200 border-base-300 text-base-content/70'
+                          }`}
+                        >
+                          {day.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Total Summary */}
-                <div className="pt-3 border-t border-base-200 flex items-center justify-between text-sm font-bold">
-                  <span>Total Payable ({sessionsCount} sessions):</span>
-                  <span className="text-xl font-extrabold text-primary">
-                    ₹{totalPrice.toLocaleString('en-IN')}
-                  </span>
-                </div>
+                  {/* Time Slot */}
+                  <div className="form-control">
+                    <label className="label text-xs font-bold py-1">Preferred Time Slot</label>
+                    <select 
+                      value={selectedSlot}
+                      onChange={(e) => setSelectedSlot(e.target.value)}
+                      className="select select-bordered min-h-[44px] w-full rounded-xl text-sm font-semibold"
+                    >
+                      {TIME_SLOTS.map(slot => <option key={slot} value={slot}>{slot}</option>)}
+                    </select>
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={booking}
-                  className="btn btn-accent min-h-[48px] w-full rounded-2xl text-white font-bold text-sm gap-2 mt-2 shadow-md"
-                >
-                  {booking ? <span className="loading loading-spinner loading-xs"></span> : <>Request Managed Session <ArrowRight className="w-4 h-4" /></>}
-                </button>
-              </form>
+                  {/* Number of Sessions */}
+                  <div className="form-control">
+                    <label className="label text-xs font-bold py-1">Number of Sessions</label>
+                    <div className="join w-full">
+                      {[1, 3, 5, 10].map(cnt => (
+                        <button
+                          key={cnt}
+                          type="button"
+                          onClick={() => setSessionsCount(cnt)}
+                          className={`join-item btn min-h-[44px] flex-1 text-xs sm:text-sm ${sessionsCount === cnt ? 'btn-accent text-white font-bold shadow-xs' : 'btn-ghost border-base-300'}`}
+                        >
+                          {cnt} {cnt === 1 ? 'Session' : 'Sessions'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Contact Phone */}
+                  <div className="form-control">
+                    <label className="label text-xs font-bold py-1">WhatsApp / Phone for Class Link</label>
+                    <input 
+                      type="tel" 
+                      required
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
+                    />
+                  </div>
+
+                  {/* Total Summary */}
+                  <div className="pt-3 border-t border-base-200 flex items-center justify-between text-sm font-bold">
+                    <span>Total Payable ({sessionsCount} sessions):</span>
+                    <span className="text-xl font-extrabold text-primary">
+                      ₹{totalPrice.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={booking}
+                    className="btn btn-accent min-h-[48px] w-full rounded-2xl text-white font-bold text-sm gap-2 mt-2 shadow-md"
+                  >
+                    {booking ? <span className="loading loading-spinner loading-xs"></span> : <>Enroll into Class Batch <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </form>
+              )}
             </div>
           ) : (
             /* Active Managed Booking State Machine Tracker */
@@ -426,145 +479,18 @@ export default function ServiceDetailPage() {
                 )}
               </div>
 
-              {/* Judge Interactive Simulator to advance state */}
-              <div className="bg-base-200/60 p-3 rounded-2xl space-y-2 text-xs">
-                <span className="text-[10px] font-bold text-base-content/60 uppercase block">
-                  Workflow Simulator (Judge / Demo):
-                </span>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <button 
-                    onClick={() => handleSimulateState('accepted')} 
-                    className="btn btn-xs btn-outline btn-accent rounded-lg text-[10px]"
-                  >
-                    1. Accept
-                  </button>
-                  <button 
-                    onClick={() => handleSimulateState('scheduled')} 
-                    className="btn btn-xs btn-outline btn-primary rounded-lg text-[10px]"
-                  >
-                    2. Schedule Link
-                  </button>
-                  <button 
-                    onClick={() => handleSimulateState('completed')} 
-                    className="btn btn-xs btn-outline btn-success rounded-lg text-[10px]"
-                  >
-                    3. Complete
-                  </button>
-                </div>
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-base-200">
+                <Link to="/services/my-bookings" className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs w-full">
+                  View All My Booked Classes
+                </Link>
               </div>
-
-              {/* Review Form after Completion */}
-              {activeBooking.status === 'completed' && !activeBooking.review_rating && (
-                <form onSubmit={handleSubmitReview} className="space-y-3 pt-2 border-t border-base-200 text-xs">
-                  <h4 className="font-bold text-base-content flex items-center gap-1">
-                    <Star className="w-4 h-4 text-warning fill-warning" /> Rate & Review {service.senior_name}:
-                  </h4>
-
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button 
-                        key={star} 
-                        type="button" 
-                        onClick={() => setReviewRating(star)}
-                        className={`text-lg ${star <= reviewRating ? 'text-warning' : 'text-base-300'}`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                    <span className="font-bold text-xs ml-2">{reviewRating} / 5 Stars</span>
-                  </div>
-
-                  <textarea
-                    rows={2}
-                    required
-                    value={reviewComment}
-                    onChange={(e) => setReviewComment(e.target.value)}
-                    placeholder="Share your experience..."
-                    className="textarea textarea-bordered w-full text-xs rounded-xl"
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={submittingReview}
-                    className="btn btn-primary btn-sm w-full rounded-xl text-white font-bold text-xs gap-1"
-                  >
-                    Submit Review & Add to Guru Reputation
-                  </button>
-                </form>
-              )}
-
-              {/* Review Done & Rebook */}
-              {activeBooking.review_rating && (
-                <div className="bg-success/10 border border-success/30 p-3 rounded-2xl text-xs text-center space-y-2">
-                  <div className="flex items-center justify-center gap-1 text-success font-bold">
-                    <CheckCircle2 className="w-4 h-4" /> Review Published ({activeBooking.review_rating} ★)
-                  </div>
-                  <p className="text-base-content/75 italic text-[11px]">"{activeBooking.review_comment}"</p>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setActiveBooking(null)}
-                    className="btn btn-accent btn-sm rounded-xl text-white font-bold text-xs gap-1 w-full"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" /> 1-Click Rebook Next Lesson
-                  </button>
-                </div>
-              )}
 
             </div>
           )}
 
         </div>
 
-      </div>
-
-      {/* Student Ratings & Reviews Section */}
-      <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-base-200">
-          <div>
-            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
-              <Star className="w-5 h-5 text-warning fill-warning" /> Student & Parent Reviews
-            </h2>
-            <p className="text-xs text-base-content/60 mt-0.5">
-              Verified feedback from learners who completed classes with {service.senior_name}.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 px-4 py-2 rounded-2xl">
-            <span className="text-2xl font-black text-warning flex items-center gap-1">
-              <Star className="w-6 h-6 fill-warning" /> {service.rating || service.senior_rating || 4.95}
-            </span>
-            <div className="text-left">
-              <span className="text-xs font-bold text-base-content block">Guru Rating</span>
-              <span className="text-[10px] text-base-content/60 font-semibold">{service.total_reviews || service.reviews?.length || 1} Verified Student Review(s)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Review List */}
-        {(!service.reviews || service.reviews.length === 0) ? (
-          <div className="p-6 bg-base-200/50 rounded-2xl text-center space-y-1">
-            <p className="text-xs font-bold text-base-content">Mastery & Traditional Wisdom</p>
-            <p className="text-[11px] text-base-content/60">Book your first session with {service.senior_name} and leave a review!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {service.reviews.map((rev, idx) => (
-              <div key={idx} className="bg-base-200/50 border border-base-300 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-base-content">{rev.customer_name}</span>
-                  <div className="flex items-center gap-0.5 text-warning">
-                    {[...Array(rev.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-warning" />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-xs text-base-content/80 italic leading-relaxed">"{rev.comment}"</p>
-                <span className="text-[10px] text-base-content/40 block">{rev.created_at?.slice(0, 10)}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
     </div>

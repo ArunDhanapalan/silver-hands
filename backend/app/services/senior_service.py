@@ -121,6 +121,94 @@ class SeniorService:
             review_count=doc["review_count"]
         )
 
+    async def compute_senior_ratings_and_trust(self, user_id: str) -> Dict[str, Any]:
+        products_col = db_manager.get_collection("products")
+        services_col = db_manager.get_collection("managed_services")
+        bookings_col = db_manager.get_collection("service_bookings")
+
+        prod_ratings = []
+        all_reviews = []
+
+        # 1. Collect all product review ratings
+        prod_cursor = products_col.find({"seller_id": user_id})
+        prods = await prod_cursor.to_list(100)
+        for p in prods:
+            for r in p.get("reviews", []):
+                if isinstance(r, dict) and r.get("rating"):
+                    try:
+                        val = float(r["rating"])
+                        prod_ratings.append(val)
+                        all_reviews.append({
+                            "type": "store_product",
+                            "item_title": p.get("title", "Store Product"),
+                            "customer_name": r.get("customer_name", "Verified Customer"),
+                            "rating": val,
+                            "comment": r.get("comment", ""),
+                            "created_at": r.get("created_at", "")
+                        })
+                    except (ValueError, TypeError):
+                        pass
+
+        # 2. Collect all service review ratings
+        srv_cursor = services_col.find({"$or": [{"provider_id": user_id}, {"senior_id": user_id}]})
+        srvs = await srv_cursor.to_list(100)
+        srv_ratings = []
+        for s in srvs:
+            for r in s.get("reviews", []):
+                if isinstance(r, dict) and r.get("rating"):
+                    try:
+                        val = float(r["rating"])
+                        srv_ratings.append(val)
+                        all_reviews.append({
+                            "type": "managed_service",
+                            "item_title": s.get("title", "Learning Session"),
+                            "customer_name": r.get("customer_name", "Verified Student"),
+                            "rating": val,
+                            "comment": r.get("comment", ""),
+                            "created_at": r.get("created_at", "")
+                        })
+                    except (ValueError, TypeError):
+                        pass
+
+        # 3. Collect all service booking review ratings
+        book_cursor = bookings_col.find({"$or": [{"senior_id": user_id}, {"provider_id": user_id}]})
+        books = await book_cursor.to_list(100)
+        book_ratings = []
+        for b in books:
+            if b.get("review_rating"):
+                try:
+                    val = float(b["review_rating"])
+                    book_ratings.append(val)
+                    all_reviews.append({
+                        "type": "service_booking",
+                        "item_title": b.get("service_title", "Teaching Class"),
+                        "customer_name": b.get("customer_name", "Verified Client"),
+                        "rating": val,
+                        "comment": b.get("review_comment", ""),
+                        "created_at": b.get("updated_at") or b.get("created_at", "")
+                    })
+                except (ValueError, TypeError):
+                    pass
+
+        combined_ratings = prod_ratings + srv_ratings + book_ratings
+        total_reviews = len(combined_ratings)
+
+        if total_reviews == 0:
+            trust_score = None
+            avg_rating = None
+        else:
+            avg_rating = round(sum(combined_ratings) / total_reviews, 2)
+            trust_score = avg_rating
+
+        all_reviews.sort(key=lambda x: str(x.get("created_at", "")), reverse=True)
+
+        return {
+            "trust_score": trust_score,
+            "rating": avg_rating,
+            "total_reviews": total_reviews,
+            "reviews": all_reviews
+        }
+
     async def get_senior_profile(self, user_id_or_payload: Any) -> SeniorProfileResponse:
         if isinstance(user_id_or_payload, dict):
             user_id = str(user_id_or_payload.get("sub") or user_id_or_payload.get("id") or user_id_or_payload.get("_id"))
@@ -166,15 +254,17 @@ class SeniorService:
                 "work_mode": "both",
                 "availability": "Flexible",
                 "is_age_verified": True,
-                "earnings_total": 24500.0,
-                "completed_jobs_count": 8,
-                "rating": 4.95,
-                "review_count": 14,
+                "earnings_total": 0.0,
+                "completed_jobs_count": 0,
+                "rating": None,
+                "review_count": 0,
                 "created_at": now
             }
             res = await col.insert_one(default_doc)
             default_doc["_id"] = str(res.inserted_id)
             doc = default_doc
+
+        trust_data = await self.compute_senior_ratings_and_trust(user_id)
 
         return SeniorProfileResponse(
             id=str(doc.get("_id")),
@@ -193,8 +283,8 @@ class SeniorService:
             is_age_verified=doc.get("is_age_verified", True),
             earnings_total=doc.get("earnings_total", 0.0),
             completed_jobs_count=doc.get("completed_jobs_count", 0),
-            rating=doc.get("rating", 5.0),
-            review_count=doc.get("review_count", 0)
+            rating=trust_data["rating"],
+            review_count=trust_data["total_reviews"]
         )
 
     async def get_senior_earnings_ledger(self, user_id_or_payload: Any) -> Dict[str, Any]:
@@ -259,8 +349,7 @@ class SeniorService:
         total_earnings = store_earnings + service_earnings
         pending_payout = sum(t["amount"] for t in transactions if t["status"] not in ["Settled", "Cancelled"])
 
-        # Sort transactions by date desc
-        transactions.sort(key=lambda x: x["date"], reverse=True)
+        transactions.sort(key=lambda x: str(x["date"]), reverse=True)
 
         return {
             "senior_name": profile.full_name,
@@ -278,11 +367,12 @@ class SeniorService:
         user_id = user_payload.get("sub") if isinstance(user_payload, dict) else str(user_payload)
         profile = await self.get_senior_profile(user_payload)
         earnings_ledger = await self.get_senior_earnings_ledger(user_payload)
+        trust_data = await self.compute_senior_ratings_and_trust(user_id)
 
         badges = [
             {"id": "b1", "title": "Verified Senior Guru", "icon": "ShieldCheck", "description": "Government & Community Identity Verified"},
             {"id": "b2", "title": "Heritage Wisdom Bearer", "icon": "Award", "description": "Preserving and transmitting traditional cultural knowledge"},
-            {"id": "b3", "title": "5-Star Neighbor", "icon": "Star", "description": "Top-tier reliability and community satisfaction score"},
+            {"id": "b3", "title": "Community Contributor", "icon": "Star", "description": "Providing local teaching classes and handmade goods"},
             {"id": "b4", "title": "Micro-Gig Luminary", "icon": "Sparkles", "description": "Actively mentoring and offering local managed services"}
         ]
 
@@ -297,8 +387,8 @@ class SeniorService:
             city=profile.city,
             member_since="2026",
             is_age_verified=True,
-            dignity_score=100,
-            trust_score=4.95,
+            trust_score=trust_data["trust_score"],
+            review_count=trust_data["total_reviews"],
             completed_orders_count=earnings_ledger.get("completed_orders_count", 0),
             completed_sessions_count=earnings_ledger.get("completed_services_count", 0),
             total_earnings=earnings_ledger.get("total_earnings", 0.0),
@@ -306,6 +396,7 @@ class SeniorService:
             inferred_skills=profile.inferred_skills,
             keywords=profile.keywords,
             badges=[SkillPassportBadge(**b) for b in badges],
+            reviews=trust_data["reviews"],
             credential_hash=cred_hash
         )
 

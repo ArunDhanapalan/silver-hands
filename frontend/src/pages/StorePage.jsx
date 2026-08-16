@@ -45,6 +45,7 @@ export default function StorePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFestivalOnly, setShowFestivalOnly] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  const [addedId, setAddedId] = useState(null);
 
   // Senior Create Product Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -79,7 +80,7 @@ export default function StorePage() {
     const existingIndex = existingCart.findIndex(item => item.product_id === product.id);
 
     if (existingIndex > -1) {
-      existingCart[existingIndex].quantity += 1;
+      existingCart[existingIndex].quantity = Math.min(10, existingCart[existingIndex].quantity + 1);
     } else {
       existingCart.push({
         product_id: product.id,
@@ -94,6 +95,8 @@ export default function StorePage() {
     }
 
     localStorage.setItem('silverhands_cart', JSON.stringify(existingCart));
+    setAddedId(product.id);
+    setTimeout(() => setAddedId(null), 1500);
     setToastMsg(`Added "${product.title}" to your cart!`);
     setTimeout(() => setToastMsg(''), 3000);
   };
@@ -257,9 +260,14 @@ export default function StorePage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] text-base-content/60">
                     <span className="font-semibold text-primary">{product.category}</span>
-                    <span className="flex items-center gap-1 font-bold text-base-content/80">
-                      <Star className="w-3 h-3 text-warning fill-warning" /> {product.seller_rating}
-                    </span>
+                    {(product.seller_rating || product.rating) ? (
+                      <span className="flex items-center gap-1 font-bold text-base-content/80">
+                        <Star className="w-3 h-3 text-warning fill-warning" /> {product.seller_rating || product.rating}
+                        {product.total_reviews > 0 && <span className="font-normal text-[10px] text-base-content/60">({product.total_reviews})</span>}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-base-content/50 font-bold">New</span>
+                    )}
                   </div>
 
                   <Link to={`/store/${product.id}`} className="hover:underline block">

@@ -397,7 +397,7 @@ export default function SeniorStorefrontPage() {
                       <p className="text-xs text-base-content/70 line-clamp-2 leading-relaxed">{prod.description}</p>
                       
                       <div className="flex items-center justify-between text-[11px] text-base-content/60 pt-1 border-t border-base-200">
-                        <span>Stock: <strong className="text-base-content">{Math.max(0, 20 - (prod.total_sold || 0))} left</strong></span>
+                        <span>Total Sold: <strong className="text-primary font-bold">{prod.total_sold || 0} units</strong></span>
                         <span className="flex items-center gap-1 font-bold text-warning">
                           ★ {prod.rating || 4.95} <span className="font-normal text-[10px] text-base-content/60">({prod.total_reviews || prod.reviews?.length || 1} revs)</span>
                         </span>

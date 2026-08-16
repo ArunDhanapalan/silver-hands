@@ -8,6 +8,7 @@ from app.schemas.service import (
     BookingStatusUpdateRequest,
     BookingReviewRequest,
     MarkSessionProgressRequest,
+    ClassBatchRosterResponse,
     AISuggestServiceRequest,
     AISuggestServiceResponse
 )
@@ -43,6 +44,15 @@ async def get_my_offerings(
     Senior views all their offered managed services.
     """
     return await service_booking_service.get_senior_services(current_user)
+
+@router.get("/my-class-rosters", response_model=List[ClassBatchRosterResponse])
+async def get_my_class_rosters(
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior views class rosters with all enrolled students, capacity limits, and individual progress.
+    """
+    return await service_booking_service.get_senior_class_rosters(current_user)
 
 @router.get("/{id}", response_model=ServiceResponse)
 async def get_service(id: str):

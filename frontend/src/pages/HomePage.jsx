@@ -168,7 +168,7 @@ export default function HomePage() {
         <div className="card bg-base-100 border border-base-300 p-6 rounded-3xl text-center shadow-xs space-y-1">
           <ShieldCheck className="w-6 h-6 text-accent mx-auto" />
           <span className="text-2xl sm:text-3xl font-extrabold text-base-content">99.4%</span>
-          <p className="text-xs text-base-content/60 font-medium">Dignity & Safety Rating</p>
+          <p className="text-xs text-base-content/60 font-medium">Verified Trust & Safety Rating</p>
         </div>
       </section>
 

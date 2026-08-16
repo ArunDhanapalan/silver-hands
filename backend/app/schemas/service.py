@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 class ServiceCreateRequest(BaseModel):
@@ -11,6 +11,10 @@ class ServiceCreateRequest(BaseModel):
     price_per_session: int = Field(..., gt=0)
     languages: List[str] = ["en", "ta"]
     target_audience: str = "All Ages / Beginners"
+    available_days: List[str] = ["Monday", "Wednesday", "Friday"]
+    time_slot: str = "Evening (5:00 PM – 6:00 PM)"
+    max_students_capacity: int = 10
+    venue_address: Optional[str] = None
     locality: str = "Adyar"
     city: str = "Chennai"
 
@@ -27,6 +31,8 @@ class AISuggestServiceResponse(BaseModel):
     price_per_session: Optional[int] = None
     duration_mins: int
     target_audience: str
+    available_days: List[str] = ["Monday", "Wednesday", "Friday"]
+    time_slot: str = "Evening (5:00 PM – 6:00 PM)"
     deliverables: List[str] = []
     engine: Optional[str] = "gemini_live"
 
@@ -43,7 +49,7 @@ class ServiceResponse(BaseModel):
     senior_name: str
     senior_locality: str
     senior_city: str
-    senior_rating: float = 4.95
+    senior_rating: Optional[float] = None
     is_age_verified: bool = True
     title: str
     category: str
@@ -54,11 +60,17 @@ class ServiceResponse(BaseModel):
     price_per_session: int
     languages: List[str]
     target_audience: str
+    available_days: List[str] = ["Monday", "Wednesday", "Friday"]
+    time_slot: str = "Evening (5:00 PM – 6:00 PM)"
+    max_students_capacity: int = 10
+    enrolled_students_count: int = 0
+    meeting_link: Optional[str] = None
+    venue_address: Optional[str] = None
     locality: str
     city: str
-    total_sessions_conducted: int = 12
-    rating: float = 4.95
-    total_reviews: int = 1
+    total_sessions_conducted: int = 0
+    rating: Optional[float] = None
+    total_reviews: int = 0
     reviews: List[ServiceReviewItem] = []
     created_at: str
 
@@ -88,15 +100,28 @@ class BookingResponse(BaseModel):
     student_name: str
     student_age_group: str
     scheduled_slot: str
+    available_days: List[str] = []
     sessions_count: int
     completed_sessions_count: int = 0
+    price_per_session: int = 0
     total_amount: int
     meeting_link: Optional[str] = None
+    venue_address: Optional[str] = None
     status: str # requested, accepted, scheduled, in_progress, completed, cancelled
     review_rating: Optional[int] = None
     review_comment: Optional[str] = None
     created_at: str
     updated_at: str
+
+class ClassBatchRosterResponse(BaseModel):
+    service: ServiceResponse
+    max_capacity: int = 10
+    enrolled_count: int = 0
+    completed_count: int = 0
+    total_class_earnings: int = 0
+    meeting_link: Optional[str] = None
+    venue_address: Optional[str] = None
+    students: List[BookingResponse] = []
 
 class BookingStatusUpdateRequest(BaseModel):
     status: str = Field(..., pattern="^(accepted|scheduled|in_progress|completed|cancelled)$")
