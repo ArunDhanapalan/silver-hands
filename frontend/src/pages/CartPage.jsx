@@ -140,6 +140,16 @@ export default function CartPage() {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      await api.put(`/store/orders/${orderId}/cancel`, {});
+      fetchOrders();
+    } catch (err) {
+      setError(err.message || 'Failed to cancel order');
+    }
+  };
+
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price_per_unit * item.quantity), 0);
   const deliveryFee = subtotal > 500 ? 0 : 40;
   const grandTotal = subtotal + deliveryFee;
@@ -439,10 +449,22 @@ export default function CartPage() {
                       ))}
                     </div>
 
-                    {/* Delivery Info */}
-                    <div className="text-xs text-base-content/70 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
-                      <span>Delivering to: <strong>{ord.delivery_address}, {ord.delivery_locality}, {ord.delivery_city}</strong></span>
+                    {/* Delivery Info & Actions */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-base-200">
+                      <div className="text-xs text-base-content/70 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
+                        <span>Delivering to: <strong>{ord.delivery_address}, {ord.delivery_locality}, {ord.delivery_city}</strong></span>
+                      </div>
+
+                      {ord.status !== 'completed' && ord.status !== 'delivered' && ord.status !== 'cancelled' && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelOrder(ord.id)}
+                          className="btn btn-ghost btn-xs min-h-[32px] text-error hover:bg-error/10 font-bold rounded-xl self-end sm:self-auto"
+                        >
+                          Cancel Order
+                        </button>
+                      )}
                     </div>
 
                   </div>

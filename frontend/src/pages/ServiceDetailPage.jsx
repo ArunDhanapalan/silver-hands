@@ -348,37 +348,39 @@ export default function ServiceDetailPage() {
                     </select>
                   </div>
 
-                  {/* Preferred Days */}
+                  {/* Allotted Class Days */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-base-content block py-1">Select Teaching Days</label>
+                    <label className="text-xs font-bold text-base-content block py-1 flex items-center justify-between">
+                      <span>Scheduled Class Days (Allotted by Senior)</span>
+                      <span className="text-[10px] text-accent font-semibold">Select your attending days</span>
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                      {(service.available_days && service.available_days.length > 0 ? service.available_days : ['Monday', 'Wednesday', 'Friday']).map(day => (
                         <button
                           key={day}
                           type="button"
                           onClick={() => handleToggleDay(day)}
-                          className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                          className={`min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                             selectedDays.includes(day)
                               ? 'bg-accent text-white border-accent shadow-xs'
-                              : 'bg-base-200 border-base-300 text-base-content/70'
+                              : 'bg-base-200 border-base-300 text-base-content/70 hover:bg-base-300'
                           }`}
                         >
-                          {day.slice(0, 3)}
+                          {day}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Time Slot */}
+                  {/* Allotted Time Slot */}
                   <div className="form-control">
-                    <label className="label text-xs font-bold py-1">Preferred Time Slot</label>
-                    <select 
-                      value={selectedSlot}
-                      onChange={(e) => setSelectedSlot(e.target.value)}
-                      className="select select-bordered min-h-[44px] w-full rounded-xl text-sm font-semibold"
-                    >
-                      {TIME_SLOTS.map(slot => <option key={slot} value={slot}>{slot}</option>)}
-                    </select>
+                    <label className="label text-xs font-bold py-1">Class Schedule Time Slot</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={service.time_slot || 'Evening (5:00 PM – 6:00 PM)'}
+                      className="input input-bordered min-h-[44px] w-full rounded-xl text-sm font-bold bg-base-200 text-primary cursor-default"
+                    />
                   </div>
 
                   {/* Number of Sessions */}

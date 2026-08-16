@@ -23,16 +23,22 @@ async def list_services(
     subcategory: Optional[str] = Query(None),
     mode: Optional[str] = Query(None),
     city: Optional[str] = Query(None),
+    locality: Optional[str] = Query(None, description="Requester's locality for in-person distance filtering"),
+    radius_km: Optional[float] = Query(None, description="Max distance in km for in-person services; omit to disable filtering"),
     search: Optional[str] = Query(None)
 ):
     """
     Public directory of managed services across language tuition, mentoring, culinary & handicrafts.
+    When locality and radius_km are provided, in-person services beyond that radius are excluded.
+    Remote/online services are always included regardless of distance.
     """
     return await service_booking_service.list_services(
         category=category,
         subcategory=subcategory,
         mode=mode,
         city=city,
+        locality=locality,
+        radius_km=radius_km,
         search=search
     )
 

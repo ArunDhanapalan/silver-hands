@@ -150,13 +150,13 @@ export default function StorePage() {
       </div>
 
       {/* Festival Quick Filter Banner */}
-      <div className="bg-gradient-to-r from-secondary/15 via-base-100 to-primary/15 border-2 border-secondary/30 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-gradient-to-r from-secondary/15 via-base-100 to-primary/15 border-2 border-secondary/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">🪔</span>
+          <span className="text-2xl">🪔</span>
           <div>
-            <span className="font-extrabold text-secondary uppercase text-xs sm:text-sm block">{activeFestival} Festive Edition</span>
-            <p className="text-xs sm:text-sm text-base-content/80 font-medium">
-              Discover authentic handmade delicacies, puja sweets, and festive gifts crafted by local grandmothers & artisans.
+            <span className="font-bold text-secondary uppercase text-xs block">{activeFestival} Edition</span>
+            <p className="text-xs text-base-content/80 font-medium">
+              Discover authentic handmade delicacies, sweets, and festive crafts.
             </p>
           </div>
         </div>
@@ -164,11 +164,11 @@ export default function StorePage() {
         <button
           type="button"
           onClick={() => setShowFestivalOnly(!showFestivalOnly)}
-          className={`btn min-h-[44px] px-5 rounded-2xl font-bold text-xs sm:text-sm gap-2 shrink-0 shadow-xs ${
+          className={`btn btn-sm min-h-[38px] px-4 rounded-xl font-bold text-xs gap-1.5 shrink-0 shadow-xs ${
             showFestivalOnly ? 'btn-secondary text-white' : 'btn-outline btn-secondary'
           }`}
         >
-          <Sparkles className="w-4 h-4" /> {showFestivalOnly ? 'Showing Festival Only' : `Show ${activeFestival} Items`}
+          <Sparkles className="w-3.5 h-3.5" /> {showFestivalOnly ? 'Showing Festive Only' : 'Show Festive Items'}
         </button>
       </div>
 

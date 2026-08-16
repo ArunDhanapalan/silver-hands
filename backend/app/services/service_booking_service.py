@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from bson import ObjectId
 from fastapi import HTTPException
 from app.database import db_manager
+from app.services.location_utils import compute_distance_km
 from app.schemas.service import (
     ServiceCreateRequest,
     ServiceResponse,
@@ -113,6 +114,8 @@ class ServiceBookingService:
         subcategory: Optional[str] = None,
         mode: Optional[str] = None,
         city: Optional[str] = None,
+        locality: Optional[str] = None,
+        radius_km: Optional[float] = None,
         search: Optional[str] = None
     ) -> List[ServiceResponse]:
         col = self._services_col()
@@ -134,6 +137,30 @@ class ServiceBookingService:
 
         cursor = col.find(query).sort("created_at", -1)
         docs = await cursor.to_list(100)
+
+        # ---- Distance-based post-filter ----------------------------------------
+        # Apply only when the caller supplies their locality + a max radius.
+        # Rules:
+        #   • Online/remote services → always included (no location requirement).
+        #   • In-person services → included only if within radius_km of caller.
+        #   • "both" mode services → included (at least partially remote).
+        #   • If distance cannot be computed → include (benefit of doubt).
+        if locality and radius_km is not None and radius_km > 0:
+            filtered = []
+            for doc in docs:
+                svc_mode = doc.get("mode", "online")
+                if svc_mode in ("online", "both"):
+                    filtered.append(doc)
+                    continue
+                # Purely in-person: check distance
+                svc_locality = doc.get("senior_locality") or doc.get("locality", "")
+                svc_city = doc.get("senior_city") or doc.get("city", "Chennai")
+                dist = compute_distance_km(locality, city or "", svc_locality, svc_city)
+                if dist is None or dist <= radius_km:
+                    filtered.append(doc)
+            docs = filtered
+        # -------------------------------------------------------------------------
+
         return [self._format_service(d) for d in docs]
 
     async def get_service_by_id(self, service_id: str) -> ServiceResponse:
@@ -168,6 +195,18 @@ class ServiceBookingService:
         user_id = user_payload.get("sub")
         col = self._services_col()
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        # Slot Clash Check for Senior: prevent double-booking same day & time slot
+        existing_classes = await col.find({"senior_id": user_id}).to_list(100)
+        for s in existing_classes:
+            if s.get("time_slot") == req.time_slot:
+                overlap = set(s.get("available_days", [])) & set(req.available_days)
+                if overlap:
+                    days_str = ", ".join(sorted(list(overlap)))
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Schedule clash: You already have '{s.get('title')}' scheduled on {days_str} during {req.time_slot}. Please choose a different day or time slot."
+                    )
 
         doc = {
             "senior_id": user_id,
@@ -223,6 +262,24 @@ class ServiceBookingService:
         })
         if active_students >= (service.max_students_capacity or 10):
             raise HTTPException(status_code=400, detail="This class batch is currently full (Maximum 10 students per batch).")
+
+        # Slot Clash Check for Student: prevent student from booking overlapping slots
+        chosen_slot = req.preferred_time_slot or service.time_slot
+        chosen_days = req.preferred_days or service.available_days or []
+        if customer_id and customer_id != "guest_customer":
+            cust_active = await col.find({
+                "customer_id": customer_id,
+                "status": {"$in": ["requested", "accepted", "scheduled", "in_progress"]}
+            }).to_list(100)
+            for b in cust_active:
+                if b.get("scheduled_slot") == chosen_slot:
+                    overlap = set(b.get("preferred_days", [])) & set(chosen_days)
+                    if overlap:
+                        days_str = ", ".join(sorted(list(overlap)))
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Schedule clash: You are already enrolled in '{b.get('service_title')}' on {days_str} at {chosen_slot}. Please select a different time slot."
+                        )
 
         total_amount = service.price_per_session * req.sessions_count
 

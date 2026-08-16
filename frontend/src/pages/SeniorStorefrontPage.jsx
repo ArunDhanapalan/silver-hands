@@ -222,24 +222,24 @@ export default function SeniorStorefrontPage() {
       <ErrorAlert message={error} onRetry={fetchStorefrontData} />
 
       {/* FESTIVAL SHOWCASE BANNER */}
-      <div className="bg-gradient-to-r from-warning/15 via-secondary/15 to-primary/15 border-2 border-warning/30 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-warning/20 text-warning flex items-center justify-center text-2xl shrink-0 shadow-inner">
+      <div className="bg-gradient-to-r from-warning/15 via-secondary/15 to-primary/15 border border-warning/30 rounded-3xl p-4 sm:p-5 shadow-sm relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-warning/20 text-warning flex items-center justify-center text-xl shrink-0">
               {activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '✨'}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-warning">
-                  Active Cultural Festival Showcase
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-warning">
+                  Festival Spotlight
                 </span>
-                <span className="badge badge-warning badge-xs font-black text-white">{activeFestival} Special</span>
+                <span className="badge badge-warning badge-xs font-bold text-white">{activeFestival}</span>
               </div>
-              <h2 className="text-base sm:text-lg font-extrabold text-base-content">
-                {activeFestival} Festive Catalog
+              <h2 className="text-sm sm:text-base font-bold text-base-content">
+                {activeFestival} Festive Edition
               </h2>
               <p className="text-xs text-base-content/75 max-w-xl">
-                {festivalSuggestions?.festival_theme || `Demand is surging in ${selectedCity?.name || 'Chennai'} for authentic ${activeFestival} homemade sweets, savouries, pooja hampers, and festive clothing.`}
+                Tag your homemade delicacies and festive crafts to get featured for {activeFestival}.
               </p>
             </div>
           </div>
@@ -248,13 +248,13 @@ export default function SeniorStorefrontPage() {
             <button
               type="button"
               onClick={() => setFestivalOnly(!festivalOnly)}
-              className={`btn min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all ${
+              className={`btn btn-sm min-h-[38px] px-3.5 rounded-xl text-xs font-bold transition-all ${
                 festivalOnly 
                   ? 'btn-warning text-white shadow-md' 
                   : 'btn-outline border-warning/50 text-base-content hover:bg-warning/20'
               }`}
             >
-              {festivalOnly ? <Check className="w-4 h-4" /> : '🪔'} {festivalOnly ? 'Showing Festive Items' : 'Filter Festive Specials'}
+              {festivalOnly ? <Check className="w-3.5 h-3.5" /> : '🪔'} {festivalOnly ? 'Showing Festive Items' : 'Filter Festive'}
             </button>
             <button
               type="button"
@@ -262,7 +262,7 @@ export default function SeniorStorefrontPage() {
                 setModalSkillHint(`${activeFestival} Traditional Specialty`);
                 setShowProductModal(true);
               }}
-              className="btn btn-warning min-h-[44px] px-4 rounded-xl text-white font-black text-xs gap-1.5 shadow-xs"
+              className="btn btn-warning btn-sm min-h-[38px] px-3.5 rounded-xl text-white font-bold text-xs gap-1 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Tag {activeFestival} Item
             </button>
@@ -270,58 +270,61 @@ export default function SeniorStorefrontPage() {
         </div>
       </div>
 
-      {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-sm border-b border-base-200">
+      {/* Main Navigation Button Bar (No hidden scrollbars) */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300">
         <button
           type="button"
           onClick={() => setActiveTab('products')}
-          className={`min-h-[44px] px-5 py-2.5 rounded-2xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
             activeTab === 'products'
-              ? 'bg-secondary text-white shadow-md'
-              : 'bg-base-200/60 hover:bg-base-200 text-base-content/75'
+              ? 'btn-secondary text-white shadow-xs'
+              : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <ShoppingBag className="w-4 h-4" />
-          My Products Catalog ({products.length})
+          <ShoppingBag className="w-3.5 h-3.5" />
+          Catalog ({products.length})
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('pending_requests')}
-          className={`min-h-[44px] px-5 py-2.5 rounded-2xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
             activeTab === 'pending_requests'
-              ? 'bg-warning text-white shadow-md'
-              : 'bg-base-200/60 hover:bg-base-200 text-base-content/75'
+              ? 'btn-warning text-white shadow-xs'
+              : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          Incoming Order Requests ({pendingOrders.length})
+          <Clock className="w-3.5 h-3.5" />
+          Incoming Orders
+          {pendingOrders.length > 0 && (
+            <span className="badge badge-warning badge-xs font-black text-[10px] text-white">{pendingOrders.length}</span>
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('active_pipeline')}
-          className={`min-h-[44px] px-5 py-2.5 rounded-2xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
             activeTab === 'active_pipeline'
-              ? 'bg-primary text-white shadow-md'
-              : 'bg-base-200/60 hover:bg-base-200 text-base-content/75'
+              ? 'btn-primary text-white shadow-xs'
+              : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <TrendingUp className="w-4 h-4" />
-          Live Order Pipeline ({activeOrders.length})
+          <TrendingUp className="w-3.5 h-3.5" />
+          Live Pipeline ({activeOrders.length})
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('history')}
-          className={`min-h-[44px] px-5 py-2.5 rounded-2xl font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
             activeTab === 'history'
-              ? 'bg-neutral text-neutral-content shadow-md'
-              : 'bg-base-200/60 hover:bg-base-200 text-base-content/75'
+              ? 'btn-neutral text-neutral-content shadow-xs'
+              : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <Archive className="w-4 h-4" />
-          Order History & Archive ({historyOrders.length})
+          <Archive className="w-3.5 h-3.5" />
+          History ({historyOrders.length})
         </button>
       </div>
 

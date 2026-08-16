@@ -1,5 +1,6 @@
 import datetime
 import logging
+import random
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, status
 from bson import ObjectId
@@ -10,6 +11,11 @@ from app.schemas.opportunity import (
     SwipeActionRequest,
     SwipeActionResponse,
     ApplicationItemResponse
+)
+from app.services.location_utils import (
+    parse_radius_km,
+    compute_distance_km,
+    is_within_radius,
 )
 
 logger = logging.getLogger("silverhands.matching_service")
@@ -27,21 +33,15 @@ class MatchingService:
     async def get_opportunity_deck(self, user_payload: Dict[str, Any]) -> List[OpportunityResponse]:
         user_id = user_payload.get("sub")
         senior_doc = await self._senior_col().find_one({"user_id": user_id})
-        
+
         senior_skills = [s.lower() for s in senior_doc.get("skills", [])] if senior_doc else ["accounting", "mentoring"]
         senior_languages = [l.lower() for l in senior_doc.get("languages", ["en", "ta"])] if senior_doc else ["en", "ta"]
         senior_radius_str = senior_doc.get("travel_radius", "5 km") if senior_doc else "5 km"
-        
-        # Parse radius num
-        max_km = 5.0
-        try:
-            if "2" in senior_radius_str: max_km = 2.0
-            elif "5" in senior_radius_str: max_km = 5.0
-            elif "10" in senior_radius_str: max_km = 10.0
-            elif "home" in senior_radius_str.lower() or "online" in senior_radius_str.lower(): max_km = 0.0
-            elif "flexible" in senior_radius_str.lower(): max_km = 50.0
-        except Exception:
-            max_km = 5.0
+        senior_locality = senior_doc.get("locality", "") if senior_doc else ""
+        senior_city = senior_doc.get("city", "Chennai") if senior_doc else "Chennai"
+
+        # Parse travel radius using shared utility
+        max_km = parse_radius_km(senior_radius_str)
 
         # Find existing swipes/applications
         apps_cursor = self._apps_col().find({"user_id": user_id})
@@ -57,40 +57,69 @@ class MatchingService:
         for opp in all_opps:
             opp_id = str(opp.get("_id"))
             if opp_id in swiped_ids:
-                continue # Already swiped
+                continue  # Already swiped
 
             opp_skills = [s.lower() for s in opp.get("required_skills", [])]
-            dist_km = opp.get("distance_km", 0.0)
             work_mode = opp.get("work_mode", "offline")
+            opp_locality = opp.get("locality", "")
+            opp_city = opp.get("city", "Chennai")
             opp_languages = [l.lower() for l in opp.get("languages", ["en"])]
 
-            # 1. Skill Match Score (0 - 55 pts)
+            # ---- Distance-based filtering ----------------------------------------
+            is_offline = work_mode in ("offline", "both")
+            is_online  = work_mode in ("online", "home")
+
+            if is_offline and not is_online:
+                # Pure in-person/offline: filter by senior's travel radius
+                if not is_within_radius(
+                    senior_locality, senior_city,
+                    opp_locality, opp_city,
+                    max_km
+                ):
+                    continue  # Too far – skip this gig
+
+            # Compute actual distance for scoring & display
+            dist_km: float
+            if is_online:
+                dist_km = 0.0
+            else:
+                computed = compute_distance_km(senior_locality, senior_city, opp_locality, opp_city)
+                dist_km = computed if computed is not None else opp.get("distance_km", 2.5)
+            # -----------------------------------------------------------------------
+
+            # 1. Skill Match Score (0 – 55 pts)
             common_skills = [s for s in opp_skills if any(s in sk or sk in s for sk in senior_skills)]
             skill_score = (len(common_skills) / max(len(opp_skills), 1)) * 55
 
-            # 2. Distance Score (0 - 25 pts)
-            if work_mode == "online" or work_mode == "home" or max_km == 0.0:
+            # 2. Distance Score (0 – 25 pts)
+            if is_online or max_km == 0.0:
                 dist_score = 25
-            elif dist_km <= max_km:
-                dist_score = 25 - (dist_km / max(max_km, 1)) * 10
             else:
-                dist_score = 5 # Deprioritized distance
+                dist_score = 25 - (dist_km / max(max_km, 1)) * 10
+                dist_score = max(dist_score, 5)  # floor at 5
 
-            # 3. Language & Schedule (0 - 20 pts)
+            # 3. Language & Schedule (0 – 20 pts)
             lang_common = [l for l in opp_languages if l in senior_languages]
             lang_score = 15 if lang_common else 5
             sched_score = 5
 
             total_score = min(int(skill_score + dist_score + lang_score + sched_score), 99)
             if total_score < 40:
-                total_score = 45 # Baseline minimum relevance
+                total_score = 45  # Baseline minimum relevance
 
-            # Generate Explainable Rationale
+            # Explainable rationale
             matched_skill_names = [s.title() for s in common_skills]
+            dist_label = f"{dist_km:.1f} km away" if dist_km > 0 else "Remote"
             if matched_skill_names:
-                explanation = f"{total_score}% Match: Matches your strengths in {', '.join(matched_skill_names[:2])} and {work_mode} schedule."
+                explanation = (
+                    f"{total_score}% Match: Aligns with your {', '.join(matched_skill_names[:2])} skills "
+                    f"({dist_label}, {work_mode} mode)."
+                )
             else:
-                explanation = f"{total_score}% Match: Suitable nearby opportunity in {opp.get('locality', 'Chennai')} matching your availability."
+                explanation = (
+                    f"{total_score}% Match: Nearby opportunity in {opp_locality or opp_city} "
+                    f"({dist_label}) matching your availability."
+                )
 
             results.append(OpportunityResponse(
                 id=opp_id,
@@ -100,9 +129,9 @@ class MatchingService:
                 company_id=opp.get("company_id"),
                 description=opp["description"],
                 required_skills=opp["required_skills"],
-                locality=opp.get("locality", "Adyar"),
-                city=opp.get("city", "Chennai"),
-                distance_km=dist_km,
+                locality=opp_locality,
+                city=opp_city,
+                distance_km=round(dist_km, 2),
                 work_mode=work_mode,
                 schedule=opp.get("schedule", "Flexible"),
                 pay_amount=opp["pay_amount"],
@@ -231,6 +260,12 @@ class MatchingService:
         company_name = user_doc.get("company_name") or user_doc.get("full_name", "Local Employer") if user_doc else "Local Employer"
         
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        # Compute and store a reference distance from a central point so the
+        # deck-scoring logic has a fallback value when senior location is unknown.
+        # The actual filtering uses Haversine at query time.
+        ref_dist = compute_distance_km(req.locality, req.city, req.locality, req.city)
+
         opp_doc = {
             "title": req.title,
             "description": req.description,
@@ -241,7 +276,7 @@ class MatchingService:
             "required_skills": req.required_skills,
             "locality": req.locality,
             "city": req.city,
-            "distance_km": 2.5,
+            "distance_km": ref_dist or 2.5,
             "work_mode": req.work_mode,
             "schedule": req.schedule,
             "pay_amount": req.pay_amount,

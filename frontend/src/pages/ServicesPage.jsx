@@ -33,7 +33,7 @@ const CATEGORIES = [
 
 export default function ServicesPage() {
   const { user } = useAuth();
-  const { selectedCity } = useLocation();
+  const { selectedCity, selectedLocality } = useLocation();
 
   const [services, setServices] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -54,6 +54,14 @@ export default function ServicesPage() {
       if (searchQuery.trim()) params.search = searchQuery.trim();
       params.city = selectedCity.name;
 
+      // Distance-based filtering: when a specific locality is chosen (not "All Areas"),
+      // pass locality + default 10 km radius so in-person services beyond that are hidden.
+      // Online/remote services are always shown regardless.
+      if (selectedLocality && selectedLocality !== 'All Areas') {
+        params.locality = selectedLocality;
+        params.radius_km = 10;
+      }
+
       const data = await api.get('/services', { params });
       setServices(data || []);
     } catch (err) {
@@ -67,7 +75,7 @@ export default function ServicesPage() {
 
   useEffect(() => {
     fetchServices();
-  }, [selectedCategory, selectedMode, searchQuery, selectedCity?.name]);
+  }, [selectedCategory, selectedMode, searchQuery, selectedCity?.name, selectedLocality]);
 
   return (
     <div className="space-y-8 pb-12">

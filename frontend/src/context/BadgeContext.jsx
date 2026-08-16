@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import api from '../api/client';
 
@@ -15,13 +15,7 @@ export function BadgeProvider({ children }) {
   const [storefrontCount, setStorefrontCount] = useState(0);
   const [servicesCount, setServicesCount] = useState(0);
 
-  const [dismissed, setDismissed] = useState({
-    opportunities: false,
-    storefront: false,
-    services: false
-  });
-
-  const fetchBadgeCounts = async () => {
+  const fetchBadgeCounts = useCallback(async () => {
     if (!isAuthenticated || user?.role !== 'senior') {
       setOpportunitiesCount(0);
       setStorefrontCount(0);
@@ -37,7 +31,7 @@ export function BadgeProvider({ children }) {
       ]);
 
       const newGigs = Array.isArray(oppDeck) ? oppDeck.length : 0;
-      const newOrders = Array.isArray(orders) ? orders.filter(o => o.status === 'pending').length : 0;
+      const newOrders = Array.isArray(orders) ? orders.filter(o => o.status === 'pending' || o.status === 'placed').length : 0;
       const newBookings = Array.isArray(bookings) ? bookings.filter(b => b.status === 'requested').length : 0;
 
       setOpportunitiesCount(newGigs);
@@ -46,18 +40,22 @@ export function BadgeProvider({ children }) {
     } catch (err) {
       console.warn('Failed to load senior badge counts:', err);
     }
-  };
+  }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
     fetchBadgeCounts();
-  }, [isAuthenticated, user?.role]);
+    const interval = setInterval(fetchBadgeCounts, 15000);
+    return () => clearInterval(interval);
+  }, [fetchBadgeCounts]);
 
   const markSeen = (section) => {
-    setDismissed(prev => ({ ...prev, [section]: true }));
+    // Soft dismiss until next data fetch
+    if (section === 'opportunities') setOpportunitiesCount(0);
+    if (section === 'storefront') setStorefrontCount(0);
+    if (section === 'services') setServicesCount(0);
   };
 
   const getCount = (section) => {
-    if (dismissed[section]) return 0;
     if (section === 'opportunities') return opportunitiesCount;
     if (section === 'storefront') return storefrontCount;
     if (section === 'services') return servicesCount;

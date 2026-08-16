@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/client';
 import ErrorAlert from '../common/ErrorAlert';
+import { useLocation } from '../../context/LocationContext';
 
 const PRODUCT_CATEGORIES = [
   'Festive Sweets & Snacks',
@@ -24,6 +25,7 @@ const PRODUCT_CATEGORIES = [
 ];
 
 export default function AddProductModal({ isOpen, onClose, onProductCreated, initialSkill = '', initialData = null }) {
+  const { activeFestival, currentFestivalInfo } = useLocation();
   const [rawIdea, setRawIdea] = useState(initialSkill);
   const [aiLoading, setAiLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -137,7 +139,7 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
         locality: productForm.locality,
         city: productForm.city,
         is_festival_special: Boolean(productForm.is_festival_special),
-        festival_tag: productForm.festival_tag || 'Festive'
+        festival_tag: productForm.is_festival_special ? (activeFestival || currentFestivalInfo?.name || 'Festive Special') : null
       };
 
       const res = await api.post('/store/products', payload);
@@ -179,12 +181,12 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
             </span>
             <span className="text-xs text-base-content/60">Type item name & click Generate</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input 
               type="text" 
               value={rawIdea}
               onChange={(e) => setRawIdea(e.target.value)}
-              placeholder="e.g. Traditional Sun-Dried Mango Pickle or Silk Potli Bags"
+              placeholder="e.g. Kai Murukku, Mysore Pak, or Silk Blouse"
               className="input input-bordered min-h-[44px] flex-1 text-sm rounded-xl"
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAiSuggest(); } }}
             />
@@ -192,39 +194,38 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
               type="button"
               onClick={handleAiSuggest}
               disabled={aiLoading || !rawIdea.trim()}
-              className="btn btn-secondary min-h-[44px] text-white rounded-xl font-bold text-xs sm:text-sm gap-1.5 px-4 shadow-xs"
+              className="btn btn-secondary min-h-[44px] text-white rounded-xl font-bold text-xs sm:text-sm shrink-0 shadow-xs gap-1.5 px-4"
             >
               {aiLoading ? <span className="loading loading-spinner loading-xs"></span> : <Sparkles className="w-4 h-4" />}
-              Auto-Fill
+              Generate
             </button>
           </div>
         </div>
 
         <ErrorAlert message={error} />
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
           
-          {/* Title */}
           <div className="form-control">
-            <label className="label text-xs font-bold text-base-content/80 py-1">Product Title</label>
+            <label className="label text-xs font-bold py-1">Product Title</label>
             <input 
               type="text" 
               required
               value={productForm.title}
-              onChange={(e) => setProductForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="e.g. Authentic Homemade Sun-Dried Mango Pickle"
+              onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+              placeholder="e.g. Handmade Mysore Pak with Pure Ghee"
               className="input input-bordered min-h-[44px] w-full rounded-xl font-semibold text-sm"
             />
           </div>
 
-          {/* Category & Unit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-control">
-              <label className="label text-xs font-bold text-base-content/80 py-1">Category</label>
+              <label className="label text-xs font-bold py-1">Category</label>
               <select 
                 value={productForm.category}
-                onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
-                className="select select-bordered min-h-[44px] w-full rounded-xl text-sm"
+                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                className="select select-bordered min-h-[44px] rounded-xl text-sm"
               >
                 {PRODUCT_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -233,70 +234,61 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
             </div>
 
             <div className="form-control">
-              <label className="label text-xs font-bold text-base-content/80 py-1">Packaging / Unit</label>
+              <label className="label text-xs font-bold py-1">Unit / Packaging</label>
               <input 
                 type="text" 
-                required
                 value={productForm.unit}
-                onChange={(e) => setProductForm(prev => ({ ...prev, unit: e.target.value }))}
-                placeholder="e.g. 500g Jar, Pack of 2, 1 Piece"
-                className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
+                onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
+                placeholder="e.g. 500g Box, 1 Piece, 1 Set"
+                className="input input-bordered min-h-[44px] rounded-xl text-sm"
               />
             </div>
           </div>
 
-          {/* Price & Stock */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="form-control">
-              <label className="label text-xs font-bold text-base-content/80 py-1">Price (₹ INR)</label>
-              <input 
-                type="number" 
-                required
-                min="10"
-                value={productForm.price}
-                onChange={(e) => setProductForm(prev => ({ ...prev, price: parseInt(e.target.value, 10) || 0 }))}
-                className="input input-bordered min-h-[44px] w-full rounded-xl text-sm font-bold text-primary"
-              />
-            </div>
-
-            <div className="form-control">
-              <label className="label text-xs font-bold text-base-content/80 py-1">Initial Stock</label>
-              <input 
-                type="number" 
-                required
-                min="1"
-                value={productForm.stock}
-                onChange={(e) => setProductForm(prev => ({ ...prev, stock: parseInt(e.target.value, 10) || 1 }))}
-                className="input input-bordered min-h-[44px] w-full rounded-xl text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Description */}
           <div className="form-control">
-            <label className="label text-xs font-bold text-base-content/80 py-1">Description & Ingredients</label>
+            <label className="label text-xs font-bold py-1">Description & Ingredients / Craft Details</label>
             <textarea 
               rows={3}
               required
               value={productForm.description}
-              onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe your authentic traditional ingredients, preparation method, and flavor profile..."
-              className="textarea textarea-bordered text-sm w-full rounded-xl leading-relaxed"
+              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+              placeholder="Detail your authentic preparation methods, pure ingredients, or handloom craftsmanship."
+              className="textarea textarea-bordered text-sm rounded-xl leading-relaxed"
             />
           </div>
 
-          {/* Image Upload Section */}
-          <div className="space-y-2">
-            <label className="label text-xs font-bold py-1 flex items-center justify-between">
-              <span className="flex items-center gap-1.5"><Camera className="w-4 h-4 text-primary" /> Product Photos</span>
-              <span className="text-xs text-base-content/60 font-normal">Upload photo or use defaults</span>
-            </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="form-control">
+              <label className="label text-xs font-bold py-1">Price (₹)</label>
+              <input 
+                type="number" 
+                min="10"
+                step="10"
+                value={productForm.price}
+                onChange={(e) => setProductForm({ ...productForm, price: parseInt(e.target.value, 10) || 0 })}
+                className="input input-bordered min-h-[44px] rounded-xl font-bold text-sm text-primary"
+              />
+            </div>
 
-            {/* Photo Previews */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="form-control">
+              <label className="label text-xs font-bold py-1">Locality</label>
+              <input 
+                type="text" 
+                value={productForm.locality}
+                onChange={(e) => setProductForm({ ...productForm, locality: e.target.value })}
+                className="input input-bordered min-h-[44px] rounded-xl text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Image Upload / URL Input */}
+          <div className="space-y-2">
+            <label className="label text-xs font-bold py-1">Product Images (Upload or Paste Photo)</label>
+            
+            <div className="flex flex-wrap items-center gap-3">
               {productForm.images.map((imgUrl, idx) => (
-                <div key={idx} className="relative w-20 h-20 rounded-2xl border border-base-300 overflow-hidden group shadow-xs">
-                  <img src={imgUrl} alt="Product" className="w-full h-full object-cover" />
+                <div key={idx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-base-300 group">
+                  <img src={imgUrl} alt={`Product ${idx}`} className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
@@ -307,7 +299,6 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
                 </div>
               ))}
 
-              {/* Upload Trigger Button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -334,7 +325,9 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
                 onChange={(e) => setProductForm(prev => ({ ...prev, is_festival_special: e.target.checked }))}
                 className="checkbox checkbox-md checkbox-secondary rounded-lg"
               />
-              <span className="label-text text-sm font-bold">Tag as Festive Special Offering</span>
+              <span className="label-text text-sm font-bold">
+                Tag as Festive Special Offering ({activeFestival || currentFestivalInfo?.name || 'Active Festival'})
+              </span>
             </label>
           </div>
 

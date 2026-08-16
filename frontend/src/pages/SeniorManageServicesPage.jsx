@@ -28,7 +28,8 @@ import {
   Star,
   Play,
   CheckCheck,
-  MapPin
+  MapPin,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -36,6 +37,7 @@ import api from '../api/client';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorAlert from '../components/common/ErrorAlert';
 import AddServiceModal from '../components/modals/AddServiceModal';
+import StudentBookingSwipeDeck from '../components/services/StudentBookingSwipeDeck';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -80,7 +82,7 @@ export default function SeniorManageServicesPage() {
     setUpdatingId(bookingId);
     try {
       await api.put(`/services/bookings/${bookingId}/status`, { status: 'accepted' });
-      showToast(`🎉 Accepted ${studentName} into class!`);
+      showToast(`🎉 Accepted ${studentName} into class batch!`);
       fetchData();
     } catch (err) {
       setError(err.message || 'Failed to accept student');
@@ -103,9 +105,30 @@ export default function SeniorManageServicesPage() {
     }
   };
 
+  // Mark incremental class session conducted for student (e.g. 1/3, 2/3, 3/3)
+  const handleMarkClassSessionDone = async (bookingId, studentName, currentDone, totalSessions, amount) => {
+    const nextDone = currentDone + 1;
+    setUpdatingId(bookingId);
+    try {
+      await api.put(`/services/bookings/${bookingId}/progress`, {
+        completed_sessions: nextDone
+      });
+      if (nextDone >= totalSessions) {
+        showToast(`🎉 All ${totalSessions} classes completed for ${studentName}! ₹${amount} settled into your earnings.`);
+      } else {
+        showToast(`✔ Marked Class ${nextDone} of ${totalSessions} done for ${studentName}!`);
+      }
+      fetchData();
+    } catch (err) {
+      setError(err.message || 'Failed to mark class session');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // Mark student session completed and credit senior payout
   const handleCompleteStudent = async (bookingId, studentName, amount) => {
-    if (!window.confirm(`Mark session completed for ${studentName}? ₹${amount} will be settled into your earnings ledger.`)) return;
+    if (!window.confirm(`Mark entire session completed for ${studentName}? ₹${amount} will be settled into your earnings ledger.`)) return;
     setUpdatingId(bookingId);
     try {
       await api.put(`/services/bookings/${bookingId}/status`, { status: 'completed' });
@@ -186,7 +209,7 @@ export default function SeniorManageServicesPage() {
               Class Rosters & Student Management
             </h1>
             <p className="text-xs sm:text-sm text-base-content/70 max-w-2xl">
-              Manage your active class batches, track student progress individually, join dedicated class video rooms, and earn verified payouts student-by-student.
+              Manage your active class batches, track student classes individually, join dedicated class video rooms, and earn verified payouts student-by-student.
             </p>
           </div>
 
@@ -234,26 +257,26 @@ export default function SeniorManageServicesPage() {
 
       <ErrorAlert message={error} />
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-sm border-b border-base-200">
+      {/* Responsive Navigation Button Bar (No hidden scrollbars) */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300">
         <button
           type="button"
           onClick={() => setActiveTab('classes')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[38px] ${
-            activeTab === 'classes' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/70'
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+            activeTab === 'classes' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5" /> Class Batches & Rosters ({rosters.length})
+          <BookOpen className="w-3.5 h-3.5" /> Class Rosters ({rosters.length})
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('requests')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[38px] ${
-            activeTab === 'requests' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/70'
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+            activeTab === 'requests' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <Users className="w-3.5 h-3.5" /> New Student Requests
+          <Users className="w-3.5 h-3.5" /> Student Requests
           {pendingRequests.length > 0 && (
             <span className="badge badge-warning badge-xs font-black text-[10px]">{pendingRequests.length}</span>
           )}
@@ -262,21 +285,21 @@ export default function SeniorManageServicesPage() {
         <button
           type="button"
           onClick={() => setActiveTab('schedule')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[38px] ${
-            activeTab === 'schedule' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/70'
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+            activeTab === 'schedule' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <Calendar className="w-3.5 h-3.5" /> Weekly Timetable
+          <Calendar className="w-3.5 h-3.5" /> Timetable
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('history')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[38px] ${
-            activeTab === 'history' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/70'
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+            activeTab === 'history' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <CheckCircle2 className="w-3.5 h-3.5" /> Completed Students ({completedStudents.length})
+          <CheckCircle2 className="w-3.5 h-3.5" /> Completed ({completedStudents.length})
         </button>
       </div>
 
@@ -314,9 +337,9 @@ export default function SeniorManageServicesPage() {
                   key={srv.id}
                   className="card bg-base-100 border-2 border-base-300 rounded-3xl p-6 sm:p-7 shadow-xs space-y-6"
                 >
-                  {/* Class Header */}
+                  {/* Class Header with Clean Aligned Delete Button */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-base-200">
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="badge badge-accent badge-sm font-bold text-white uppercase text-[10px]">
                           {srv.category}
@@ -353,26 +376,27 @@ export default function SeniorManageServicesPage() {
                       </div>
                     </div>
 
-                    {/* Actions & Meeting Link */}
-                    <div className="flex items-center gap-2 flex-wrap self-start md:self-auto">
+                    {/* Class Room Video Action and Aligned Delete Action */}
+                    <div className="flex items-center gap-2.5 flex-wrap self-start md:self-center shrink-0">
                       {srv.mode !== 'offline' && roster.meeting_link && (
                         <a
                           href={roster.meeting_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-primary btn-sm min-h-[40px] rounded-xl text-white font-bold text-xs gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
+                          className="btn btn-primary btn-sm min-h-[40px] px-4 rounded-xl text-white font-bold text-xs gap-1.5 shadow-sm hover:scale-[1.02] transition-transform"
                         >
                           <Video className="w-4 h-4" /> Join Class Room
                           <ExternalLink className="w-3 h-3 opacity-70" />
                         </a>
                       )}
+                      
                       <button
                         type="button"
                         onClick={() => handleDeleteService(srv.id, srv.title)}
-                        className="btn btn-ghost btn-sm min-h-[40px] rounded-xl text-error hover:bg-error/10 text-xs p-2"
+                        className="btn btn-outline btn-error btn-sm min-h-[40px] px-3 rounded-xl font-bold text-xs gap-1 hover:bg-error hover:text-white transition-all"
                         title="Delete Class"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Class
                       </button>
                     </div>
                   </div>
@@ -424,12 +448,15 @@ export default function SeniorManageServicesPage() {
                     {(!roster.students || roster.students.length === 0) ? (
                       <div className="p-6 rounded-2xl bg-base-200/40 border border-dashed border-base-300 text-center space-y-1">
                         <p className="text-xs font-semibold text-base-content/70">No students currently enrolled in this class batch.</p>
-                        <p className="text-[11px] text-base-content/50">When students book through the catalog, their names and progress will appear here.</p>
+                        <p className="text-[11px] text-base-content/50">When students book through the catalog, their names and class progress will appear here.</p>
                       </div>
                     ) : (
                       <div className="space-y-2.5">
                         {roster.students.map((student) => {
                           const isUpdating = updatingId === student.id;
+                          const totalSess = student.sessions_count || 1;
+                          const doneSess = student.completed_sessions_count || 0;
+
                           return (
                             <div 
                               key={student.id}
@@ -460,6 +487,12 @@ export default function SeniorManageServicesPage() {
                                   }`}>
                                     {student.status.replace('_', ' ')}
                                   </span>
+                                  
+                                  {student.status !== 'completed' && student.status !== 'cancelled' && (
+                                    <span className="text-[11px] font-bold text-primary">
+                                      (Class {doneSess} of {totalSess} Done)
+                                    </span>
+                                  )}
                                 </div>
 
                                 <div className="text-xs text-base-content/70 flex flex-wrap items-center gap-2">
@@ -475,7 +508,7 @@ export default function SeniorManageServicesPage() {
                                 </div>
                               </div>
 
-                              {/* Student Actions */}
+                              {/* Student Actions: Mark Session Progress / Complete */}
                               <div className="flex items-center gap-2 flex-wrap self-end md:self-auto">
                                 {student.status === 'requested' && (
                                   <>
@@ -512,15 +545,30 @@ export default function SeniorManageServicesPage() {
                                 )}
 
                                 {student.status === 'in_progress' && (
-                                  <button
-                                    type="button"
-                                    disabled={isUpdating}
-                                    onClick={() => handleCompleteStudent(student.id, student.student_name, student.total_amount || srv.price_per_session)}
-                                    className="btn btn-success btn-xs min-h-[34px] rounded-xl text-white font-black gap-1 px-3 shadow-sm"
-                                  >
-                                    {isUpdating ? <span className="loading loading-spinner loading-xs"></span> : <CheckCheck className="w-3.5 h-3.5" />}
-                                    Mark Completed (+₹{student.total_amount || srv.price_per_session})
-                                  </button>
+                                  <div className="flex items-center gap-1.5">
+                                    {/* Option to mark individual class session done */}
+                                    <button
+                                      type="button"
+                                      disabled={isUpdating}
+                                      onClick={() => handleMarkClassSessionDone(student.id, student.student_name, doneSess, totalSess, student.total_amount || srv.price_per_session)}
+                                      className="btn btn-accent btn-xs min-h-[34px] rounded-xl text-white font-bold gap-1 px-3 shadow-xs"
+                                      title={`Mark Class ${doneSess + 1} of ${totalSess} Conducted`}
+                                    >
+                                      {isUpdating ? <span className="loading loading-spinner loading-xs"></span> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                      +1 Class Done ({doneSess + 1}/{totalSess})
+                                    </button>
+
+                                    {/* Direct complete button */}
+                                    <button
+                                      type="button"
+                                      disabled={isUpdating}
+                                      onClick={() => handleCompleteStudent(student.id, student.student_name, student.total_amount || srv.price_per_session)}
+                                      className="btn btn-success btn-xs min-h-[34px] rounded-xl text-white font-black gap-1 px-3 shadow-sm"
+                                    >
+                                      {isUpdating ? <span className="loading loading-spinner loading-xs"></span> : <CheckCheck className="w-3.5 h-3.5" />}
+                                      Complete & Settle (+₹{student.total_amount || srv.price_per_session})
+                                    </button>
+                                  </div>
                                 )}
 
                                 {student.status === 'completed' && (
@@ -544,9 +592,9 @@ export default function SeniorManageServicesPage() {
         </div>
       )}
 
-      {/* TAB 2: PENDING STUDENT REQUESTS */}
+      {/* TAB 2: PENDING STUDENT REQUESTS (Swipe Deck & Quick Review) */}
       {activeTab === 'requests' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {pendingRequests.length === 0 ? (
             <div className="card bg-base-100 border border-base-300 rounded-3xl p-12 text-center max-w-md mx-auto space-y-2 shadow-sm">
               <div className="w-14 h-14 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto text-2xl font-bold">
@@ -556,42 +604,25 @@ export default function SeniorManageServicesPage() {
               <p className="text-xs text-base-content/60">All student class enrollments have been reviewed and accepted!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pendingRequests.map((req) => (
-                <div key={req.id} className="card bg-base-100 border-2 border-warning/40 rounded-3xl p-5 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="badge badge-warning badge-sm font-bold text-white uppercase text-[10px]">
-                      New Student Enrollment
-                    </span>
-                    <span className="font-extrabold text-primary text-sm">₹{req.total_amount}</span>
-                  </div>
+            <div className="space-y-6">
+              <div className="text-center max-w-sm mx-auto space-y-1">
+                <span className="badge badge-warning badge-sm font-bold text-white uppercase text-[10px]">
+                  Swipe Approval Deck
+                </span>
+                <h3 className="font-extrabold text-lg text-base-content">
+                  Review Incoming Student Requests
+                </h3>
+                <p className="text-xs text-base-content/60">
+                  Swipe Right to Accept student into class batch • Swipe Left to Decline.
+                </p>
+              </div>
 
-                  <div>
-                    <h3 className="font-extrabold text-base text-base-content">{req.student_name}</h3>
-                    <p className="text-xs text-base-content/60 font-semibold">{req.service_title}</p>
-                    <p className="text-xs text-base-content/70 mt-1">Schedule: {req.scheduled_slot}</p>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-base-200">
-                    <button
-                      type="button"
-                      disabled={updatingId === req.id}
-                      onClick={() => handleAcceptStudent(req.id, req.student_name)}
-                      className="btn btn-success btn-sm flex-1 rounded-xl text-white font-bold text-xs"
-                    >
-                      Accept Student
-                    </button>
-                    <button
-                      type="button"
-                      disabled={updatingId === req.id}
-                      onClick={() => handleCancelStudent(req.id, req.student_name)}
-                      className="btn btn-ghost btn-sm rounded-xl text-error hover:bg-error/10 text-xs"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {/* Interactive Left-Right Swipe Deck for Student Requests */}
+              <StudentBookingSwipeDeck
+                requests={pendingRequests}
+                onAccept={(bookingId, studentName) => handleAcceptStudent(bookingId, studentName)}
+                onDecline={(bookingId, studentName) => handleCancelStudent(bookingId, studentName)}
+              />
             </div>
           )}
         </div>

@@ -280,23 +280,24 @@ export default function Navbar() {
                     <div className="bg-primary text-primary-content rounded-full w-10 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    {totalUnreadCount > 0 && (
+                    {(totalUnreadCount > 0 || getCount('opportunities') > 0 || getCount('storefront') > 0 || getCount('services') > 0) && (
                       <span 
-                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 animate-bounce min-w-[20px] min-h-[20px]"
-                        title={`${totalUnreadCount} new direct message(s)`}
+                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 min-w-[18px] min-h-[18px] text-[10px] font-black"
+                        title="New notifications / messages"
                       >
-                        <Bell className="w-3 h-3 fill-current" />
+                        {totalUnreadCount > 0 ? (
+                          <Bell className="w-2.5 h-2.5 fill-current" />
+                        ) : (
+                          <span>•</span>
+                        )}
                       </span>
                     )}
                   </div>
-                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-2 shadow-2xl bg-base-100 rounded-2xl w-64 right-0 max-w-[calc(100vw-1.5rem)] border border-base-300 text-xs space-y-0.5 max-h-[82vh] overflow-y-auto">
-                    <li className="px-3 py-2 bg-base-200/80 rounded-xl mb-1 border border-base-300/50">
-                      <div className="flex flex-col gap-0.5 pointer-events-none p-0">
-                        <span className="font-black text-xs sm:text-sm text-base-content truncate">{user?.company_name || user?.full_name}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="badge badge-xs badge-primary font-bold text-white uppercase text-[9px]">{user?.role === 'senior' ? 'Senior Guru' : user?.role}</span>
-                          <span className="text-[10px] text-base-content/60 truncate">{user?.email}</span>
-                        </div>
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[99999] p-2 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+                    <li className="menu-title px-2.5 py-1.5 border-b border-base-200 mb-1">
+                      <div className="flex flex-col">
+                        <span className="font-extrabold text-sm text-base-content truncate">{user?.full_name || 'User'}</span>
+                        <span className="text-[11px] text-base-content/60 font-medium truncate">{user?.email}</span>
                       </div>
                     </li>
 
@@ -324,21 +325,42 @@ export default function Navbar() {
                     {user?.role === 'senior' && (
                       <>
                         <li>
-                          <Link to="/senior" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 active:bg-primary active:text-white">
-                            <Briefcase className="w-3.5 h-3.5 text-warning shrink-0" />
-                            <span>Job Opportunities</span>
+                          <Link to="/senior" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 active:bg-primary active:text-white">
+                            <span className="flex items-center gap-2">
+                              <Briefcase className="w-3.5 h-3.5 text-warning shrink-0" />
+                              <span>Job Opportunities</span>
+                            </span>
+                            {getCount('opportunities') > 0 && (
+                              <span className="badge badge-error badge-xs text-white font-black text-[10px]">
+                                {getCount('opportunities')}
+                              </span>
+                            )}
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/storefront" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
-                            <ShoppingBag className="w-3.5 h-3.5 text-secondary shrink-0" />
-                            <span>My Storefront</span>
+                          <Link to="/senior/storefront" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
+                            <span className="flex items-center gap-2">
+                              <ShoppingBag className="w-3.5 h-3.5 text-secondary shrink-0" />
+                              <span>My Storefront</span>
+                            </span>
+                            {getCount('storefront') > 0 && (
+                              <span className="badge badge-error badge-xs text-white font-black text-[10px]">
+                                {getCount('storefront')}
+                              </span>
+                            )}
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-accent active:bg-accent active:text-white">
-                            <BookOpen className="w-3.5 h-3.5 text-accent shrink-0" />
-                            <span>Service Hub</span>
+                          <Link to="/senior/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 text-accent active:bg-accent active:text-white">
+                            <span className="flex items-center gap-2">
+                              <BookOpen className="w-3.5 h-3.5 text-accent shrink-0" />
+                              <span>Service Hub</span>
+                            </span>
+                            {getCount('services') > 0 && (
+                              <span className="badge badge-error badge-xs text-white font-black text-[10px]">
+                                {getCount('services')}
+                              </span>
+                            )}
                           </Link>
                         </li>
                         <li>

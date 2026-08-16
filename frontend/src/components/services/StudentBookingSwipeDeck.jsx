@@ -1,0 +1,264 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Check, 
+  X, 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  Phone, 
+  Sparkles,
+  User,
+  RotateCcw
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
+
+export default function StudentBookingSwipeDeck({ requests = [], onAccept, onDecline, loading }) {
+  const [currentIndex, setCurrentIndex] = useState(() => requests.length - 1);
+  const [swipeOffset, setSwipeOffset] = useState({ x: 0, y: 0, rotating: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setCurrentIndex(requests.length - 1);
+  }, [requests]);
+
+  const handleAction = (direction) => {
+    if (currentIndex < 0 || currentIndex >= requests.length) return;
+    const req = requests[currentIndex];
+
+    if (direction === 'right') {
+      try {
+        confetti({
+          particleCount: 45,
+          spread: 65,
+          origin: { y: 0.7 }
+        });
+      } catch (e) {}
+      onAccept(req.id, req.student_name);
+    } else {
+      onDecline(req.id, req.student_name);
+    }
+
+    setCurrentIndex(prev => prev - 1);
+    setSwipeOffset({ x: 0, y: 0, rotating: 0 });
+  };
+
+  // Drag handlers
+  const handleTouchStart = (e) => {
+    const touch = e.touches ? e.touches[0] : e;
+    setIsDragging(true);
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const deltaX = touch.clientX - dragStart.x;
+    const deltaY = touch.clientY - dragStart.y;
+    const rot = (deltaX / 250) * 15;
+    setSwipeOffset({ x: deltaX, y: deltaY, rotating: rot });
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    if (swipeOffset.x > 75) {
+      handleAction('right');
+    } else if (swipeOffset.x < -75) {
+      handleAction('left');
+    } else {
+      setSwipeOffset({ x: 0, y: 0, rotating: 0 });
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMove = (e) => handleTouchMove(e);
+      const handleGlobalEnd = () => handleTouchEnd();
+      window.addEventListener('mousemove', handleGlobalMove);
+      window.addEventListener('mouseup', handleGlobalEnd);
+      window.addEventListener('touchmove', handleGlobalMove);
+      window.addEventListener('touchend', handleGlobalEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleGlobalMove);
+        window.removeEventListener('mouseup', handleGlobalEnd);
+        window.removeEventListener('touchmove', handleGlobalMove);
+        window.removeEventListener('touchend', handleGlobalEnd);
+      };
+    }
+  }, [isDragging, swipeOffset, dragStart]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-base-100 rounded-3xl border border-base-300 shadow-sm max-w-md mx-auto">
+        <span className="loading loading-spinner loading-lg text-accent"></span>
+        <p className="mt-4 text-xs font-semibold text-base-content/70">Checking incoming student requests...</p>
+      </div>
+    );
+  }
+
+  if (!requests.length || currentIndex < 0) {
+    return (
+      <div className="card bg-base-100 border border-base-300 shadow-sm rounded-3xl p-8 text-center max-w-md mx-auto space-y-4">
+        <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto text-2xl">
+          🎓
+        </div>
+        <div>
+          <h3 className="text-lg font-extrabold text-base-content">All Student Requests Reviewed!</h3>
+          <p className="text-xs text-base-content/70 mt-1 max-w-xs mx-auto">
+            Accepted students are added to your active class rosters.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentReq = requests[currentIndex];
+  const nextReq = currentIndex > 0 ? requests[currentIndex - 1] : null;
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-4">
+      
+      {/* Swipe Deck Stage */}
+      <div className="relative w-full h-[470px] select-none">
+        
+        {/* Next Card Preview */}
+        {nextReq && (
+          <div className="absolute top-0 left-0 w-full h-full z-10 opacity-70 scale-95 translate-y-3 pointer-events-none transition-all">
+            <div className="w-full h-full bg-base-100 rounded-3xl border border-base-300 shadow-md p-6 flex flex-col justify-between overflow-hidden">
+              <div className="space-y-2">
+                <span className="badge badge-accent badge-sm font-bold text-[10px]">
+                  Student Enrollment Request
+                </span>
+                <h3 className="text-lg font-black text-base-content">{nextReq.student_name}</h3>
+                <p className="text-xs text-base-content/60">{nextReq.service_title}</p>
+              </div>
+              <div className="text-base font-extrabold text-primary">₹{nextReq.total_amount}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Current Active Top Card */}
+        <div
+          onMouseDown={handleTouchStart}
+          onTouchStart={handleTouchStart}
+          style={{
+            transform: `translate3d(${swipeOffset.x}px, ${swipeOffset.y * 0.4}px, 0) rotate(${swipeOffset.rotating}deg)`,
+            transition: isDragging ? 'none' : 'transform 0.25s ease-out',
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          className="absolute top-0 left-0 w-full h-full z-20 bg-base-100 rounded-3xl border-2 border-accent/40 shadow-xl p-6 flex flex-col justify-between overflow-hidden"
+        >
+          {/* Swipe Stamp Indicators */}
+          {swipeOffset.x > 30 && (
+            <div 
+              className="absolute top-6 left-6 z-30 border-4 border-success text-success px-4 py-1.5 rounded-2xl font-black text-lg tracking-widest rotate-[-12deg] bg-base-100/90 shadow-md"
+              style={{ opacity: Math.min(1, (swipeOffset.x - 30) / 45) }}
+            >
+              ACCEPT STUDENT
+            </div>
+          )}
+
+          {swipeOffset.x < -30 && (
+            <div 
+              className="absolute top-6 right-6 z-30 border-4 border-error text-error px-4 py-1.5 rounded-2xl font-black text-lg tracking-widest rotate-[12deg] bg-base-100/90 shadow-md"
+              style={{ opacity: Math.min(1, Math.abs(swipeOffset.x + 30) / 45) }}
+            >
+              DECLINE
+            </div>
+          )}
+
+          {/* Card Content */}
+          <div className="space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-base-200">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-accent">
+                  Student Enrollment Request
+                </span>
+                <h3 className="text-xl font-black text-base-content mt-0.5">
+                  {currentReq.student_name}
+                </h3>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-primary">₹{currentReq.total_amount}</div>
+                <span className="text-[10px] text-base-content/60 font-bold">{currentReq.sessions_count || 1} Session(s)</span>
+              </div>
+            </div>
+
+            {/* Target Class Info */}
+            <div className="bg-accent/10 border border-accent/20 rounded-2xl p-3 space-y-1 text-xs">
+              <span className="font-extrabold text-accent flex items-center gap-1">
+                <BookOpen className="w-3.5 h-3.5" /> Class: {currentReq.service_title}
+              </span>
+              <p className="text-base-content/75 text-[11px]">
+                Age Group: <strong>{currentReq.student_age_group}</strong>
+              </p>
+            </div>
+
+            {/* Schedule Slot */}
+            <div className="bg-base-200/70 rounded-2xl p-3 space-y-1 text-xs border border-base-300">
+              <div className="flex items-center gap-1.5 font-bold text-primary">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{(currentReq.available_days || []).join(', ') || 'Mon, Wed, Fri'}</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-semibold text-base-content/70">
+                <Clock className="w-3.5 h-3.5 text-secondary" />
+                <span>{currentReq.scheduled_slot}</span>
+              </div>
+            </div>
+
+            {/* Guardian & Contact */}
+            <div className="text-xs text-base-content/70 space-y-1">
+              <p>Parent / Guardian: <strong>{currentReq.customer_name}</strong></p>
+              {currentReq.customer_phone && (
+                <p className="flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-secondary" /> {currentReq.customer_phone}
+                </p>
+              )}
+            </div>
+
+            {currentReq.special_goals && (
+              <p className="text-[11px] text-base-content/60 italic bg-base-200/40 p-2 rounded-xl">
+                "{currentReq.special_goals}"
+              </p>
+            )}
+          </div>
+
+          {/* Bottom Swipe Guidance */}
+          <div className="text-center pt-2 border-t border-base-200">
+            <span className="text-[11px] text-base-content/60 font-semibold">
+              👈 Swipe Left (Decline) • Swipe Right (Accept) 👉
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Manual Action Buttons */}
+      <div className="flex items-center justify-center gap-6 pt-2">
+        <button
+          type="button"
+          onClick={() => handleAction('left')}
+          className="btn btn-circle btn-lg btn-outline btn-error shadow-md hover:scale-110 transition-transform"
+          title="Decline Student"
+          aria-label="Decline Student"
+        >
+          <X className="w-6 h-6 stroke-[3]" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleAction('right')}
+          className="btn btn-circle btn-lg btn-success text-white shadow-lg hover:scale-110 transition-transform ring-4 ring-success/20"
+          title="Accept Student"
+          aria-label="Accept Student"
+        >
+          <Check className="w-6 h-6 stroke-[3]" />
+        </button>
+      </div>
+
+    </div>
+  );
+}
