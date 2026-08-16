@@ -47,6 +47,31 @@ export default function SeniorEarningsPage() {
   const pendingPayout = earningsData?.pending_payout || 0;
   const transactions = earningsData?.transactions || [];
 
+  const handleDownloadStatement = () => {
+    if (!transactions || transactions.length === 0) {
+      alert('No transactions recorded to download.');
+      return;
+    }
+    const csvRows = [
+      ['Date', 'Activity / Item Description', 'Type', 'Status', 'Earnings (INR)'],
+      ...transactions.map(t => [
+        `"${t.date || ''}"`,
+        `"${(t.description || '').replace(/"/g, '""')}"`,
+        `"${t.type === 'store_product' ? 'Store Product' : 'Tuition / Service'}"`,
+        `"${t.status || 'Settled'}"`,
+        `"${t.amount || 0}"`
+      ])
+    ];
+    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map(e => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `SilverHands_Earnings_Statement_${user?.full_name || 'Senior'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       
@@ -66,8 +91,8 @@ export default function SeniorEarningsPage() {
         </div>
 
         <button 
-          onClick={() => alert('Statement for ' + (user?.full_name || 'Senior') + ' downloaded!')}
-          className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold gap-1 text-xs self-start sm:self-auto"
+          onClick={handleDownloadStatement}
+          className="btn btn-outline btn-neutral btn-sm rounded-xl font-bold gap-1 text-xs self-start sm:self-auto hover:bg-neutral hover:text-white"
         >
           <Download className="w-3.5 h-3.5" /> Download Statement
         </button>
@@ -162,37 +187,37 @@ export default function SeniorEarningsPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto no-scrollbar max-w-full">
                 <table className="table table-zebra w-full text-xs">
                   <thead>
                     <tr className="text-base-content/70 font-bold border-b border-base-300">
-                      <th>Date</th>
+                      <th className="whitespace-nowrap">Date</th>
                       <th>Activity / Item</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th className="text-right">Earnings</th>
+                      <th className="whitespace-nowrap">Type</th>
+                      <th className="whitespace-nowrap">Status</th>
+                      <th className="text-right whitespace-nowrap">Earnings</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((txn, idx) => (
                       <tr key={idx} className="hover">
-                        <td className="font-mono text-base-content/70">{txn.date}</td>
-                        <td className="font-bold text-base-content">{txn.description}</td>
-                        <td>
-                          <span className={`badge badge-xs font-semibold ${
+                        <td className="font-mono text-base-content/70 whitespace-nowrap">{txn.date}</td>
+                        <td className="font-bold text-base-content max-w-[200px] truncate" title={txn.description}>{txn.description}</td>
+                        <td className="whitespace-nowrap">
+                          <span className={`badge badge-xs font-semibold whitespace-nowrap ${
                             txn.type === 'store_product' ? 'badge-secondary' : 'badge-accent'
                           }`}>
-                            {txn.type === 'store_product' ? 'Product' : 'Tuition / Service'}
+                            {txn.type === 'store_product' ? 'Product' : 'Service'}
                           </span>
                         </td>
-                        <td>
-                          <span className={`badge badge-xs font-bold ${
+                        <td className="whitespace-nowrap">
+                          <span className={`badge badge-xs font-bold whitespace-nowrap ${
                             txn.status === 'Settled' ? 'badge-success text-white' : 'badge-warning'
                           }`}>
                             {txn.status}
                           </span>
                         </td>
-                        <td className="text-right font-extrabold text-success text-sm">
+                        <td className="text-right font-extrabold text-success text-sm whitespace-nowrap">
                           +₹{txn.amount.toLocaleString('en-IN')}
                         </td>
                       </tr>
@@ -201,7 +226,6 @@ export default function SeniorEarningsPage() {
                 </table>
               </div>
             )}
-
           </div>
 
         </div>

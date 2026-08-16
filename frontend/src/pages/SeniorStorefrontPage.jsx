@@ -270,12 +270,12 @@ export default function SeniorStorefrontPage() {
         </div>
       </div>
 
-      {/* Main Navigation Button Bar (No hidden scrollbars) */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300">
+      {/* Main Navigation Button Bar */}
+      <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300 overflow-x-auto no-scrollbar max-w-full">
         <button
           type="button"
           onClick={() => setActiveTab('products')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'products'
               ? 'btn-secondary text-white shadow-xs'
               : 'btn-ghost text-base-content/80 hover:bg-base-300'
@@ -288,7 +288,7 @@ export default function SeniorStorefrontPage() {
         <button
           type="button"
           onClick={() => setActiveTab('pending_requests')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'pending_requests'
               ? 'btn-warning text-white shadow-xs'
               : 'btn-ghost text-base-content/80 hover:bg-base-300'
@@ -304,7 +304,7 @@ export default function SeniorStorefrontPage() {
         <button
           type="button"
           onClick={() => setActiveTab('active_pipeline')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'active_pipeline'
               ? 'btn-primary text-white shadow-xs'
               : 'btn-ghost text-base-content/80 hover:bg-base-300'
@@ -317,14 +317,14 @@ export default function SeniorStorefrontPage() {
         <button
           type="button"
           onClick={() => setActiveTab('history')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'history'
-              ? 'btn-neutral text-neutral-content shadow-xs'
+              ? 'btn-success text-white shadow-xs'
               : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
-          <Archive className="w-3.5 h-3.5" />
-          History ({historyOrders.length})
+          <Check className="w-3.5 h-3.5" />
+          Delivered ({historyOrders.length})
         </button>
       </div>
 

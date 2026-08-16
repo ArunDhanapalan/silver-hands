@@ -255,12 +255,12 @@ export default function SeniorManageServicesPage() {
 
       <ErrorAlert message={error} />
 
-      {/* Responsive Navigation Button Bar (No hidden scrollbars) */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300">
+      {/* Responsive Navigation Button Bar */}
+      <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-base-200/60 rounded-2xl border border-base-300 overflow-x-auto no-scrollbar max-w-full">
         <button
           type="button"
           onClick={() => setActiveTab('classes')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'classes' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
@@ -270,7 +270,7 @@ export default function SeniorManageServicesPage() {
         <button
           type="button"
           onClick={() => setActiveTab('requests')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'requests' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
@@ -283,7 +283,7 @@ export default function SeniorManageServicesPage() {
         <button
           type="button"
           onClick={() => setActiveTab('schedule')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'schedule' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >
@@ -293,7 +293,7 @@ export default function SeniorManageServicesPage() {
         <button
           type="button"
           onClick={() => setActiveTab('history')}
-          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] flex-1 sm:flex-none ${
+          className={`btn btn-sm rounded-xl gap-1.5 font-bold text-xs min-h-[40px] shrink-0 whitespace-nowrap ${
             activeTab === 'history' ? 'btn-accent text-white shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-300'
           }`}
         >

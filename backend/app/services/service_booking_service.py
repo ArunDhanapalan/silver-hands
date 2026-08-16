@@ -178,11 +178,11 @@ class ServiceBookingService:
         if not doc:
             raise HTTPException(status_code=404, detail="Managed service not found")
 
-        # Calculate live enrolled count
+        # Calculate live enrolled count for active learners only
         bookings_col = self._bookings_col()
         enrolled_count = await bookings_col.count_documents({
             "service_id": service_id,
-            "status": {"$in": ["requested", "accepted", "scheduled", "in_progress", "completed"]}
+            "status": {"$in": ["requested", "accepted", "scheduled", "in_progress"]}
         })
         doc["enrolled_students_count"] = enrolled_count
 
@@ -267,10 +267,10 @@ class ServiceBookingService:
         customer_id = user_payload.get("sub") if user_payload else "guest_customer"
         customer_name = user_payload.get("full_name", req.student_name) if user_payload else req.student_name
 
-        # Enforce strict 10 student cap per class batch
+        # Enforce strict 10 student cap per class batch (active enrolled seats only)
         active_students = await col.count_documents({
             "service_id": req.service_id,
-            "status": {"$in": ["requested", "accepted", "scheduled", "in_progress", "completed"]}
+            "status": {"$in": ["requested", "accepted", "scheduled", "in_progress"]}
         })
         if active_students >= (service.max_students_capacity or 10):
             raise HTTPException(status_code=400, detail="This class batch is currently full (Maximum 10 students per batch).")
@@ -361,7 +361,7 @@ class ServiceBookingService:
         await col.update_one(filter_q, {"$set": update_fields})
         doc.update(update_fields)
 
-        # Credit individual student's fee to senior earnings once this student is completed
+        # Credit individual student's fee to senior earnings once this student is completed, and free up seat
         if req.status == "completed" and previous_status != "completed":
             senior_id = doc.get("senior_id")
             if senior_id:
@@ -373,7 +373,7 @@ class ServiceBookingService:
             if doc.get("service_id"):
                 await self._services_col().update_one(
                     self._build_id_filter(doc["service_id"]),
-                    {"$inc": {"total_sessions_conducted": 1}}
+                    {"$inc": {"total_sessions_conducted": 1, "enrolled_students_count": -1}}
                 )
 
         return self._format_booking(doc)
@@ -455,6 +455,11 @@ class ServiceBookingService:
                 await senior_col.update_one(
                     {"user_id": senior_id},
                     {"$inc": {"earnings_total": doc["total_amount"], "completed_jobs_count": 1}}
+                )
+            if doc.get("service_id"):
+                await self._services_col().update_one(
+                    self._build_id_filter(doc["service_id"]),
+                    {"$inc": {"total_sessions_conducted": 1, "enrolled_students_count": -1}}
                 )
 
         return self._format_booking(doc)

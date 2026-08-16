@@ -47,10 +47,7 @@ export function ChatProvider({ children }) {
       const convList = Array.isArray(data) ? data : [];
       setConversations(convList);
       
-      const unreadTotal = convList.reduce((acc, c) => acc + (c.unread_count || 0), 0);
-      setTotalUnreadCount(unreadTotal);
-
-      // Auto-select first conversation if none selected or if active is no longer in list
+      // Maintain active conversation without wiping unread count on startup
       setActiveConversation(prev => {
         if (prev && convList.some(c => String(c.id) === String(prev.id))) {
           return prev;
@@ -62,19 +59,21 @@ export function ChatProvider({ children }) {
     }
   };
 
-  const fetchMessages = async (convId) => {
+  const fetchMessages = async (convId, markAsRead = false) => {
     if (!convId || !isAuthenticated) return;
     try {
       const data = await api.get(`/chat/conversations/${convId}/messages`);
       setMessages(Array.isArray(data) ? data : []);
 
-      // Clear unread count for this conversation in local state immediately so red bell disappears
-      setConversations(prev => {
-        const updated = prev.map(c => String(c.id) === String(convId) ? { ...c, unread_count: 0 } : c);
-        const unreadTotal = updated.reduce((acc, c) => acc + (c.unread_count || 0), 0);
-        setTotalUnreadCount(unreadTotal);
-        return updated;
-      });
+      // Only clear unread count if user actively opened the chat drawer
+      if (markAsRead) {
+        setConversations(prev => {
+          const updated = prev.map(c => String(c.id) === String(convId) ? { ...c, unread_count: 0 } : c);
+          const unreadTotal = updated.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+          setTotalUnreadCount(unreadTotal);
+          return updated;
+        });
+      }
     } catch (err) {
       console.error('Failed to load messages for conversation:', err);
     }
@@ -91,13 +90,13 @@ export function ChatProvider({ children }) {
 
   useEffect(() => {
     if (activeConversation?.id && isAuthenticated) {
-      fetchMessages(activeConversation.id);
+      fetchMessages(activeConversation.id, isChatDrawerOpen);
       const interval = setInterval(() => {
-        fetchMessages(activeConversation.id);
+        fetchMessages(activeConversation.id, isChatDrawerOpen);
       }, 4000);
       return () => clearInterval(interval);
     }
-  }, [activeConversation?.id, isAuthenticated]);
+  }, [activeConversation?.id, isAuthenticated, isChatDrawerOpen]);
 
   const openChatDrawer = async (initialConv = null) => {
     if (!isAuthenticated) return;

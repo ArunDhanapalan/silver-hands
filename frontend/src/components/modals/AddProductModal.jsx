@@ -43,7 +43,7 @@ export default function AddProductModal({ isOpen, onClose, onProductCreated, ini
     locality: 'Adyar',
     city: 'Chennai',
     is_festival_special: true,
-    festival_tag: 'Diwali'
+    festival_tag: activeFestival || 'Festive Special'
   });
 
   // Pre-populate form from launchpad AI data when modal opens

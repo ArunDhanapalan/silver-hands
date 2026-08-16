@@ -274,23 +274,26 @@ export default function Navbar() {
                     <div className="bg-primary text-primary-content rounded-full w-10 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    {(totalUnreadCount > 0 || getCount('opportunities') > 0 || getCount('storefront') > 0 || getCount('services') > 0) && (
+                    {totalUnreadCount > 0 && (
                       <span 
-                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 min-w-[18px] min-h-[18px] text-[10px] font-black"
-                        title="New notifications / messages"
+                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 min-w-[18px] min-h-[18px] text-[10px] font-black animate-pulse"
+                        title={`${totalUnreadCount} unread message(s)`}
                       >
-                        {totalUnreadCount > 0 ? (
-                          <Bell className="w-2.5 h-2.5 fill-current" />
-                        ) : (
-                          <span>•</span>
-                        )}
+                        <Bell className="w-2.5 h-2.5 fill-current" />
                       </span>
                     )}
                   </div>
                   <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[99999] p-2 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
                     <li className="menu-title px-2.5 py-1.5 border-b border-base-200 mb-1">
-                      <div className="flex flex-col">
-                        <span className="font-extrabold text-sm text-base-content truncate">{user?.full_name || 'User'}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-sm text-base-content truncate">{user?.full_name || 'User'}</span>
+                          <span className={`badge badge-xs font-bold uppercase ${
+                            user?.role === 'senior' ? 'badge-primary text-white' : user?.role === 'company' ? 'badge-secondary text-white' : 'badge-accent text-white'
+                          }`}>
+                            {user?.role === 'senior' ? 'Senior' : user?.role === 'company' ? 'Company' : 'Customer'}
+                          </span>
+                        </div>
                         <span className="text-[11px] text-base-content/60 font-medium truncate">{user?.email}</span>
                       </div>
                     </li>

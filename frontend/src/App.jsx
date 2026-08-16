@@ -81,6 +81,7 @@ export default function App() {
                     {/* Managed Services */}
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/services/:id" element={<ServiceDetailPage />} />
+                    <Route path="/services/my-bookings" element={<CustomerServicesPage />} />
                     <Route path="/customer/services" element={<CustomerServicesPage />} />
                     <Route path="/my-bookings" element={<CustomerServicesPage />} />
                     

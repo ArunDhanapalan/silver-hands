@@ -402,18 +402,22 @@ export default function ServiceDetailPage() {
                     />
                   </div>
 
-                  {/* Number of Sessions */}
+                  {/* Number of Sessions Chooser */}
                   <div className="form-control">
                     <label className="label text-xs font-bold py-1">Number of Sessions</label>
-                    <div className="join w-full">
+                    <div className="grid grid-cols-4 gap-1.5 w-full">
                       {[1, 3, 5, 10].map(cnt => (
                         <button
                           key={cnt}
                           type="button"
                           onClick={() => setSessionsCount(cnt)}
-                          className={`join-item btn min-h-[44px] flex-1 text-xs sm:text-sm ${sessionsCount === cnt ? 'btn-accent text-white font-bold shadow-xs' : 'btn-ghost border-base-300'}`}
+                          className={`min-h-[40px] px-1.5 py-1.5 rounded-xl text-xs font-bold border transition-all text-center truncate ${
+                            sessionsCount === cnt 
+                              ? 'bg-accent text-white border-accent shadow-xs' 
+                              : 'bg-base-200 border-base-300 text-base-content/70 hover:bg-base-300'
+                          }`}
                         >
-                          {cnt} {cnt === 1 ? 'Session' : 'Sessions'}
+                          {cnt} {cnt === 1 ? 'Class' : 'Classes'}
                         </button>
                       ))}
                     </div>
@@ -502,7 +506,7 @@ export default function ServiceDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center justify-between gap-2 pt-2 border-t border-base-200">
-                <Link to="/services/my-bookings" className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs w-full">
+                <Link to="/customer/services" className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs w-full">
                   View All My Booked Classes
                 </Link>
               </div>
