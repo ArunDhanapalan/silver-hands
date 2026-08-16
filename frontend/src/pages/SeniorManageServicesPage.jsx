@@ -495,12 +495,6 @@ export default function SeniorManageServicesPage() {
 
                                 <div className="text-xs text-base-content/70 flex flex-wrap items-center gap-2">
                                   <span>Guardian: <strong>{student.customer_name}</strong></span>
-                                  {student.customer_phone && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="flex items-center gap-0.5"><Phone className="w-3 h-3 text-secondary" /> {student.customer_phone}</span>
-                                    </>
-                                  )}
                                   <span>•</span>
                                   <span className="font-mono text-[11px] text-base-content/50">Ref: {student.booking_reference}</span>
                                 </div>

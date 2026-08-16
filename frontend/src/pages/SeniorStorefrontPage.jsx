@@ -44,7 +44,7 @@ const NEXT_STATUS_MAP = {
 
 export default function SeniorStorefrontPage() {
   const { user } = useAuth();
-  const { selectedCity, activeFestival } = useLocation();
+  const { selectedCity, activeFestival, currentFestivalInfo } = useLocation();
 
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);

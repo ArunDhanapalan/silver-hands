@@ -94,11 +94,11 @@ export function ChatProvider({ children }) {
   }, [isAuthenticated, currentUserId]);
 
   useEffect(() => {
-    if (activeConversation?.id && isAuthenticated) {
-      fetchMessages(activeConversation.id, isChatDrawerOpen);
+    if (isChatDrawerOpen && activeConversation?.id && isAuthenticated) {
+      fetchMessages(activeConversation.id, true);
       const interval = setInterval(() => {
-        fetchMessages(activeConversation.id, isChatDrawerOpen);
-      }, 4000);
+        fetchMessages(activeConversation.id, true);
+      }, 3000);
       return () => clearInterval(interval);
     }
   }, [activeConversation?.id, isAuthenticated, isChatDrawerOpen]);
