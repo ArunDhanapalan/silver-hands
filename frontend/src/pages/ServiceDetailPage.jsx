@@ -53,17 +53,22 @@ export default function ServiceDetailPage() {
   const [toastMsg, setToastMsg] = useState('');
 
   // Booking Form State
-  const [studentName, setStudentName] = useState(user?.full_name || 'Ananya Sharma');
+  const [studentName, setStudentName] = useState(user?.full_name || '');
   const [studentAgeGroup, setStudentAgeGroup] = useState('Child (Age 6-12)');
   const [selectedDays, setSelectedDays] = useState(['Monday', 'Wednesday', 'Friday']);
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[4]);
   const [sessionsCount, setSessionsCount] = useState(1);
-  const [contactPhone, setContactPhone] = useState(user?.phone || '+91 98840 56789');
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
   const [specialGoals, setSpecialGoals] = useState('Spoken language conversation practice & conversational fluency');
+
+  useEffect(() => {
+    if (user?.full_name && !studentName) setStudentName(user.full_name);
+    if (user?.phone && !contactPhone) setContactPhone(user.phone);
+  }, [user]);
 
   // Review State
   const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('Outstanding patience and clear explanations! Very helpful for beginners.');
+  const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
@@ -192,8 +197,11 @@ export default function ServiceDetailPage() {
       )}
 
       {/* Breadcrumb Back */}
-      <Link to="/services" className="btn btn-ghost btn-sm rounded-xl gap-1 text-xs">
-        <ArrowLeft className="w-4 h-4" /> Back to Services Directory
+      <Link 
+        to={user?.role === 'senior' ? '/senior/services' : '/services'} 
+        className="btn btn-ghost btn-sm rounded-xl gap-1 text-xs font-bold text-base-content/70 hover:text-base-content"
+      >
+        <ArrowLeft className="w-4 h-4" /> {user?.role === 'senior' ? 'Back to Manage Services' : 'Back to Services Directory'}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -493,6 +501,61 @@ export default function ServiceDetailPage() {
 
         </div>
 
+      </div>
+
+      {/* Customer Reviews & Feedback Section */}
+      <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-base-200">
+          <div>
+            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
+              <Star className="w-5 h-5 text-warning fill-warning" /> Customer Reviews & Guru Feedback
+            </h2>
+            <p className="text-xs text-base-content/60 mt-0.5">
+              Authentic feedback from learners and parents in your community.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 px-4 py-2 rounded-2xl">
+            <span className="text-2xl font-black text-warning flex items-center gap-1">
+              {(service.rating || service.senior_rating) ? (
+                <>
+                  <Star className="w-6 h-6 fill-warning" /> {service.rating || service.senior_rating}
+                </>
+              ) : (
+                <span className="text-xs font-bold text-base-content/60">New</span>
+              )}
+            </span>
+            <div className="text-left">
+              <span className="text-xs font-bold text-base-content block">Guru Rating</span>
+              <span className="text-[10px] text-base-content/60 font-semibold">{service.reviews?.length || service.total_reviews || 0} Review(s)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews List */}
+        {(!service.reviews || service.reviews.length === 0) ? (
+          <div className="p-6 bg-base-200/50 rounded-2xl text-center space-y-1">
+            <p className="text-xs font-bold text-base-content">Open for Enrollments</p>
+            <p className="text-[11px] text-base-content/60">Enroll in this class batch to learn and leave the first verified review!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {service.reviews.map((rev, idx) => (
+              <div key={idx} className="bg-base-200/50 border border-base-300 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-base-content">{rev.customer_name || 'Verified Learner'}</span>
+                  <div className="flex items-center gap-0.5 text-warning">
+                    {[...Array(Number(rev.rating) || 5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-warning" />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-base-content/80 italic leading-relaxed">"{rev.comment}"</p>
+                {rev.created_at && <span className="text-[10px] text-base-content/40 block">{rev.created_at.slice(0, 10)}</span>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>

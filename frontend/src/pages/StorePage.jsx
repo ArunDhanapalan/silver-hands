@@ -193,12 +193,12 @@ export default function StorePage() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs sm:text-sm no-scrollbar max-w-full">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`min-h-[40px] px-4 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
+              className={`min-h-[38px] px-4 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition-all text-xs sm:text-sm ${
                 selectedCategory === cat
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'

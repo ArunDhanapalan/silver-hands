@@ -8,11 +8,6 @@ logger = logging.getLogger("silverhands.seed")
 async def seed_initial_data():
     users_col = db_manager.get_collection("users")
     user_count = await users_col.count_documents({})
-    if user_count > 0:
-        logger.info("Database already contains %d users. Skipping re-seed.", user_count)
-        return
-
-    logger.info("Seeding initial SilverHands 2.0 demo ecosystem data...")
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()
     hashed_pwd = hash_password("password123")
 
@@ -23,6 +18,9 @@ async def seed_initial_data():
     techlocal_id = "user_techlocal_04"
     ananya_id = "user_ananya_05"
     karthik_id = "user_karthik_06"
+
+    if user_count == 0:
+        logger.info("Seeding initial SilverHands 2.0 demo users...")
 
     users = [
         {
@@ -494,8 +492,9 @@ async def seed_initial_data():
         logger.info("Successfully seeded store products.")
 
     # 5. Seed Managed Services (Bouquet & Online Language Tuition reference)
+    managed_services_col = db_manager.get_collection("managed_services")
     services_col = db_manager.get_collection("services")
-    serv_count = await services_col.count_documents({})
+    serv_count = await managed_services_col.count_documents({})
     if serv_count == 0:
         services = [
             {
@@ -646,7 +645,8 @@ async def seed_initial_data():
             }
         ]
         for s in services:
-            await services_col.insert_one(s)
+            await managed_services_col.update_one({"_id": s["_id"]}, {"$set": s}, upsert=True)
+            await services_col.update_one({"_id": s["_id"]}, {"$set": s}, upsert=True)
         logger.info("Successfully seeded managed services.")
 
     # 6. Seed Community Posts & Collaborations

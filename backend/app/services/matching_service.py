@@ -14,8 +14,9 @@ from app.schemas.opportunity import (
 )
 from app.services.location_utils import (
     parse_radius_km,
-    compute_distance_km,
-    is_within_radius,
+    compute_distance_km_async,
+    is_within_radius_async,
+    get_coords_async,
 )
 
 logger = logging.getLogger("silverhands.matching_service")
@@ -52,6 +53,13 @@ class MatchingService:
         opps_cursor = self._opps_col().find({})
         all_opps = await opps_cursor.to_list(100)
 
+        # Pre-resolve senior coordinates (stored or dynamically geocoded)
+        senior_coords = None
+        if senior_doc and "latitude" in senior_doc and "longitude" in senior_doc:
+            senior_coords = (float(senior_doc["latitude"]), float(senior_doc["longitude"]))
+        else:
+            senior_coords = await get_coords_async(senior_locality, senior_city)
+
         results: List[OpportunityResponse] = []
 
         for opp in all_opps:
@@ -65,17 +73,24 @@ class MatchingService:
             opp_city = opp.get("city", "Chennai")
             opp_languages = [l.lower() for l in opp.get("languages", ["en"])]
 
+            opp_coords = None
+            if "latitude" in opp and "longitude" in opp:
+                opp_coords = (float(opp["latitude"]), float(opp["longitude"]))
+
             # ---- Distance-based filtering ----------------------------------------
             is_offline = work_mode in ("offline", "both")
             is_online  = work_mode in ("online", "home")
 
             if is_offline and not is_online:
                 # Pure in-person/offline: filter by senior's travel radius
-                if not is_within_radius(
+                within_rad = await is_within_radius_async(
                     senior_locality, senior_city,
                     opp_locality, opp_city,
-                    max_km
-                ):
+                    max_km,
+                    senior_coords=senior_coords,
+                    item_coords=opp_coords
+                )
+                if not within_rad:
                     continue  # Too far – skip this gig
 
             # Compute actual distance for scoring & display
@@ -83,7 +98,12 @@ class MatchingService:
             if is_online:
                 dist_km = 0.0
             else:
-                computed = compute_distance_km(senior_locality, senior_city, opp_locality, opp_city)
+                computed = await compute_distance_km_async(
+                    senior_locality, senior_city,
+                    opp_locality, opp_city,
+                    from_coords=senior_coords,
+                    to_coords=opp_coords
+                )
                 dist_km = computed if computed is not None else opp.get("distance_km", 2.5)
             # -----------------------------------------------------------------------
 
@@ -261,10 +281,8 @@ class MatchingService:
         
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        # Compute and store a reference distance from a central point so the
-        # deck-scoring logic has a fallback value when senior location is unknown.
-        # The actual filtering uses Haversine at query time.
-        ref_dist = compute_distance_km(req.locality, req.city, req.locality, req.city)
+        # Geocode opportunity locality to store lat/lng at creation time
+        coords = await get_coords_async(req.locality, req.city)
 
         opp_doc = {
             "title": req.title,
@@ -276,7 +294,9 @@ class MatchingService:
             "required_skills": req.required_skills,
             "locality": req.locality,
             "city": req.city,
-            "distance_km": ref_dist or 2.5,
+            "latitude": coords[0] if coords else None,
+            "longitude": coords[1] if coords else None,
+            "distance_km": 2.5,
             "work_mode": req.work_mode,
             "schedule": req.schedule,
             "pay_amount": req.pay_amount,

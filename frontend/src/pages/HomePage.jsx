@@ -314,56 +314,112 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. 1-CLICK FESTIVAL GIFTING CARD */}
-      <section className="bg-gradient-to-r from-secondary/15 via-base-100 to-primary/15 border-2 border-secondary/30 rounded-3xl p-8 sm:p-10 shadow-xs flex flex-col md:flex-row items-center justify-between gap-8">
+      {/* 5. PROMINENT CULTURAL GIFTING SECTION */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-secondary/20 via-primary/10 to-accent/20 border-2 border-secondary/40 rounded-3xl p-8 sm:p-12 shadow-lg space-y-8">
         
-        <div className="space-y-3 max-w-lg">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🎁</span>
-            <span className="badge badge-secondary badge-sm font-bold text-white uppercase">Instant Cultural Gifting</span>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-3xl animate-bounce">🎁</span>
+              <span className="badge badge-secondary font-bold text-white uppercase text-xs px-3 py-1 shadow-sm">
+                Generational Gifting Experience
+              </span>
+              <span className="badge badge-outline badge-primary font-bold text-xs">
+                {activeFestival} Special
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-base-content tracking-tight leading-tight">
+              Gift Meaningful Heritage & Wisdom from India's Elders
+            </h2>
+            <p className="text-xs sm:text-sm text-base-content/80 leading-relaxed max-w-xl">
+              Delight your friends, colleagues, or family with handcrafted sweets hampers, artisanal creations, or 1-on-1 private tuition sessions taught by neighborhood grandmothers and retirees.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-base-content leading-tight">
-            Send a {activeFestival} Gift Hamper from Local Seniors
-          </h2>
-          <p className="text-xs sm:text-sm text-base-content/75 leading-relaxed">
-            Personalize an authentic festive package with pure ghee sweets, sun-dried condiments, and hand-stitched silk pouches delivered directly to your loved ones.
-          </p>
+
+          {/* Quick Category Action Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto shrink-0">
+            
+            {/* Gift Products Card */}
+            <Link 
+              to="/store" 
+              className="bg-base-100/95 hover:bg-base-100 border-2 border-secondary/30 hover:border-secondary transition-all rounded-2xl p-5 shadow-sm space-y-2.5 group flex flex-col justify-between"
+            >
+              <div>
+                <span className="text-2xl block mb-1">🪔</span>
+                <h4 className="font-extrabold text-sm text-base-content group-hover:text-secondary transition-colors">
+                  Festive Sweets & Hampers
+                </h4>
+                <p className="text-[11px] text-base-content/70">
+                  Pure ghee sweets, crunchy podis, and silk gift pouches.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-secondary flex items-center gap-1 mt-2">
+                Explore Gift Hampers <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+
+            {/* Gift Services Card */}
+            <Link 
+              to="/services" 
+              className="bg-base-100/95 hover:bg-base-100 border-2 border-accent/30 hover:border-accent transition-all rounded-2xl p-5 shadow-sm space-y-2.5 group flex flex-col justify-between"
+            >
+              <div>
+                <span className="text-2xl block mb-1">📖</span>
+                <h4 className="font-extrabold text-sm text-base-content group-hover:text-accent transition-colors">
+                  Gift a Learning Class
+                </h4>
+                <p className="text-[11px] text-base-content/70">
+                  Telugu language, Carnatic music, or MSME financial mentoring.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-accent flex items-center gap-1 mt-2">
+                Book Guru Class <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+
+          </div>
         </div>
 
-        {/* Gift Form */}
-        <form onSubmit={handleSendGiftCard} className="card bg-base-100 border border-base-300 p-5 rounded-2xl shadow-sm w-full md:max-w-xs space-y-3 text-xs">
-          <h4 className="font-bold text-base-content">1-Click Festive Gifting</h4>
-          
-          <div className="form-control">
-            <label className="label text-[10px] font-semibold">Recipient Name / Phone</label>
-            <input 
-              type="text" 
-              required
-              value={giftRecipient}
-              onChange={(e) => setGiftRecipient(e.target.value)}
-              placeholder="e.g. Priya Sharma"
-              className="input input-bordered input-sm w-full rounded-xl text-xs"
-            />
-          </div>
+        {/* 1-Click Personalized Hamper Customizer */}
+        <div className="bg-base-100/90 backdrop-blur border border-base-300 rounded-2xl p-6 shadow-sm">
+          <form onSubmit={handleSendGiftCard} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div className="sm:col-span-4 form-control">
+              <label className="label text-xs font-bold py-1 text-base-content">Recipient Name & Contact</label>
+              <input 
+                type="text" 
+                required
+                value={giftRecipient}
+                onChange={(e) => setGiftRecipient(e.target.value)}
+                placeholder="e.g. Priya Sharma (+91 98840...)"
+                className="input input-bordered min-h-[44px] w-full rounded-xl text-xs"
+              />
+            </div>
 
-          <div className="form-control">
-            <label className="label text-[10px] font-semibold">Festive Message</label>
-            <input 
-              type="text" 
-              value={giftMessage}
-              onChange={(e) => setGiftMessage(e.target.value)}
-              placeholder="e.g. Happy Diwali with authentic blessings!"
-              className="input input-bordered input-sm w-full rounded-xl text-xs"
-            />
-          </div>
+            <div className="sm:col-span-5 form-control">
+              <label className="label text-xs font-bold py-1 text-base-content">Custom Festive Message</label>
+              <input 
+                type="text" 
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                placeholder="e.g. Wishing you sweetness and prosperity with love!"
+                className="input input-bordered min-h-[44px] w-full rounded-xl text-xs"
+              />
+            </div>
 
-          <button 
-            type="submit"
-            className="btn btn-secondary btn-sm w-full rounded-xl text-white font-bold gap-1 shadow-sm"
-          >
-            {giftSuccess ? <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Customized! Opening Store...</span> : <><Gift className="w-4 h-4" /> Choose Gift Items</>}
-          </button>
-        </form>
+            <div className="sm:col-span-3">
+              <button 
+                type="submit"
+                className="btn btn-secondary min-h-[44px] w-full rounded-xl text-white font-bold text-xs gap-1.5 shadow-md"
+              >
+                {giftSuccess ? (
+                  <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Redirecting to Store...</span>
+                ) : (
+                  <><Gift className="w-4 h-4" /> Pick Hamper Items <ArrowRight className="w-3.5 h-3.5" /></>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
 
       </section>
 

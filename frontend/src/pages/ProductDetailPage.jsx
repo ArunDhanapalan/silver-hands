@@ -133,10 +133,10 @@ export default function ProductDetailPage() {
       {/* Back to Store Nav */}
       <div>
         <Link 
-          to="/store" 
+          to={user?.role === 'senior' ? '/senior/storefront' : '/store'} 
           className="btn btn-ghost btn-sm gap-2 rounded-2xl text-xs font-bold text-base-content/70 hover:text-base-content"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Storefront
+          <ArrowLeft className="w-4 h-4" /> {user?.role === 'senior' ? 'Back to My Storefront' : 'Back to Storefront'}
         </Link>
       </div>
 

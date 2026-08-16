@@ -245,16 +245,12 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setCityModalOpen(true)}
-                className="btn btn-ghost btn-sm rounded-xl px-2 sm:px-2.5 min-h-[38px] sm:min-h-[40px] gap-1 sm:gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                className="btn btn-ghost btn-sm rounded-xl px-2 sm:px-2.5 min-h-[38px] sm:min-h-[40px] gap-1 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
                 aria-label="Select City"
                 title={`City: ${selectedCity?.name || 'Chennai'}`}
               >
                 <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
-                <span className="hidden sm:inline max-w-[80px] sm:max-w-none truncate font-bold">{selectedCity?.name || 'Chennai'}</span>
-                {selectedLocality && selectedLocality !== 'All Areas' && (
-                  <span className="text-[10px] text-base-content/60 hidden md:inline">({selectedLocality})</span>
-                )}
-                <span className="badge badge-xs badge-neutral hidden lg:inline">{selectedCity?.tier || 'Metro'}</span>
+                <span className="font-extrabold uppercase tracking-wider">{selectedCity?.name ? selectedCity.name.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase() : 'CHE'}</span>
                 <ChevronDown className="w-3 h-3 opacity-60 hidden sm:inline" />
               </button>
 
@@ -262,14 +258,12 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setLangModalOpen(true)}
-                className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
+                className="btn btn-ghost btn-sm rounded-xl px-2 sm:px-2.5 min-h-[40px] gap-1 text-xs font-semibold hover:bg-base-200 border border-base-300 shadow-xs"
                 aria-label="Select Language"
+                title={`Language: ${languages.find(l => l.code === language)?.native || 'English'}`}
               >
                 <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
-                <span className="uppercase font-bold">{language}</span>
-                <span className="text-[11px] text-base-content/70 hidden sm:inline">
-                  {languages.find(l => l.code === language)?.native || 'English'}
-                </span>
+                <span className="font-extrabold uppercase tracking-wider">{language ? language.substring(0, 2).toUpperCase() : 'EN'}</span>
                 <ChevronDown className="w-3 h-3 opacity-60" />
               </button>
 

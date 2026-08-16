@@ -35,14 +35,26 @@ export default function CartPage() {
 
   // Delivery Form
   const [deliveryForm, setDeliveryForm] = useState({
-    name: user?.full_name || 'Ananya Sharma',
-    phone: user?.phone || '+91 98840 56789',
+    name: user?.full_name || '',
+    phone: user?.phone || '',
     address: 'Flat 4B, Green Meadows Apartment, Gandhi Nagar',
-    locality: selectedLocality !== 'All Areas' ? selectedLocality : 'Adyar',
-    city: selectedCity.name,
+    locality: user?.locality || (selectedLocality !== 'All Areas' ? selectedLocality : 'Adyar'),
+    city: user?.city || selectedCity?.name || 'Chennai',
     paymentMethod: 'UPI / NetBanking',
     notes: 'Please pack carefully in sustainable materials.'
   });
+
+  useEffect(() => {
+    if (user) {
+      setDeliveryForm(prev => ({
+        ...prev,
+        name: user.full_name || prev.name,
+        phone: user.phone || prev.phone,
+        locality: user.locality || prev.locality,
+        city: user.city || prev.city
+      }));
+    }
+  }, [user]);
 
   const loadCart = () => {
     const saved = localStorage.getItem('silverhands_cart');
@@ -98,6 +110,17 @@ export default function CartPage() {
     localStorage.removeItem('silverhands_cart');
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      await api.put(`/store/orders/${orderId}/cancel`);
+      setError('');
+      await fetchOrders();
+    } catch (err) {
+      setError(err.message || 'Failed to cancel order.');
+    }
+  };
+
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (!cartItems.length) return;
@@ -137,16 +160,6 @@ export default function CartPage() {
       setError(err.message || 'Checkout failed. Please try again.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to cancel this order?')) return;
-    try {
-      await api.put(`/store/orders/${orderId}/cancel`, {});
-      fetchOrders();
-    } catch (err) {
-      setError(err.message || 'Failed to cancel order');
     }
   };
 

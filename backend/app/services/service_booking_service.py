@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from bson import ObjectId
 from fastapi import HTTPException
 from app.database import db_manager
-from app.services.location_utils import compute_distance_km
+from app.services.location_utils import compute_distance_km_async, get_coords_async
 from app.schemas.service import (
     ServiceCreateRequest,
     ServiceResponse,
@@ -146,6 +146,7 @@ class ServiceBookingService:
         #   • "both" mode services → included (at least partially remote).
         #   • If distance cannot be computed → include (benefit of doubt).
         if locality and radius_km is not None and radius_km > 0:
+            caller_coords = await get_coords_async(locality, city or "")
             filtered = []
             for doc in docs:
                 svc_mode = doc.get("mode", "online")
@@ -155,7 +156,14 @@ class ServiceBookingService:
                 # Purely in-person: check distance
                 svc_locality = doc.get("senior_locality") or doc.get("locality", "")
                 svc_city = doc.get("senior_city") or doc.get("city", "Chennai")
-                dist = compute_distance_km(locality, city or "", svc_locality, svc_city)
+                svc_coords = (float(doc["latitude"]), float(doc["longitude"])) if "latitude" in doc and "longitude" in doc and doc["latitude"] is not None else None
+                
+                dist = await compute_distance_km_async(
+                    locality, city or "",
+                    svc_locality, svc_city,
+                    from_coords=caller_coords,
+                    to_coords=svc_coords
+                )
                 if dist is None or dist <= radius_km:
                     filtered.append(doc)
             docs = filtered
@@ -208,11 +216,15 @@ class ServiceBookingService:
                         detail=f"Schedule clash: You already have '{s.get('title')}' scheduled on {days_str} during {req.time_slot}. Please choose a different day or time slot."
                     )
 
+        coords = await get_coords_async(req.locality, req.city)
+
         doc = {
             "senior_id": user_id,
             "senior_name": user_payload.get("full_name", "Senior Guru"),
             "senior_locality": req.locality,
             "senior_city": req.city,
+            "latitude": coords[0] if coords else None,
+            "longitude": coords[1] if coords else None,
             "is_age_verified": True,
             "title": req.title,
             "category": req.category,

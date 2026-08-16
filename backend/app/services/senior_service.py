@@ -18,6 +18,7 @@ from app.schemas.senior import (
     SkillPassportBadge,
     SeniorTwinResponse
 )
+from app.services.location_utils import get_coords_async
 
 logger = logging.getLogger("silverhands.senior_service")
 
@@ -71,6 +72,8 @@ class SeniorService:
 
         existing_profile = await col.find_one({"user_id": user_id})
         
+        coords = await get_coords_async(req.locality, req.city)
+
         doc = {
             "user_id": user_id,
             "full_name": req.full_name or user_payload.get("full_name", "Senior Citizen"),
@@ -82,6 +85,8 @@ class SeniorService:
             "travel_radius": req.travel_radius,
             "locality": req.locality,
             "city": req.city,
+            "latitude": coords[0] if coords else (existing_profile.get("latitude") if existing_profile else None),
+            "longitude": coords[1] if coords else (existing_profile.get("longitude") if existing_profile else None),
             "work_mode": req.work_mode,
             "availability": req.availability,
             "is_age_verified": True,

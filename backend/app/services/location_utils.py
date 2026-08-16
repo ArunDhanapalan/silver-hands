@@ -1,22 +1,31 @@
 """
 Location utilities for SilverHands distance-based filtering.
 
-Uses locality + city → (lat, lng) lookup table built from well-known
-neighbourhoods across all supported cities. Falls back to city-level
-centroid when a specific locality is not found.
-
-Distance is computed via the Haversine formula (great-circle distance).
+Supports ANY arbitrary user-entered locality or area name via:
+1. Fast in-memory resolution cache
+2. Static lookup table for instant zero-latency responses for common localities
+3. Dynamic online geocoding via OpenStreetMap Nominatim API for ANY arbitrary user input
+4. City centroid fallbacks for resilient error recovery
+5. Haversine great-circle distance calculation
 """
 
 import math
-from typing import Optional, Tuple
+import logging
+import asyncio
+from typing import Optional, Tuple, Dict
+import httpx
+
+logger = logging.getLogger("silverhands.location_utils")
 
 # ---------------------------------------------------------------------------
-# Locality → (lat, lng) coordinate table
-# Coordinates are approximate centroids of each neighbourhood.
+# In-memory Geocoding Cache (preserves lookups across requests)
 # ---------------------------------------------------------------------------
+_GEO_CACHE: Dict[str, Optional[Tuple[float, float]]] = {}
 
-LOCALITY_COORDS: dict[str, Tuple[float, float]] = {
+# ---------------------------------------------------------------------------
+# Locality → (lat, lng) coordinate table (Instant Level-1 Fast Path)
+# ---------------------------------------------------------------------------
+LOCALITY_COORDS: Dict[str, Tuple[float, float]] = {
     # ---- Chennai ----
     "adyar":            (13.0012, 80.2565),
     "mylapore":         (13.0366, 80.2676),
@@ -200,7 +209,7 @@ LOCALITY_COORDS: dict[str, Tuple[float, float]] = {
 }
 
 # City-level centroids as fallback
-CITY_CENTROIDS: dict[str, Tuple[float, float]] = {
+CITY_CENTROIDS: Dict[str, Tuple[float, float]] = {
     "chennai":             (13.0827, 80.2707),
     "bengaluru":           (12.9716, 77.5946),
     "bangalore":           (12.9716, 77.5946),
@@ -220,24 +229,131 @@ CITY_CENTROIDS: dict[str, Tuple[float, float]] = {
     "warangal":            (17.9689, 79.5941),
 }
 
+NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
-def _get_coords(locality: str, city: str) -> Optional[Tuple[float, float]]:
-    """Resolve a locality+city to lat/lng coordinates.
-    
-    Tries locality lookup first, then city centroid fallback.
+
+def _clean_key(locality: str, city: str = "") -> str:
+    loc = (locality or "").strip().lower()
+    cty = (city or "").strip().lower()
+    return f"{loc}|{cty}"
+
+
+async def geocode_locality_online(locality: str, city: str = "") -> Optional[Tuple[float, float]]:
     """
-    key = locality.strip().lower()
-    if key in LOCALITY_COORDS:
-        return LOCALITY_COORDS[key]
+    Dynamically geocode any arbitrary area/locality and city across India
+    using OpenStreetMap Nominatim search.
+    """
+    loc_clean = (locality or "").strip()
+    city_clean = (city or "").strip()
 
-    # Try matching just the first word of locality (handles "Adyar, Chennai" inputs)
-    key_first = key.split(",")[0].strip()
-    if key_first in LOCALITY_COORDS:
-        return LOCALITY_COORDS[key_first]
+    if not loc_clean and not city_clean:
+        return None
 
-    # Fall back to city centroid
-    city_key = city.strip().lower()
-    return CITY_CENTROIDS.get(city_key)
+    # Construct search queries with fallback granularity
+    queries = []
+    if loc_clean and city_clean and city_clean.lower() not in loc_clean.lower():
+        queries.append(f"{loc_clean}, {city_clean}, India")
+    if loc_clean:
+        queries.append(f"{loc_clean}, India")
+    if city_clean:
+        queries.append(f"{city_clean}, India")
+
+    headers = {
+        "User-Agent": "SilverHands-App/1.0 (contact@silverhands.in; educational/elderly-livelihood-platform)"
+    }
+
+    async with httpx.AsyncClient(timeout=4.0) as client:
+        for q in queries:
+            try:
+                resp = await client.get(
+                    NOMINATIM_SEARCH_URL,
+                    params={
+                        "q": q,
+                        "format": "json",
+                        "limit": 1,
+                        "countrycodes": "in"
+                    },
+                    headers=headers
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data and isinstance(data, list) and len(data) > 0:
+                        lat = float(data[0]["lat"])
+                        lon = float(data[0]["lon"])
+                        return (lat, lon)
+            except Exception as ex:
+                logger.debug(f"Nominatim geocode exception for query '{q}': {ex}")
+                continue
+
+    return None
+
+
+async def get_coords_async(locality: str, city: str = "") -> Optional[Tuple[float, float]]:
+    """
+    Resolves any arbitrary user-entered locality and city to (lat, lng).
+    Tier 1: In-memory cache
+    Tier 2: Predefined instant locality table
+    Tier 3: Dynamic OpenStreetMap geocoder
+    Tier 4: City centroid fallback
+    """
+    cache_key = _clean_key(locality, city)
+    if cache_key in _GEO_CACHE:
+        return _GEO_CACHE[cache_key]
+
+    loc_lower = (locality or "").strip().lower()
+    city_lower = (city or "").strip().lower()
+
+    # Tier 2: Static Table Lookup
+    if loc_lower in LOCALITY_COORDS:
+        coords = LOCALITY_COORDS[loc_lower]
+        _GEO_CACHE[cache_key] = coords
+        return coords
+
+    # Try first word match (e.g., "Adyar East" -> "Adyar")
+    loc_first = loc_lower.split(",")[0].split()[0] if loc_lower else ""
+    if loc_first and loc_first in LOCALITY_COORDS:
+        coords = LOCALITY_COORDS[loc_first]
+        _GEO_CACHE[cache_key] = coords
+        return coords
+
+    # Tier 3: Dynamic Online Geocoding (handles ANY arbitrary area entered by user)
+    coords = await geocode_locality_online(locality, city)
+    if coords:
+        _GEO_CACHE[cache_key] = coords
+        return coords
+
+    # Tier 4: Fallback to city centroid
+    if city_lower in CITY_CENTROIDS:
+        coords = CITY_CENTROIDS[city_lower]
+        _GEO_CACHE[cache_key] = coords
+        return coords
+
+    _GEO_CACHE[cache_key] = None
+    return None
+
+
+def get_coords_sync(locality: str, city: str = "") -> Optional[Tuple[float, float]]:
+    """
+    Synchronous resolution for locations (uses cache, static table, or city centroids).
+    """
+    cache_key = _clean_key(locality, city)
+    if cache_key in _GEO_CACHE and _GEO_CACHE[cache_key] is not None:
+        return _GEO_CACHE[cache_key]
+
+    loc_lower = (locality or "").strip().lower()
+    city_lower = (city or "").strip().lower()
+
+    if loc_lower in LOCALITY_COORDS:
+        return LOCALITY_COORDS[loc_lower]
+
+    loc_first = loc_lower.split(",")[0].split()[0] if loc_lower else ""
+    if loc_first and loc_first in LOCALITY_COORDS:
+        return LOCALITY_COORDS[loc_first]
+
+    if city_lower in CITY_CENTROIDS:
+        return CITY_CENTROIDS[city_lower]
+
+    return None
 
 
 def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -250,24 +366,40 @@ def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+async def compute_distance_km_async(
+    from_locality: str, from_city: str,
+    to_locality: str, to_city: str,
+    from_coords: Optional[Tuple[float, float]] = None,
+    to_coords: Optional[Tuple[float, float]] = None
+) -> Optional[float]:
+    """
+    Computes distance in km between any two locations asynchronously.
+    Uses precomputed/stored coords if provided, otherwise dynamically resolves them.
+    """
+    src = from_coords or await get_coords_async(from_locality, from_city)
+    dst = to_coords or await get_coords_async(to_locality, to_city)
+    if src is None or dst is None:
+        return None
+    return haversine_km(src[0], src[1], dst[0], dst[1])
+
+
 def compute_distance_km(
     from_locality: str, from_city: str,
     to_locality: str, to_city: str
 ) -> Optional[float]:
-    """Compute the km distance between two locality/city pairs.
-    
-    Returns None if either location cannot be resolved to coordinates.
     """
-    src = _get_coords(from_locality, from_city)
-    dst = _get_coords(to_locality, to_city)
+    Synchronous fallback distance computation.
+    """
+    src = get_coords_sync(from_locality, from_city)
+    dst = get_coords_sync(to_locality, to_city)
     if src is None or dst is None:
         return None
     return haversine_km(src[0], src[1], dst[0], dst[1])
 
 
 def parse_radius_km(travel_radius: str) -> float:
-    """Parse a senior's travel_radius preference string into kilometres.
-    
+    """
+    Parse a senior's travel_radius preference string into kilometres.
     Examples: '5 km' → 5.0,  'Online only' → 0.0,  'Flexible' → 50.0
     """
     if not travel_radius:
@@ -275,16 +407,38 @@ def parse_radius_km(travel_radius: str) -> float:
     r = travel_radius.strip().lower()
     if any(kw in r for kw in ["home only", "online", "remote", "0 km"]):
         return 0.0
-    # Extract first number found in the string
     import re
     nums = re.findall(r"\d+\.?\d*", r)
     if nums:
         val = float(nums[0])
-        # Sanity cap: 100 km max
         return min(val, 100.0)
     if "flexible" in r or "any" in r:
         return 50.0
     return 5.0
+
+
+async def is_within_radius_async(
+    senior_locality: str, senior_city: str,
+    item_locality: str, item_city: str,
+    max_km: float,
+    senior_coords: Optional[Tuple[float, float]] = None,
+    item_coords: Optional[Tuple[float, float]] = None
+) -> bool:
+    """
+    Asynchronous check if an item location is within the senior's radius.
+    """
+    if max_km == 0.0:
+        return False  # Online-only senior; exclude in-person items
+
+    dist = await compute_distance_km_async(
+        senior_locality, senior_city,
+        item_locality, item_city,
+        from_coords=senior_coords,
+        to_coords=item_coords
+    )
+    if dist is None:
+        return True  # Benefit of doubt if coordinates cannot be resolved
+    return dist <= max_km
 
 
 def is_within_radius(
@@ -292,18 +446,13 @@ def is_within_radius(
     item_locality: str, item_city: str,
     max_km: float
 ) -> bool:
-    """Return True if the item location is reachable within senior's travel radius.
-    
-    - If max_km == 0 → senior is home/online only; all in-person items are EXCLUDED.
-    - If either location cannot be resolved → give benefit of doubt and INCLUDE.
-    - If distance <= max_km → INCLUDE.
-    - Otherwise → EXCLUDE.
+    """
+    Synchronous check if an item location is within the senior's radius.
     """
     if max_km == 0.0:
-        return False  # Online-only senior; exclude all in-person items
+        return False
 
     dist = compute_distance_km(senior_locality, senior_city, item_locality, item_city)
     if dist is None:
-        # Cannot compute: include with benefit of doubt
         return True
     return dist <= max_km
