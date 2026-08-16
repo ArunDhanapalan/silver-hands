@@ -269,18 +269,31 @@ export default function SeniorStorefrontPage() {
           </div>
         </div>
 
-        {/* Actionable Suggestions for Senior */}
-        {currentFestivalInfo?.senior_suggestions && currentFestivalInfo.senior_suggestions.length > 0 && (
+        {/* Actionable Suggestions for Senior with 1-Click Product Creation */}
+        {((currentFestivalInfo?.senior_suggestions && currentFestivalInfo.senior_suggestions.length > 0) || (festivalSuggestions?.suggestions && festivalSuggestions.suggestions.length > 0)) && (
           <div className="pt-2 border-t border-warning/20">
             <span className="text-[11px] font-black uppercase text-warning tracking-wide block mb-1.5">
-              💡 Recommended Activities to Earn During {activeFestival}:
+              💡 Recommended High-Demand Products for {activeFestival} (Click any item to list with AI):
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {currentFestivalInfo.senior_suggestions.map((sugg, idx) => (
-                <div key={idx} className="bg-base-100/90 border border-warning/30 rounded-xl p-2.5 text-xs flex items-start gap-2 shadow-2xs">
-                  <span className="text-warning font-bold shrink-0">{idx + 1}.</span>
-                  <span className="text-base-content/80 font-medium">{sugg}</span>
-                </div>
+              {(currentFestivalInfo?.senior_suggestions || festivalSuggestions?.suggestions || []).map((sugg, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setModalSkillHint(sugg);
+                    setShowProductModal(true);
+                  }}
+                  className="bg-base-100/95 hover:bg-base-100 border border-warning/40 hover:border-warning rounded-xl p-2.5 text-xs flex items-start justify-between gap-2 shadow-2xs text-left group transition-all"
+                >
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-warning font-bold shrink-0">{idx + 1}.</span>
+                    <span className="text-base-content/85 font-medium leading-snug">{sugg}</span>
+                  </div>
+                  <span className="text-warning text-[10px] font-bold shrink-0 group-hover:translate-x-0.5 transition-transform">
+                    + List
+                  </span>
+                </button>
               ))}
             </div>
           </div>

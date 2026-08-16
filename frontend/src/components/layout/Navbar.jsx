@@ -222,7 +222,7 @@ export default function Navbar() {
                     to="/services" 
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary font-bold' : ''}`}
                   >
-                    <Sparkles className="w-4 h-4 text-accent" />
+                    <Layers className="w-4 h-4 text-accent" />
                     <span>{t('nav_services')}</span>
                   </Link>
 

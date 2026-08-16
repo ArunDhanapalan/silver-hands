@@ -46,15 +46,15 @@ export default function ChatDrawer() {
     }
   }, [messages, isChatDrawerOpen]);
 
-  // Ensure first conversation is automatically selected and highlighted when drawer opens
+  // Ensure first conversation is selected on desktop only when drawer first opens
   useEffect(() => {
-    if (isChatDrawerOpen && conversations.length > 0) {
+    if (isChatDrawerOpen && conversations.length > 0 && typeof window !== 'undefined' && window.innerWidth >= 768) {
       const isSelectedInList = activeConversation && conversations.some(c => String(c.id) === String(activeConversation.id));
       if (!activeConversation || !isSelectedInList) {
         selectConversation(conversations[0]);
       }
     }
-  }, [isChatDrawerOpen, conversations, activeConversation]);
+  }, [isChatDrawerOpen]);
 
   if (!isChatDrawerOpen) return null;
 
@@ -90,7 +90,7 @@ export default function ChatDrawer() {
                 </span>
               </h2>
               <p className="text-[11px] text-base-content/60 hidden sm:block truncate">
-                Encrypted elder-safe chat with automated scam, phone, bank & threat word filtering.
+                Elder-safe direct chat with automated scam, phone, bank & threat word filtering.
               </p>
             </div>
           </div>
