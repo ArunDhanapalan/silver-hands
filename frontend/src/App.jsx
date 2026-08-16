@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { LocationProvider } from './context/LocationContext';
+import { BadgeProvider } from './context/BadgeContext';
 import AppShell from './components/layout/AppShell';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AccessibilityBar from './components/common/AccessibilityBar';
@@ -57,9 +58,10 @@ export default function App() {
       <LanguageProvider>
         <LocationProvider>
           <AuthProvider>
-            <AppShell>
-              <ErrorBoundary>
-                <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
+            <BadgeProvider>
+              <AppShell>
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
                   <Routes>
                     {/* Public & Customer Routes */}
                     <Route path="/" element={<HomePage />} />
@@ -166,9 +168,10 @@ export default function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                   <AccessibilityBar />
-                </Suspense>
-              </ErrorBoundary>
-            </AppShell>
+                  </Suspense>
+                </ErrorBoundary>
+              </AppShell>
+            </BadgeProvider>
           </AuthProvider>
         </LocationProvider>
       </LanguageProvider>

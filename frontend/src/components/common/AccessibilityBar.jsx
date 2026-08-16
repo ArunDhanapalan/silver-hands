@@ -81,29 +81,41 @@ export default function AccessibilityBar() {
             {/* Text Size Control */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-base-content/70 flex items-center gap-1">
-                <Type className="w-3.5 h-3.5 text-primary" /> Elder Text Size
+                <Type className="w-3.5 h-3.5 text-primary" /> Text Size
               </label>
               <div className="join w-full grid grid-cols-3">
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('normal')}
-                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'normal' ? 'btn-primary text-white font-bold' : 'btn-outline border-base-300 text-xs'}`}
+                  className={`join-item btn min-h-[42px] ${
+                    fontSizeLevel === 'normal' 
+                      ? 'btn-primary text-white font-bold text-sm' 
+                      : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-sm font-semibold'
+                  }`}
                 >
-                  Standard
+                  A
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('large')}
-                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'large' ? 'btn-primary text-white font-bold' : 'btn-outline border-base-300 text-xs font-bold'}`}
+                  className={`join-item btn min-h-[42px] ${
+                    fontSizeLevel === 'large' 
+                      ? 'btn-primary text-white font-bold text-base' 
+                      : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-base font-bold'
+                  }`}
                 >
-                  Large (18px)
+                  A+
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSizeLevel('xlarge')}
-                  className={`join-item btn min-h-[42px] ${fontSizeLevel === 'xlarge' ? 'btn-primary text-white font-bold' : 'btn-outline border-base-300 text-sm font-black'}`}
+                  className={`join-item btn min-h-[42px] ${
+                    fontSizeLevel === 'xlarge' 
+                      ? 'btn-primary text-white font-black text-lg' 
+                      : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content text-lg font-black'
+                  }`}
                 >
-                  Extra Large
+                  A++
                 </button>
               </div>
             </div>
@@ -112,7 +124,7 @@ export default function AccessibilityBar() {
             <div className="space-y-1.5 pt-1 border-t border-base-200">
               <label className="text-[11px] font-bold text-base-content/70 flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  {isDarkMode ? <Moon className="w-3.5 h-3.5 text-secondary" /> : <Sun className="w-3.5 h-3.5 text-warning" />} High Contrast Theme
+                  {isDarkMode ? <Moon className="w-3.5 h-3.5 text-secondary" /> : <Sun className="w-3.5 h-3.5 text-warning" />} Theme
                 </span>
                 <span className="text-[10px] font-bold text-primary uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
               </label>
@@ -121,12 +133,12 @@ export default function AccessibilityBar() {
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className={`btn min-h-[44px] w-full rounded-2xl text-xs font-bold gap-2 ${
                   isDarkMode 
-                    ? 'btn-secondary text-white shadow-md' 
-                    : 'btn-outline border-base-300 text-base-content hover:bg-base-200'
+                    ? 'btn-secondary text-white shadow-md hover:bg-secondary/90 hover:text-white' 
+                    : 'btn-outline border-base-300 text-base-content hover:bg-base-200 hover:text-base-content'
                 }`}
               >
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                {isDarkMode ? 'Switch to Bright Light Mode' : 'Switch to High-Contrast Dark Mode'}
+                {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               </button>
             </div>
 

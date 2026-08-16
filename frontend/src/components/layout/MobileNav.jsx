@@ -2,10 +2,12 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingBag, Sparkles, Users, Briefcase, User, TrendingUp, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useBadges } from '../../context/BadgeContext';
 
 export default function MobileNav() {
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
+  const { getCount, markSeen } = useBadges();
 
   return (
     <nav 
@@ -18,6 +20,7 @@ export default function MobileNav() {
           <>
             <Link 
               to="/senior" 
+              onClick={() => markSeen('opportunities')}
               className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname === '/senior' || location.pathname === '/opportunities' ? 'text-primary font-black' : 'text-base-content/70'
               }`}
@@ -25,11 +28,16 @@ export default function MobileNav() {
             >
               <Briefcase className="w-5 h-5 mb-0.5 text-warning" />
               <span>Gigs</span>
-              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100 animate-pulse"></span>
+              {getCount('opportunities') > 0 && (
+                <span className="absolute top-1 right-1.5 min-w-[18px] h-[18px] px-1 bg-error text-white font-black text-[10px] rounded-full flex items-center justify-center shadow-xs">
+                  {getCount('opportunities')}
+                </span>
+              )}
             </Link>
 
             <Link 
               to="/senior/storefront" 
+              onClick={() => markSeen('storefront')}
               className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/storefront') || location.pathname.startsWith('/storefront') ? 'text-secondary font-black' : 'text-base-content/70'
               }`}
@@ -37,11 +45,16 @@ export default function MobileNav() {
             >
               <ShoppingBag className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Store</span>
-              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
+              {getCount('storefront') > 0 && (
+                <span className="absolute top-1 right-1.5 min-w-[18px] h-[18px] px-1 bg-error text-white font-black text-[10px] rounded-full flex items-center justify-center shadow-xs">
+                  {getCount('storefront')}
+                </span>
+              )}
             </Link>
 
             <Link 
               to="/senior/services" 
+              onClick={() => markSeen('services')}
               className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/services') ? 'text-accent font-black' : 'text-base-content/70'
               }`}
@@ -49,7 +62,11 @@ export default function MobileNav() {
             >
               <BookOpen className="w-5 h-5 mb-0.5 text-accent" />
               <span>Classes</span>
-              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
+              {getCount('services') > 0 && (
+                <span className="absolute top-1 right-1.5 min-w-[18px] h-[18px] px-1 bg-error text-white font-black text-[10px] rounded-full flex items-center justify-center shadow-xs">
+                  {getCount('services')}
+                </span>
+              )}
             </Link>
 
             <Link 
@@ -65,14 +82,13 @@ export default function MobileNav() {
 
             <Link 
               to="/community" 
-              className={`relative flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-black' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-primary" />
               <span>Community</span>
-              <span className="absolute top-1 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
           </>
         ) : user?.role === 'company' ? (
@@ -90,14 +106,13 @@ export default function MobileNav() {
             
             <Link 
               to="/community" 
-              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Community</span>
-              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
           </>
         ) : (
@@ -115,38 +130,35 @@ export default function MobileNav() {
 
             <Link 
               to="/store" 
-              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/store') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Store"
             >
               <ShoppingBag className="w-5 h-5 mb-0.5 text-secondary" />
               <span>Store</span>
-              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
               to="/services" 
-              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/services') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Services"
             >
               <Sparkles className="w-5 h-5 mb-0.5 text-accent" />
               <span>Classes</span>
-              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 
               to="/community" 
-              className={`relative flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[11px] font-medium rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-bold' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-primary" />
               <span>Community</span>
-              <span className="absolute top-1 right-3 w-2 h-2 bg-error rounded-full ring-2 ring-base-100"></span>
             </Link>
 
             <Link 

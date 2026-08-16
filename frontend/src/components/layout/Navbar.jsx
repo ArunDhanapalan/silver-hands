@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useBadges } from '../../context/BadgeContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -44,12 +45,24 @@ export default function Navbar() {
   } = useLocation();
   const { language, setLanguage, languages, t } = useLanguage();
   const routerLocation = useRouteLocation();
+  const { getCount, markSeen } = useBadges();
 
   const [cityModalOpen, setCityModalOpen] = useState(false);
   const [langModalOpen, setLangModalOpen] = useState(false);
   const [festModalOpen, setFestModalOpen] = useState(false);
   const [customCityInput, setCustomCityInput] = useState('');
   const [customLocalityInput, setCustomLocalityInput] = useState('');
+
+  // Auto-dismiss notification badges when Senior is actively on that section
+  React.useEffect(() => {
+    if (routerLocation.pathname === '/senior' || routerLocation.pathname === '/opportunities') {
+      markSeen('opportunities');
+    } else if (routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront')) {
+      markSeen('storefront');
+    } else if (routerLocation.pathname.startsWith('/senior/services')) {
+      markSeen('services');
+    }
+  }, [routerLocation.pathname]);
 
   const handleCitySelect = (cityObj) => {
     setSelectedCity(cityObj.name);
@@ -127,33 +140,48 @@ export default function Navbar() {
                   </Link>
                 </>
               ) : isSenior ? (
-                /* Senior Navigation — Cleanly Segregated */
+                /* Senior Navigation — Cleanly Segregated with Numeric Notification Badges */
                 <>
                   <Link 
                     to="/senior" 
+                    onClick={() => markSeen('opportunities')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior' || routerLocation.pathname === '/opportunities' ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
                   >
                     <Briefcase className="w-4 h-4 text-warning" />
                     <span>Opportunities</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5 animate-pulse">NEW</span>
+                    {getCount('opportunities') > 0 && (
+                      <span className="min-w-[20px] h-[20px] px-1.5 bg-error text-white font-black text-[11px] rounded-full flex items-center justify-center shadow-xs">
+                        {getCount('opportunities')}
+                      </span>
+                    )}
                   </Link>
 
                   <Link 
                     to="/senior/storefront" 
+                    onClick={() => markSeen('storefront')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront') ? 'btn-active text-secondary font-extrabold bg-secondary/10' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
                     <span>My Storefront</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
+                    {getCount('storefront') > 0 && (
+                      <span className="min-w-[20px] h-[20px] px-1.5 bg-error text-white font-black text-[11px] rounded-full flex items-center justify-center shadow-xs">
+                        {getCount('storefront')}
+                      </span>
+                    )}
                   </Link>
 
                   <Link 
                     to="/senior/services" 
+                    onClick={() => markSeen('services')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/services') ? 'btn-active text-accent font-extrabold bg-accent/10' : ''}`}
                   >
                     <BookOpen className="w-4 h-4 text-accent" />
                     <span>Service Hub</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
+                    {getCount('services') > 0 && (
+                      <span className="min-w-[20px] h-[20px] px-1.5 bg-error text-white font-black text-[11px] rounded-full flex items-center justify-center shadow-xs">
+                        {getCount('services')}
+                      </span>
+                    )}
                   </Link>
 
                   <Link 
@@ -170,11 +198,10 @@ export default function Navbar() {
                   >
                     <Users className="w-4 h-4 text-primary" />
                     <span>{t('nav_community')}</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
                 </>
               ) : (
-                /* Consumer & Guest Navigation */
+                /* Consumer & Guest Navigation — Clean without Senior notification badges */
                 <>
                   <Link 
                     to="/store" 
@@ -182,7 +209,6 @@ export default function Navbar() {
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
                     <span>{t('nav_store')}</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -191,7 +217,6 @@ export default function Navbar() {
                   >
                     <Sparkles className="w-4 h-4 text-accent" />
                     <span>{t('nav_services')}</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
 
                   <Link 
@@ -200,7 +225,6 @@ export default function Navbar() {
                   >
                     <Users className="w-4 h-4 text-primary" />
                     <span>{t('nav_community')}</span>
-                    <span className="badge badge-error badge-xs text-white font-extrabold text-[9px] px-1.5 py-0.5">NEW</span>
                   </Link>
                 </>
               )}
