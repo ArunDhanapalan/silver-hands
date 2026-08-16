@@ -28,6 +28,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useBadges } from '../../context/BadgeContext';
+import { useChat } from '../../context/ChatContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -46,6 +47,7 @@ export default function Navbar() {
   const { language, setLanguage, languages, t } = useLanguage();
   const routerLocation = useRouteLocation();
   const { getCount, markSeen } = useBadges();
+  const { openChatDrawer, totalUnreadCount } = useChat();
 
   const [cityModalOpen, setCityModalOpen] = useState(false);
   const [langModalOpen, setLangModalOpen] = useState(false);
@@ -283,6 +285,27 @@ export default function Navbar() {
                         </div>
                         <span className="text-[10px] text-base-content/50 font-medium">{selectedCity?.name || 'Chennai'} • {selectedLocality || 'All Areas'}</span>
                       </div>
+                    </li>
+
+                    {/* Direct Messages Entry — Accessible through profile card */}
+                    <li className="border-b border-base-200 pb-1.5 mb-1">
+                      <button
+                        type="button"
+                        onClick={openChatDrawer}
+                        className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center justify-between hover:bg-primary/10 text-primary w-full text-left"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <MessageSquare className="w-4 h-4 text-primary shrink-0" />
+                          <span>My Direct Chats</span>
+                        </span>
+                        {totalUnreadCount > 0 ? (
+                          <span className="badge badge-error badge-sm text-white font-black text-[11px] min-w-[20px] h-[20px] rounded-full p-0 flex items-center justify-center">
+                            {totalUnreadCount}
+                          </span>
+                        ) : (
+                          <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60">Protected</span>
+                        )}
+                      </button>
                     </li>
                     
                     {user?.role === 'senior' && (

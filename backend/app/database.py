@@ -51,7 +51,12 @@ class InMemoryAsyncCollection:
             
             doc_val = self._get_val(doc, k)
             if isinstance(v, dict):
-                # Handle operators like $in, $ne, $gte, $lte, $regex
+                # Handle operators like $in, $all, $ne, $gte, $lte, $regex
+                if "$all" in v:
+                    if not isinstance(doc_val, list):
+                        return False
+                    if not all(item in doc_val for item in v["$all"]):
+                        return False
                 if "$in" in v:
                     if isinstance(doc_val, list):
                         if not any(item in v["$in"] for item in doc_val):

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
+import { useChat } from '../context/ChatContext';
 import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -37,7 +38,8 @@ const JOB_CATEGORIES = [
 
 export default function CompanyDashboardPage() {
   const { user } = useAuth();
-  const { cities } = useLocation();
+  const { selectedCity } = useLocation();
+  const { openChatWith } = useChat();
 
   const [postings, setPostings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -387,11 +389,23 @@ export default function CompanyDashboardPage() {
                             ))}
                           </div>
 
-                          <div className="pt-2 border-t border-base-200 flex justify-end">
+                          <div className="pt-2 border-t border-base-200 flex justify-end gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => openChatWith(
+                                cand.senior_id,
+                                'interview_invite',
+                                opp.title,
+                                `Hello ${cand.full_name}, we are reviewing your profile for "${opp.title}" and would love to connect directly!`
+                              )}
+                              className="btn btn-outline btn-primary min-h-[38px] px-3.5 rounded-xl font-bold gap-1.5 text-xs"
+                            >
+                              💬 Direct Chat
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleInviteCandidate(cand, opp)}
-                              className="btn btn-primary min-h-[40px] px-4 rounded-xl text-white font-bold gap-1.5 text-xs"
+                              className="btn btn-primary min-h-[38px] px-4 rounded-xl text-white font-bold gap-1.5 text-xs shadow-xs"
                             >
                               <Send className="w-3.5 h-3.5" /> Invite for Interview
                             </button>

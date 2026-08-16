@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
+import { useChat } from '../context/ChatContext';
 import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -34,6 +35,7 @@ const POST_TYPES = [
 export default function CommunityPage() {
   const { user, isAuthenticated } = useAuth();
   const { selectedCity, selectedLocality } = useLocation();
+  const { openChatWith } = useChat();
 
   const [posts, setPosts] = useState([]);
   const [collabs, setCollabs] = useState([]);
@@ -264,18 +266,30 @@ export default function CommunityPage() {
                   </p>
                 </div>
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end pt-1 gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => openChatWith(
+                      collab.senior_b_id,
+                      'collaboration',
+                      collab.venture_title,
+                      `Namaste ${collab.senior_b_name}! I would love to connect and discuss our complementary venture: "${collab.venture_title}".`
+                    )}
+                    className="btn btn-primary btn-xs rounded-xl text-white font-bold gap-1 min-h-[32px] px-3 shadow-xs"
+                  >
+                    💬 Direct Chat & Collab
+                  </button>
                   {collab.status === 'connected' ? (
-                    <span className="badge badge-success badge-sm text-white font-bold gap-1 text-xs">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Connected & Discussing
+                    <span className="badge badge-success badge-sm text-white font-bold gap-1 text-xs py-2">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Proposal Connected
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleConnectCollab(collab)}
-                      className="btn btn-primary btn-xs rounded-lg text-white font-bold gap-1"
+                      className="btn btn-outline btn-primary btn-xs rounded-xl font-bold gap-1 min-h-[32px] px-3"
                     >
-                      🤝 Propose Venture Collaboration
+                      🤝 Send Proposal
                     </button>
                   )}
                 </div>
@@ -374,7 +388,7 @@ export default function CommunityPage() {
               )}
 
               {/* Tags & Action Bar */}
-              <div className="pt-2 border-t border-base-200 flex items-center justify-between text-xs sm:text-sm text-base-content/70">
+              <div className="pt-2 border-t border-base-200 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm text-base-content/70">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {post.tags.map((tag, i) => (
                     <span key={i} className="badge badge-ghost badge-sm text-xs font-medium">
@@ -383,12 +397,29 @@ export default function CommunityPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Direct Chat connection button ONLY on need or collaboration posts */}
+                  {(post.type === 'need' || post.type === 'collaboration') && post.user_id !== user?.sub && (
+                    <button 
+                      type="button"
+                      onClick={() => openChatWith(
+                        post.user_id,
+                        post.type === 'need' ? 'need_post' : 'collaboration',
+                        post.title,
+                        `Hello! I saw your ${post.type === 'need' ? 'need request' : 'collaboration post'} "${post.title}" on SilverHands and would love to connect.`
+                      )}
+                      className="btn btn-primary btn-sm rounded-xl text-white font-bold text-xs gap-1.5 shadow-xs min-h-[38px] px-3"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>{post.type === 'need' ? 'Direct Message / Help' : 'Direct Message / Collab'}</span>
+                    </button>
+                  )}
+
                   <button 
                     onClick={() => handleOpenComments(post.id)}
-                    className="btn btn-ghost min-h-[40px] px-3 rounded-xl flex items-center gap-1.5 hover:text-primary font-bold text-xs sm:text-sm"
+                    className="btn btn-ghost min-h-[38px] px-3 rounded-xl flex items-center gap-1.5 hover:text-primary font-bold text-xs sm:text-sm"
                   >
-                    <MessageSquare className="w-4 h-4 text-primary" /> {post.comments_count || 0} Comments
+                    <MessageSquare className="w-4 h-4 text-primary" /> {commentsMap[post.id] !== undefined ? commentsMap[post.id].length : (post.comments_count || 0)} Comments
                   </button>
                 </div>
               </div>

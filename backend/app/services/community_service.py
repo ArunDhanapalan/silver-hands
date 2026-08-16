@@ -54,27 +54,35 @@ class CommunityService:
         cursor = col.find(filter_doc).sort("created_at", -1)
         docs = await cursor.to_list(100)
 
-        return [
-            PostResponse(
-                id=str(d.get("_id")),
-                user_id=d.get("user_id", ""),
-                author_name=d.get("author_name", "Community Member"),
-                author_role=d.get("author_role", "customer"),
-                is_age_verified=d.get("is_age_verified", False),
-                title=d["title"],
-                content=d["content"],
-                type=d["type"],
-                tags=d.get("tags", []),
-                locality=d.get("locality", "Adyar"),
-                city=d.get("city", "Chennai"),
-                comments_count=d.get("comments_count", 0),
-                likes_count=d.get("likes_count", 0),
-                demand_signal_generated=d.get("demand_signal_generated", False),
-                matched_skills=d.get("matched_skills", []),
-                created_at=d.get("created_at", "")
+        results = []
+        comments_col = self._comments_col()
+        for d in docs:
+            p_id = str(d.get("_id"))
+            # Real-time accurate comments count from comments collection
+            real_comments_count = await comments_col.count_documents({"post_id": p_id})
+
+            results.append(
+                PostResponse(
+                    id=p_id,
+                    user_id=d.get("user_id", ""),
+                    author_name=d.get("author_name", "Community Member"),
+                    author_role=d.get("author_role", "customer"),
+                    is_age_verified=d.get("is_age_verified", False),
+                    title=d["title"],
+                    content=d["content"],
+                    type=d["type"],
+                    tags=d.get("tags", []),
+                    locality=d.get("locality", "Adyar"),
+                    city=d.get("city", "Chennai"),
+                    comments_count=real_comments_count,
+                    likes_count=d.get("likes_count", 0),
+                    demand_signal_generated=d.get("demand_signal_generated", False),
+                    matched_skills=d.get("matched_skills", []),
+                    created_at=d.get("created_at", "")
+                )
             )
-            for d in docs
-        ]
+
+        return results
 
     async def create_post(self, user_payload: Dict[str, Any], req: PostCreateRequest) -> PostResponse:
         user_id = user_payload.get("sub")
@@ -182,8 +190,12 @@ class CommunityService:
         res = await col.insert_one(doc)
         doc["_id"] = str(res.inserted_id)
 
-        # Increment comments_count on post
-        await self._posts_col().update_one({"_id": post_id}, {"$inc": {"comments_count": 1}})
+        # Increment comments_count on post safely with ObjectId or str
+        post_obj = ObjectId(post_id) if ObjectId.is_valid(post_id) else post_id
+        await self._posts_col().update_one(
+            {"$or": [{"_id": post_obj}, {"_id": post_id}]},
+            {"$inc": {"comments_count": 1}}
+        )
 
         return CommentResponse(
             id=str(doc["_id"]),

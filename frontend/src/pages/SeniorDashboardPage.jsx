@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
+import { useChat } from '../context/ChatContext';
 import api from '../api/client';
 import OpportunityDeck from '../components/opportunity/OpportunityDeck';
 import ErrorAlert from '../components/common/ErrorAlert';
@@ -31,6 +32,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 export default function SeniorDashboardPage() {
   const { user } = useAuth();
   const { selectedCity } = useLocation();
+  const { openChatWith } = useChat();
 
   const [deck, setDeck] = useState([]);
   const [activeApps, setActiveApps] = useState([]);
@@ -216,18 +218,31 @@ export default function SeniorDashboardPage() {
                       </span>
                     </div>
 
-                    {iv.interview_link && (
-                      <div className="pt-2 border-t border-base-200 flex items-center justify-between">
+                    <div className="pt-2 border-t border-base-200 flex items-center justify-between gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => openChatWith(
+                          iv.posted_by_id || iv.company_id || 'user_techlocal_04',
+                          'interview_invite',
+                          iv.opportunity_title,
+                          `Namaste! I received your interview invitation for "${iv.opportunity_title}".`
+                        )}
+                        className="btn btn-outline btn-primary btn-xs rounded-xl font-bold gap-1 min-h-[36px] px-3"
+                      >
+                        💬 Chat with Employer
+                      </button>
+
+                      {iv.interview_link && (
                         <a 
                           href={iv.interview_link}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-warning btn-xs rounded-xl text-white font-bold gap-1 min-h-[36px] px-3"
                         >
-                          <Video className="w-3.5 h-3.5" /> Join Video Interview Room
+                          <Video className="w-3.5 h-3.5" /> Join Video Room
                         </a>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

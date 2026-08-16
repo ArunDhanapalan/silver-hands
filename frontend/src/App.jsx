@@ -4,9 +4,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { LocationProvider } from './context/LocationContext';
 import { BadgeProvider } from './context/BadgeContext';
+import { ChatProvider } from './context/ChatContext';
 import AppShell from './components/layout/AppShell';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import AccessibilityBar from './components/common/AccessibilityBar';
+import ChatDrawer from './components/chat/ChatDrawer';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Pages
@@ -59,9 +61,10 @@ export default function App() {
         <LocationProvider>
           <AuthProvider>
             <BadgeProvider>
-              <AppShell>
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
+              <ChatProvider>
+                <AppShell>
+                  <ErrorBoundary>
+                    <Suspense fallback={<LoadingSpinner message="Loading SilverHands module..." />}>
                   <Routes>
                     {/* Public & Customer Routes */}
                     <Route path="/" element={<HomePage />} />
@@ -168,13 +171,15 @@ export default function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                   <AccessibilityBar />
+                  <ChatDrawer />
                   </Suspense>
                 </ErrorBoundary>
               </AppShell>
-            </BadgeProvider>
-          </AuthProvider>
-        </LocationProvider>
-      </LanguageProvider>
+            </ChatProvider>
+          </BadgeProvider>
+        </AuthProvider>
+      </LocationProvider>
+    </LanguageProvider>
     </BrowserRouter>
   );
 }

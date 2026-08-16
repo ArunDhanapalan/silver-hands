@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import db_manager
-from app.routers import health, auth, senior, opportunities, store, services, community, festival
+from app.routers import health, auth, senior, opportunities, store, services, community, festival, chat
 
 # Setup logging
 logging.basicConfig(
@@ -73,6 +73,7 @@ app.include_router(store.router, prefix=settings.API_V1_STR)
 app.include_router(services.router, prefix=settings.API_V1_STR)
 app.include_router(community.router, prefix=settings.API_V1_STR)
 app.include_router(festival.router, prefix=settings.API_V1_STR)
+app.include_router(chat.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
