@@ -1,30 +1,31 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  Sparkles, 
-  Users, 
-  Layers, 
-  TrendingUp, 
-  MapPin, 
-  Globe, 
-  Briefcase, 
-  ChevronDown, 
-  Plus, 
-  Check, 
-  X, 
-  ShieldCheck, 
-  Package, 
-  Calendar, 
-  LogOut, 
-  User, 
-  SlidersHorizontal, 
-  Home, 
-  Award, 
+import {
+  ShoppingBag,
+  Sparkles,
+  Users,
+  Layers,
+  TrendingUp,
+  MapPin,
+  Globe,
+  Briefcase,
+  ChevronDown,
+  Plus,
+  Check,
+  X,
+  ShieldCheck,
+  Package,
+  Calendar,
+  LogOut,
+  User,
+  SlidersHorizontal,
+  Home,
+  Award,
   BookOpen,
   MessageSquare,
-  Bell 
+  Bell,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
@@ -35,11 +36,11 @@ import { useChat } from '../../context/ChatContext';
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { 
-    selectedCity, 
-    setSelectedCity, 
-    indianCities, 
-    activeFestival, 
+  const {
+    selectedCity,
+    setSelectedCity,
+    indianCities,
+    activeFestival,
     setActiveFestival,
     selectedLocality,
     setSelectedLocality,
@@ -110,7 +111,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 bg-base-100/95 backdrop-blur border-b border-base-300 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            
+
             {/* Brand */}
             <div className="flex items-center gap-3">
               <Link to={isCompany ? "/company" : isSenior ? "/senior" : "/"} className="flex items-center gap-2.5 group">
@@ -125,21 +126,21 @@ export default function Navbar() {
               </Link>
             </div>
 
-              {/* Desktop Navigation Links */}
+            {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-              
+
               {/* If Company Profile */}
               {isCompany ? (
                 <>
-                  <Link 
-                    to="/company" 
+                  <Link
+                    to="/company"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/company') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Briefcase className="w-4 h-4 text-primary" />
                     Company Hub & Postings
                   </Link>
-                  <Link 
-                    to="/community" 
+                  <Link
+                    to="/community"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Users className="w-4 h-4 text-secondary" />
@@ -149,8 +150,8 @@ export default function Navbar() {
               ) : isSenior ? (
                 /* Senior Navigation — Cleanly Segregated with Numeric Notification Badges */
                 <>
-                  <Link 
-                    to="/senior" 
+                  <Link
+                    to="/senior"
                     onClick={() => markSeen('opportunities')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior' || routerLocation.pathname === '/opportunities' ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
                   >
@@ -163,8 +164,8 @@ export default function Navbar() {
                     )}
                   </Link>
 
-                  <Link 
-                    to="/senior/storefront" 
+                  <Link
+                    to="/senior/storefront"
                     onClick={() => markSeen('storefront')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/storefront') || routerLocation.pathname.startsWith('/storefront') ? 'btn-active text-secondary font-extrabold bg-secondary/10' : ''}`}
                   >
@@ -177,12 +178,12 @@ export default function Navbar() {
                     )}
                   </Link>
 
-                  <Link 
-                    to="/senior/services" 
+                  <Link
+                    to="/senior/services"
                     onClick={() => markSeen('services')}
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/services') ? 'btn-active text-accent font-extrabold bg-accent/10' : ''}`}
                   >
-                    <BookOpen className="w-4 h-4 text-accent" />
+                    <Layers className="w-4 h-4 text-accent" />
                     <span>Service Hub</span>
                     {getCount('services') > 0 && (
                       <span className="min-w-[20px] h-[20px] px-1.5 bg-error text-white font-black text-[11px] rounded-full flex items-center justify-center shadow-xs">
@@ -191,46 +192,46 @@ export default function Navbar() {
                     )}
                   </Link>
 
-                  <Link 
-                    to="/senior/earnings" 
+                  <Link
+                    to="/senior/earnings"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname === '/senior/earnings' ? 'btn-active text-success font-extrabold bg-success/10' : ''}`}
                   >
-                    <TrendingUp className="w-4 h-4 text-success" />
+                    <Wallet className="w-4 h-4 text-success" />
                     <span>{t('nav_earnings')}</span>
                   </Link>
 
-                  <Link 
-                    to="/community" 
+                  <Link
+                    to="/community"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
                   >
-                    <Users className="w-4 h-4 text-primary" />
+                    <Users className="w-4 h-4 text-violet-700" />
                     <span>{t('nav_community')}</span>
                   </Link>
                 </>
               ) : (
                 /* Consumer & Guest Navigation — Clean without Senior notification badges */
                 <>
-                  <Link 
-                    to="/store" 
+                  <Link
+                    to="/store"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/store') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <ShoppingBag className="w-4 h-4 text-secondary" />
                     <span>{t('nav_store')}</span>
                   </Link>
 
-                  <Link 
-                    to="/services" 
+                  <Link
+                    to="/services"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/services') ? 'btn-active text-primary font-bold' : ''}`}
                   >
                     <Layers className="w-4 h-4 text-accent" />
                     <span>{t('nav_services')}</span>
                   </Link>
 
-                  <Link 
-                    to="/community" 
+                  <Link
+                    to="/community"
                     className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/community') ? 'btn-active text-primary font-bold' : ''}`}
                   >
-                    <Users className="w-4 h-4 text-primary" />
+                    <Users className="w-4 h-4 text-violet-700" />
                     <span>{t('nav_community')}</span>
                   </Link>
                 </>
@@ -240,7 +241,7 @@ export default function Navbar() {
 
             {/* Right Controls: City Selector, Language Selector, User Profile */}
             <div className="flex items-center gap-1.5 sm:gap-2">
-              
+
               {/* City Selector Modal Trigger */}
               <button
                 type="button"
@@ -275,7 +276,7 @@ export default function Navbar() {
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     {totalUnreadCount > 0 && (
-                      <span 
+                      <span
                         className="absolute -top-1 -right-1 z-30 bg-error text-white w-5 h-5 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 text-[10px] font-black animate-pulse"
                         title={`${totalUnreadCount} unread message(s)`}
                       >
@@ -288,9 +289,8 @@ export default function Navbar() {
                       <div className="flex flex-col gap-1 w-full">
                         <div className="flex items-center justify-between gap-1.5 w-full">
                           <span className="font-extrabold text-sm text-base-content truncate flex-1 min-w-0">{user?.full_name || 'User'}</span>
-                          <span className={`badge badge-xs font-bold uppercase shrink-0 whitespace-nowrap ${
-                            user?.role === 'senior' ? 'badge-primary text-white' : user?.role === 'company' ? 'badge-secondary text-white' : 'badge-accent text-white'
-                          }`}>
+                          <span className={`badge badge-xs font-bold uppercase shrink-0 whitespace-nowrap ${user?.role === 'senior' ? 'badge-primary text-white' : user?.role === 'company' ? 'badge-secondary text-white' : 'badge-accent text-white'
+                            }`}>
                             {user?.role === 'senior' ? 'Senior' : user?.role === 'company' ? 'Company' : 'Customer'}
                           </span>
                         </div>
@@ -318,13 +318,13 @@ export default function Navbar() {
                         )}
                       </button>
                     </li>
-                    
+
                     {user?.role === 'senior' && (
                       <>
                         <li>
                           <Link to="/senior" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 active:bg-primary active:text-white">
                             <span className="flex items-center gap-2">
-                              <Briefcase className="w-3.5 h-3.5 text-warning shrink-0" />
+                              <Briefcase className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                               <span>Job Opportunities</span>
                             </span>
                             {getCount('opportunities') > 0 && (
@@ -350,7 +350,7 @@ export default function Navbar() {
                         <li>
                           <Link to="/senior/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-base-200 text-accent active:bg-accent active:text-white">
                             <span className="flex items-center gap-2">
-                              <BookOpen className="w-3.5 h-3.5 text-accent shrink-0" />
+                              <Layers className="w-3.5 h-3.5 text-accent shrink-0" />
                               <span>Service Hub</span>
                             </span>
                             {getCount('services') > 0 && (
@@ -362,7 +362,7 @@ export default function Navbar() {
                         </li>
                         <li>
                           <Link to="/senior/earnings" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-success active:bg-success active:text-white">
-                            <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" />
+                            <Wallet className="w-3.5 h-3.5 text-success shrink-0" />
                             <span>Earnings Ledger</span>
                           </Link>
                         </li>
@@ -390,7 +390,7 @@ export default function Navbar() {
                     {user?.role === 'customer' && (
                       <>
                         <li><Link to="/orders" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Package className="w-3.5 h-3.5 text-primary" /> My Store Orders</Link></li>
-                        <li><Link to="/customer/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><BookOpen className="w-3.5 h-3.5 text-accent" /> My Classes</Link></li>
+                        <li><Link to="/customer/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Layers className="w-3.5 h-3.5 text-accent" /> My Services</Link></li>
                         <li><Link to="/cart" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><ShoppingBag className="w-3.5 h-3.5 text-secondary" /> My Cart</Link></li>
                         <li><Link to="/community" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Users className="w-3.5 h-3.5 text-primary" /> Community Feed</Link></li>
                       </>
@@ -431,14 +431,14 @@ export default function Navbar() {
       {cityModalOpen && createPortal(
         <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            
+
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-secondary" />
                 <h3 className="font-extrabold text-lg text-base-content">Select Your City & Locality</h3>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setCityModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -457,11 +457,10 @@ export default function Navbar() {
                       key={c.name}
                       type="button"
                       onClick={() => handleCitySelect(c)}
-                      className={`min-h-[48px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                        isSelected 
-                          ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' 
-                          : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50 text-base-content'
-                      }`}
+                      className={`min-h-[48px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${isSelected
+                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                        : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50 text-base-content'
+                        }`}
                     >
                       <div>
                         <div className="font-bold text-sm">{c.name}</div>
@@ -482,14 +481,13 @@ export default function Navbar() {
                 </label>
                 <span className="text-[11px] text-primary font-semibold">Active: {selectedLocality}</span>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleLocalitySelect('All Areas')}
-                  className={`min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-xs ${
-                    selectedLocality === 'All Areas' ? 'btn-secondary text-white' : 'btn-outline border-base-300'
-                  }`}
+                  className={`min-h-[40px] px-3.5 py-1.5 rounded-xl font-bold text-xs ${selectedLocality === 'All Areas' ? 'btn-secondary text-white' : 'btn-outline border-base-300'
+                    }`}
                 >
                   All Areas ({selectedCity.name})
                 </button>
@@ -498,9 +496,8 @@ export default function Navbar() {
                     key={loc}
                     type="button"
                     onClick={() => handleLocalitySelect(loc)}
-                    className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs ${
-                      selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost bg-base-200/60'
-                    }`}
+                    className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs ${selectedLocality === loc ? 'btn-secondary text-white font-bold' : 'btn-ghost bg-base-200/60'
+                      }`}
                   >
                     {loc}
                   </button>
@@ -530,8 +527,8 @@ export default function Navbar() {
                 />
               </div>
               <div className="flex justify-end pt-1">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={!customCityInput.trim() && !customLocalityInput.trim()}
                   className="btn btn-primary min-h-[44px] px-5 text-white rounded-xl font-bold text-sm"
                 >
@@ -549,7 +546,7 @@ export default function Navbar() {
       {langModalOpen && createPortal(
         <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            
+
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
                 <Globe className="w-5 h-5 text-accent" />
@@ -558,8 +555,8 @@ export default function Navbar() {
                   <p className="text-xs text-base-content/60">100% Platform translation across 11 Indian languages</p>
                 </div>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setLangModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -578,11 +575,10 @@ export default function Navbar() {
                       setLanguage(l.code);
                       setLangModalOpen(false);
                     }}
-                    className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-xs'
-                        : 'border-base-300 bg-base-100 hover:border-accent/40 hover:bg-base-200/50 text-base-content'
-                    }`}
+                    className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${isSelected
+                      ? 'border-accent bg-accent/10 text-accent font-bold shadow-xs'
+                      : 'border-base-300 bg-base-100 hover:border-accent/40 hover:bg-base-200/50 text-base-content'
+                      }`}
                   >
                     <div>
                       <div className="text-base font-extrabold">{l.native}</div>
@@ -603,7 +599,7 @@ export default function Navbar() {
       {festModalOpen && createPortal(
         <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-base-100 border border-base-300 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            
+
             <div className="flex items-center justify-between pb-3 border-b border-base-200">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🪔</span>
@@ -612,8 +608,8 @@ export default function Navbar() {
                   <p className="text-xs text-base-content/60">Tailor store items & gigs to current Indian festivals</p>
                 </div>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setFestModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
@@ -641,11 +637,10 @@ export default function Navbar() {
                       setActiveFestival(fest.name);
                       setFestModalOpen(false);
                     }}
-                    className={`min-h-[56px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'border-secondary bg-secondary/10 text-secondary font-bold shadow-xs'
-                        : 'border-base-300 bg-base-100 hover:border-secondary/40 hover:bg-base-200/50'
-                    }`}
+                    className={`min-h-[56px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between ${isSelected
+                      ? 'border-secondary bg-secondary/10 text-secondary font-bold shadow-xs'
+                      : 'border-base-300 bg-base-100 hover:border-secondary/40 hover:bg-base-200/50'
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className="text-2xl">{fest.icon}</span>
