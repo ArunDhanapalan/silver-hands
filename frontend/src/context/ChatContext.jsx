@@ -27,6 +27,8 @@ export function ChatProvider({ children }) {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const currentUserId = user?.id || user?.sub || user?._id;
+
   const fetchConversations = async () => {
     if (!isAuthenticated) {
       setConversations([]);
@@ -40,6 +42,14 @@ export function ChatProvider({ children }) {
       
       const unreadTotal = convList.reduce((acc, c) => acc + (c.unread_count || 0), 0);
       setTotalUnreadCount(unreadTotal);
+
+      // Auto-select first conversation if none selected
+      setActiveConversation(prev => {
+        if (prev && convList.some(c => String(c.id) === String(prev.id))) {
+          return prev;
+        }
+        return convList.length > 0 ? convList[0] : null;
+      });
     } catch (err) {
       console.warn('Failed to load conversations:', err);
     }
@@ -50,8 +60,14 @@ export function ChatProvider({ children }) {
     try {
       const data = await api.get(`/chat/conversations/${convId}/messages`);
       setMessages(Array.isArray(data) ? data : []);
-      // Refresh conversations to update unread status
-      fetchConversations();
+
+      // Clear unread count for this conversation in local state immediately so red bell disappears
+      setConversations(prev => {
+        const updated = prev.map(c => String(c.id) === String(convId) ? { ...c, unread_count: 0 } : c);
+        const unreadTotal = updated.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+        setTotalUnreadCount(unreadTotal);
+        return updated;
+      });
     } catch (err) {
       console.error('Failed to load messages for conversation:', err);
     }
@@ -59,25 +75,38 @@ export function ChatProvider({ children }) {
 
   useEffect(() => {
     fetchConversations();
-  }, [isAuthenticated, user?.sub]);
+  }, [isAuthenticated, currentUserId]);
 
   useEffect(() => {
     if (activeConversation?.id) {
       fetchMessages(activeConversation.id);
       const interval = setInterval(() => {
         fetchMessages(activeConversation.id);
-      }, 5000);
+      }, 4000);
       return () => clearInterval(interval);
     }
   }, [activeConversation?.id]);
 
-  const openChatDrawer = (initialConv = null) => {
+  const openChatDrawer = async (initialConv = null) => {
     setIsChatDrawerOpen(true);
-    fetchConversations();
-    if (initialConv) {
-      setActiveConversation(initialConv);
-    } else if (!activeConversation && conversations.length > 0) {
-      setActiveConversation(conversations[0]);
+    try {
+      const data = await api.get('/chat/conversations').catch(() => []);
+      const convList = Array.isArray(data) ? data : [];
+      setConversations(convList);
+
+      let targetConv = initialConv;
+      if (!targetConv && convList.length > 0) {
+        targetConv = activeConversation && convList.some(c => String(c.id) === String(activeConversation.id))
+          ? activeConversation
+          : convList[0];
+      }
+
+      if (targetConv) {
+        setActiveConversation(targetConv);
+        await fetchMessages(targetConv.id);
+      }
+    } catch (e) {
+      console.warn('Error opening chat drawer:', e);
     }
   };
 
@@ -86,8 +115,15 @@ export function ChatProvider({ children }) {
   };
 
   const selectConversation = (conv) => {
+    if (!conv) {
+      setActiveConversation(null);
+      setMessages([]);
+      return;
+    }
     setActiveConversation(conv);
-    fetchMessages(conv.id);
+    if (conv?.id) {
+      fetchMessages(conv.id);
+    }
   };
 
   const openChatWith = async (recipientId, contextType = 'collaboration', contextTitle = 'Direct Connection', initialMessage = '') => {
@@ -108,7 +144,7 @@ export function ChatProvider({ children }) {
       setActiveConversation(conv);
       setIsChatDrawerOpen(true);
       if (conv?.id) {
-        fetchMessages(conv.id);
+        await fetchMessages(conv.id);
       }
     } catch (err) {
       console.error('Failed to start chat conversation:', err);

@@ -133,6 +133,7 @@ class AuthService:
 
         user_resp = UserResponse(
             id=user_id,
+            sub=user_id,
             email=user_doc["email"],
             full_name=user_doc["full_name"],
             role=user_doc["role"],
@@ -160,8 +161,10 @@ class AuthService:
         if not user_doc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found")
 
+        uid = str(user_doc["_id"])
         return UserResponse(
-            id=str(user_doc["_id"]),
+            id=uid,
+            sub=uid,
             email=user_doc["email"],
             full_name=user_doc["full_name"],
             role=user_doc["role"],

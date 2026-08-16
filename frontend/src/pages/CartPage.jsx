@@ -68,9 +68,16 @@ export default function CartPage() {
   }, [isAuthenticated]);
 
   const updateQuantity = (productId, delta) => {
+    const totalCurrentQuantity = cartItems.reduce((acc, i) => acc + i.quantity, 0);
     const updated = cartItems.map(item => {
       if (item.product_id === productId) {
         const newQ = item.quantity + delta;
+        if (newQ > 10) return item;
+        if (delta > 0 && totalCurrentQuantity >= 10) {
+          setError('Each store order is limited to a maximum of 10 items in total.');
+          return item;
+        }
+        setError('');
         return newQ > 0 ? { ...item, quantity: newQ } : null;
       }
       return item;
@@ -94,6 +101,11 @@ export default function CartPage() {
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (!cartItems.length) return;
+    const totalItemsCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    if (totalItemsCount > 10) {
+      setError('Each order is limited to a maximum of 10 items for handmade elder preparation.');
+      return;
+    }
     setError('');
     setSubmitting(true);
 

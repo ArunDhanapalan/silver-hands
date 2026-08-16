@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation as useRouteLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation as useRouteLocation } from 'react-router-dom';
 import { 
   ShoppingBag, 
   Sparkles, 
@@ -23,7 +23,8 @@ import {
   Home, 
   Award, 
   BookOpen,
-  MessageSquare 
+  MessageSquare,
+  Bell 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
@@ -33,6 +34,7 @@ import { useChat } from '../../context/ChatContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const { 
     selectedCity, 
     setSelectedCity, 
@@ -47,6 +49,11 @@ export default function Navbar() {
   } = useLocation();
   const { language, setLanguage, languages, t } = useLanguage();
   const routerLocation = useRouteLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
   const { getCount, markSeen } = useBadges();
   const { openChatDrawer, totalUnreadCount } = useChat();
 
@@ -271,40 +278,47 @@ export default function Navbar() {
               {/* User Account / Auth */}
               {isAuthenticated ? (
                 <div className="dropdown dropdown-end relative">
-                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder min-h-[44px] min-w-[44px]" aria-label="User menu">
+                  <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder min-h-[44px] min-w-[44px] relative" aria-label="User menu">
                     <div className="bg-primary text-primary-content rounded-full w-10 shadow-inner flex items-center justify-center font-bold text-sm">
                       {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
+                    {totalUnreadCount > 0 && (
+                      <span 
+                        className="absolute -top-1 -right-1 bg-error text-white p-1 rounded-full shadow-lg flex items-center justify-center border-2 border-base-100 animate-bounce min-w-[20px] min-h-[20px]"
+                        title={`${totalUnreadCount} new direct message(s)`}
+                      >
+                        <Bell className="w-3 h-3 fill-current" />
+                      </span>
+                    )}
                   </div>
-                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-3 shadow-2xl bg-base-100 rounded-3xl w-72 right-0 max-w-[calc(100vw-2rem)] border border-base-300 text-xs space-y-1.5">
-                    <li className="px-3.5 py-2.5 bg-base-200/70 rounded-2xl mb-1.5 border border-base-300/60">
-                      <div className="flex flex-col gap-1 pointer-events-none p-0">
-                        <span className="font-extrabold text-sm text-base-content truncate">{user?.company_name || user?.full_name}</span>
+                  <ul tabIndex={0} className="menu menu-sm dropdown-content mt-2 z-50 p-2 shadow-2xl bg-base-100 rounded-2xl w-64 right-0 max-w-[calc(100vw-1.5rem)] border border-base-300 text-xs space-y-0.5 max-h-[82vh] overflow-y-auto">
+                    <li className="px-3 py-2 bg-base-200/80 rounded-xl mb-1 border border-base-300/50">
+                      <div className="flex flex-col gap-0.5 pointer-events-none p-0">
+                        <span className="font-black text-xs sm:text-sm text-base-content truncate">{user?.company_name || user?.full_name}</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="badge badge-xs badge-primary font-bold text-white uppercase">{user?.role === 'senior' ? 'Senior Guru' : user?.role}</span>
+                          <span className="badge badge-xs badge-primary font-bold text-white uppercase text-[9px]">{user?.role === 'senior' ? 'Senior Guru' : user?.role}</span>
                           <span className="text-[10px] text-base-content/60 truncate">{user?.email}</span>
                         </div>
-                        <span className="text-[10px] text-base-content/50 font-medium">{selectedCity?.name || 'Chennai'} • {selectedLocality || 'All Areas'}</span>
                       </div>
                     </li>
 
                     {/* Direct Messages Entry — Accessible through profile card */}
-                    <li className="border-b border-base-200 pb-1.5 mb-1">
+                    <li className="border-b border-base-200 pb-1 mb-0.5">
                       <button
                         type="button"
                         onClick={openChatDrawer}
-                        className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center justify-between hover:bg-primary/10 text-primary w-full text-left"
+                        className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center justify-between hover:bg-primary/10 text-primary w-full text-left"
                       >
-                        <span className="flex items-center gap-2.5">
-                          <MessageSquare className="w-4 h-4 text-primary shrink-0" />
+                        <span className="flex items-center gap-2">
+                          <MessageSquare className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span>My Direct Chats</span>
                         </span>
                         {totalUnreadCount > 0 ? (
-                          <span className="badge badge-error badge-sm text-white font-black text-[11px] min-w-[20px] h-[20px] rounded-full p-0 flex items-center justify-center">
+                          <span className="badge badge-error badge-xs text-white font-black text-[10px] min-w-[18px] h-[18px] rounded-full p-0 flex items-center justify-center">
                             {totalUnreadCount}
                           </span>
                         ) : (
-                          <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60">Protected</span>
+                          <span className="badge badge-ghost badge-xs text-[9px] text-base-content/50">Safe</span>
                         )}
                       </button>
                     </li>
@@ -312,45 +326,45 @@ export default function Navbar() {
                     {user?.role === 'senior' && (
                       <>
                         <li>
-                          <Link to="/senior" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
-                            <Briefcase className="w-4 h-4 text-warning shrink-0" />
+                          <Link to="/senior" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Briefcase className="w-3.5 h-3.5 text-warning shrink-0" />
                             <span>Job Opportunities</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/storefront" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
-                            <ShoppingBag className="w-4 h-4 text-secondary shrink-0" />
-                            <span>My Storefront (Products)</span>
+                          <Link to="/senior/storefront" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
+                            <ShoppingBag className="w-3.5 h-3.5 text-secondary shrink-0" />
+                            <span>My Storefront</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/services" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-accent active:bg-accent active:text-white">
-                            <BookOpen className="w-4 h-4 text-accent shrink-0" />
-                            <span>Service Hub (Classes)</span>
+                          <Link to="/senior/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-accent active:bg-accent active:text-white">
+                            <BookOpen className="w-3.5 h-3.5 text-accent shrink-0" />
+                            <span>Service Hub</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/earnings" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-success active:bg-success active:text-white">
-                            <TrendingUp className="w-4 h-4 text-success shrink-0" />
-                            <span>Earnings & Payout Ledger</span>
+                          <Link to="/senior/earnings" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-success active:bg-success active:text-white">
+                            <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" />
+                            <span>Earnings Ledger</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/passport" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-warning active:bg-warning active:text-white">
-                            <Award className="w-4 h-4 text-warning shrink-0" />
-                            <span>My Skill Passport</span>
+                          <Link to="/senior/passport" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 text-warning active:bg-warning active:text-white">
+                            <Award className="w-3.5 h-3.5 text-warning shrink-0" />
+                            <span>Skill Passport</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/community" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
-                            <Users className="w-4 h-4 text-primary shrink-0" />
-                            <span>Senior Community</span>
+                          <Link to="/community" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Users className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span>Community</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/onboarding" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
-                            <Sparkles className="w-4 h-4 text-secondary shrink-0" />
-                            <span>Edit Life Story & AI Skills</span>
+                          <Link to="/senior/onboarding" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-bold flex items-center gap-2 hover:bg-base-200 active:bg-primary active:text-white">
+                            <Sparkles className="w-3.5 h-3.5 text-secondary shrink-0" />
+                            <span>Edit Skills</span>
                           </Link>
                         </li>
                       </>
@@ -358,23 +372,23 @@ export default function Navbar() {
 
                     {user?.role === 'customer' && (
                       <>
-                        <li><Link to="/orders" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Package className="w-4 h-4 text-primary" /> My Store Orders</Link></li>
-                        <li><Link to="/customer/services" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><BookOpen className="w-4 h-4 text-accent" /> My Booked Classes</Link></li>
-                        <li><Link to="/cart" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-secondary" /> My Cart</Link></li>
-                        <li><Link to="/community" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Community Feed</Link></li>
+                        <li><Link to="/orders" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Package className="w-3.5 h-3.5 text-primary" /> My Store Orders</Link></li>
+                        <li><Link to="/customer/services" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><BookOpen className="w-3.5 h-3.5 text-accent" /> My Classes</Link></li>
+                        <li><Link to="/cart" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><ShoppingBag className="w-3.5 h-3.5 text-secondary" /> My Cart</Link></li>
+                        <li><Link to="/community" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Users className="w-3.5 h-3.5 text-primary" /> Community Feed</Link></li>
                       </>
                     )}
 
                     {user?.role === 'company' && (
                       <>
-                        <li><Link to="/company" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary" /> Company Dashboard</Link></li>
-                        <li><Link to="/community" className="min-h-[44px] px-3 py-2.5 rounded-2xl font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-secondary" /> Community Feed</Link></li>
+                        <li><Link to="/company" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Briefcase className="w-3.5 h-3.5 text-primary" /> Company Dashboard</Link></li>
+                        <li><Link to="/community" className="min-h-[38px] px-2.5 py-1.5 rounded-xl font-semibold flex items-center gap-2"><Users className="w-3.5 h-3.5 text-secondary" /> Community Feed</Link></li>
                       </>
                     )}
 
-                    <li className="border-t border-base-200 pt-1.5 mt-1.5">
-                      <button onClick={logout} className="text-error font-bold min-h-[44px] px-3.5 py-2.5 rounded-2xl hover:bg-error/10 flex items-center gap-2">
-                        <LogOut className="w-4 h-4" /> Logout
+                    <li className="border-t border-base-200 pt-1 mt-1">
+                      <button onClick={handleLogout} className="text-error font-bold min-h-[38px] px-2.5 py-1.5 rounded-xl hover:bg-error/10 flex items-center gap-2 w-full text-left">
+                        <LogOut className="w-3.5 h-3.5" /> Logout
                       </button>
                     </li>
                   </ul>

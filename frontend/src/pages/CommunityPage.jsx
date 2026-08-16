@@ -215,7 +215,7 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* Senior-to-Senior Complementary Skill Match Section (For Seniors) */}
+      {/* Senior-to-Senior Complementary Skill Match Section (For Seniors, Top 2 Only) */}
       {user?.role === 'senior' && collabs.length > 0 && (
         <div className="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/15 border-2 border-primary/30 rounded-3xl p-6 sm:p-7 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
@@ -228,18 +228,18 @@ export default function CommunityPage() {
                   AI Senior-to-Senior Skill Complement Matches
                 </h3>
                 <p className="text-[11px] text-base-content/70">
-                  We identified complementary skill synergy in your locality to help you co-launch micro-businesses!
+                  Top 2 complementary skill synergies in your locality to co-launch local micro-ventures!
                 </p>
               </div>
             </div>
 
             <span className="badge badge-primary badge-sm font-bold text-white">
-              {collabs.length} Synergy Opportunity
+              Top {Math.min(collabs.length, 2)} Matches
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {collabs.map((collab) => (
+            {collabs.slice(0, 2).map((collab) => (
               <div 
                 key={collab.id}
                 className="bg-base-100 border border-base-300 rounded-2xl p-4 shadow-xs flex flex-col justify-between space-y-3"
@@ -266,32 +266,19 @@ export default function CommunityPage() {
                   </p>
                 </div>
 
-                <div className="flex justify-end pt-1 gap-2 flex-wrap">
+                <div className="flex justify-end pt-1">
                   <button
                     type="button"
                     onClick={() => openChatWith(
                       collab.senior_b_id,
                       'collaboration',
                       collab.venture_title,
-                      `Namaste ${collab.senior_b_name}! I would love to connect and discuss our complementary venture: "${collab.venture_title}".`
+                      `Hello ${collab.senior_b_name}! I would like to invite you to collaborate on our venture: "${collab.venture_title}".`
                     )}
-                    className="btn btn-primary btn-xs rounded-xl text-white font-bold gap-1 min-h-[32px] px-3 shadow-xs"
+                    className="btn btn-primary btn-sm rounded-xl text-white font-bold gap-1.5 min-h-[36px] px-5 shadow-xs"
                   >
-                    💬 Direct Chat & Collab
+                    Invite
                   </button>
-                  {collab.status === 'connected' ? (
-                    <span className="badge badge-success badge-sm text-white font-bold gap-1 text-xs py-2">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Proposal Connected
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleConnectCollab(collab)}
-                      className="btn btn-outline btn-primary btn-xs rounded-xl font-bold gap-1 min-h-[32px] px-3"
-                    >
-                      🤝 Send Proposal
-                    </button>
-                  )}
                 </div>
               </div>
             ))}

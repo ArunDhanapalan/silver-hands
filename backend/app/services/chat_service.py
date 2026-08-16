@@ -29,27 +29,45 @@ class ChatService:
         return db_manager.get_collection("senior_profiles")
 
     async def _get_user_info(self, user_id: str) -> Dict[str, str]:
-        """Fetch user display name and role."""
+        """Fetch user display name and role reliably across all collections and ID formats."""
+        if not user_id:
+            return {"name": "SilverHands Member", "role": "customer"}
+
         users_col = self._users_col()
-        # Try finding by sub/id
-        doc = await users_col.find_one({"$or": [{"_id": user_id}, {"sub": user_id}]})
-        if not doc and ObjectId.is_valid(user_id):
-            doc = await users_col.find_one({"_id": ObjectId(user_id)})
-            
+        seniors_col = self._seniors_col()
+
+        # 1. Search in users collection
+        query_list = [{"_id": user_id}, {"sub": user_id}, {"id": user_id}]
+        if ObjectId.is_valid(user_id):
+            query_list.append({"_id": ObjectId(user_id)})
+        doc = await users_col.find_one({"$or": query_list})
         if doc:
             return {
-                "name": doc.get("full_name", "Community Member"),
+                "name": doc.get("full_name") or doc.get("company_name") or "Community Member",
                 "role": doc.get("role", "customer")
             }
-        
-        # Fallback check senior profiles
-        seniors_col = self._seniors_col()
-        s_doc = await seniors_col.find_one({"$or": [{"user_id": user_id}, {"_id": user_id}]})
+
+        # 2. Search in senior_profiles collection
+        senior_query_list = [{"user_id": user_id}, {"_id": user_id}, {"id": user_id}]
+        if ObjectId.is_valid(user_id):
+            senior_query_list.append({"_id": ObjectId(user_id)})
+        s_doc = await seniors_col.find_one({"$or": senior_query_list})
         if s_doc:
             return {
-                "name": s_doc.get("full_name", "Senior Elder"),
+                "name": s_doc.get("full_name", "Senior Guru"),
                 "role": "senior"
             }
+
+        # 3. Known demo user mapping fallback
+        DEMO_USERS = {
+            "user_ramesh_01": {"name": "Ramesh Iyer", "role": "senior"},
+            "user_lakshmi_02": {"name": "Lakshmi Sundaram", "role": "senior"},
+            "user_krishnan_03": {"name": "Krishnan Murthy", "role": "senior"},
+            "user_techlocal_04": {"name": "TechLocal Solutions", "role": "company"},
+            "user_ananya_05": {"name": "Ananya Sharma", "role": "customer"}
+        }
+        if user_id in DEMO_USERS:
+            return DEMO_USERS[user_id]
 
         return {"name": "SilverHands Member", "role": "customer"}
 
@@ -61,6 +79,15 @@ class ChatService:
         user_id = str(current_user.get("sub"))
         recipient_id = str(req.recipient_id)
 
+        # Normalize recipient_id if a senior profile _id was passed instead of user_id
+        seniors_col = self._seniors_col()
+        senior_query = [{"_id": recipient_id}, {"id": recipient_id}]
+        if ObjectId.is_valid(recipient_id):
+            senior_query.append({"_id": ObjectId(recipient_id)})
+        s_doc = await seniors_col.find_one({"$or": senior_query})
+        if s_doc and s_doc.get("user_id"):
+            recipient_id = str(s_doc["user_id"])
+
         if user_id == recipient_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -70,16 +97,17 @@ class ChatService:
         conv_col = self._conv_col()
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        # Find existing conversation between these two participants with this context
+        # Find existing conversation between these two participants
         existing = await conv_col.find_one({
-            "participant_ids": {"$all": [user_id, recipient_id]},
-            "context_type": req.context_type
+            "participant_ids": {"$all": [user_id, recipient_id]}
         })
 
         if not existing:
-            # Also check if any existing conversation between these two exists regardless of context
             existing = await conv_col.find_one({
-                "participant_ids": {"$all": [user_id, recipient_id]}
+                "$or": [
+                    {"participant_ids": [user_id, recipient_id]},
+                    {"participant_ids": [recipient_id, user_id]}
+                ]
             })
 
         if existing:
@@ -92,6 +120,13 @@ class ChatService:
                     req=SendMessageRequest(content=req.initial_message)
                 )
 
+            # Update context title if newer provided
+            if req.context_title:
+                await conv_col.update_one(
+                    {"$or": [{"_id": ObjectId(conv_id)} if ObjectId.is_valid(conv_id) else {"_id": conv_id}, {"_id": conv_id}]},
+                    {"$set": {"context_title": req.context_title, "context_type": req.context_type, "updated_at": now}}
+                )
+
             other_info = await self._get_user_info(recipient_id)
             return ConversationResponse(
                 id=conv_id,
@@ -99,12 +134,12 @@ class ChatService:
                 other_user_id=recipient_id,
                 other_user_name=other_info["name"],
                 other_user_role=other_info["role"],
-                context_type=existing.get("context_type", req.context_type),
-                context_title=existing.get("context_title", req.context_title),
-                last_message=existing.get("last_message"),
-                last_message_time=existing.get("last_message_time"),
+                context_type=req.context_type or existing.get("context_type", "direct"),
+                context_title=req.context_title or existing.get("context_title"),
+                last_message=req.initial_message or existing.get("last_message"),
+                last_message_time=now if req.initial_message else existing.get("last_message_time"),
                 unread_count=0,
-                updated_at=existing.get("updated_at", now)
+                updated_at=now
             )
 
         # Create new conversation
@@ -158,10 +193,15 @@ class ChatService:
         docs = await cursor.to_list(100)
 
         results = []
+        seen_others = set()
         for d in docs:
             conv_id = str(d["_id"])
-            participants = d.get("participant_ids", [])
+            participants = [str(p) for p in d.get("participant_ids", [])]
             other_id = next((p for p in participants if p != user_id), user_id)
+
+            if other_id in seen_others:
+                continue
+            seen_others.add(other_id)
             
             # Fetch latest info for other user
             other_info = await self._get_user_info(other_id)
@@ -216,7 +256,14 @@ class ChatService:
 
         # Mark all incoming messages as read
         await msg_col.update_many(
-            {"conversation_id": conversation_id, "receiver_id": user_id, "is_read": False},
+            {
+                "conversation_id": conversation_id,
+                "$or": [
+                    {"receiver_id": user_id},
+                    {"sender_id": {"$ne": user_id}}
+                ],
+                "is_read": False
+            },
             {"$set": {"is_read": True}}
         )
 

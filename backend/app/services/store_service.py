@@ -86,8 +86,8 @@ class StoreService:
 
     def _format_product(self, doc: Dict[str, Any]) -> ProductResponse:
         total_sold = doc.get("total_sold", 0)
-        stock_quantity = doc.get("stock_quantity", max(0, 20 - total_sold))
-        is_out_of_stock = total_sold >= 20 or stock_quantity <= 0 or doc.get("is_out_of_stock", False)
+        stock_quantity = doc.get("stock_quantity", 100)
+        is_out_of_stock = doc.get("is_out_of_stock", False)
 
         return ProductResponse(
             id=str(doc.get("_id")),
@@ -111,7 +111,7 @@ class StoreService:
             stock_quantity=stock_quantity,
             total_sold=total_sold,
             is_out_of_stock=is_out_of_stock,
-            max_store_limit=20,
+            max_order_limit=10,
             rating=doc.get("rating", 4.9),
             total_reviews=doc.get("total_reviews", 1),
             reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])],
@@ -229,18 +229,21 @@ class StoreService:
         customer_name = req.delivery_name
 
         total_amount = sum(item.price_per_unit * item.quantity for item in req.items)
+        total_items_in_order = sum(item.quantity for item in req.items)
 
-        # Check 20-item store limit per product
-        prod_col = self._products_col()
+        # Enforce maximum 10 items per order for handmade elder batches
+        if total_items_in_order > 10:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Each store order is limited to a maximum of 10 items (current total: {total_items_in_order})."
+            )
+
         for item in req.items:
-            prod_doc = await prod_col.find_one(self._build_id_filter(item.product_id))
-            if prod_doc:
-                current_sold = prod_doc.get("total_sold", 0)
-                if current_sold + item.quantity > 20:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"'{item.product_title}' has reached the maximum store capacity limit of 20 units and is now Out of Stock."
-                    )
+            if item.quantity > 10:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Quantity for '{item.product_title}' exceeds maximum order limit of 10."
+                )
 
         order_doc = {
             "order_number": order_num,
@@ -263,19 +266,14 @@ class StoreService:
         res = await col.insert_one(order_doc)
         order_doc["_id"] = str(res.inserted_id)
 
-        # Increment total_sold and decrement stock
+        # Increment total_sold
+        prod_col = self._products_col()
         for item in req.items:
             prod_filter = self._build_id_filter(item.product_id)
-            prod_doc = await prod_col.find_one(prod_filter)
-            if prod_doc:
-                new_sold = prod_doc.get("total_sold", 0) + item.quantity
-                await prod_col.update_one(
-                    prod_filter,
-                    {
-                        "$inc": {"total_sold": item.quantity, "stock_quantity": -item.quantity},
-                        "$set": {"is_out_of_stock": (new_sold >= 20)}
-                    }
-                )
+            await prod_col.update_one(
+                prod_filter,
+                {"$inc": {"total_sold": item.quantity}}
+            )
 
         return OrderResponse(
             id=str(order_doc["_id"]),

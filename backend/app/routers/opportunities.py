@@ -100,6 +100,16 @@ async def cancel_application(
     """
     return await matching_service.cancel_application(current_user, id)
 
+@router.delete("/{id}")
+async def delete_opportunity(
+    id: str,
+    current_user: Dict[str, Any] = Depends(require_role(["company", "senior", "customer"]))
+):
+    """
+    Deletes an opportunity posting and removes associated application matches.
+    """
+    return await matching_service.delete_opportunity(current_user, id)
+
 @router.post("/parse-job")
 async def parse_job_description(
     req: JobParseRequest,

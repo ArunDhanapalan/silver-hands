@@ -164,7 +164,7 @@ class MatchingService:
 
     async def get_my_applications(self, user_payload: Dict[str, Any]) -> List[ApplicationItemResponse]:
         user_id = user_payload.get("sub")
-        cursor = self._apps_col().find({"user_id": user_id, "status": {"$ne": "passed"}})
+        cursor = self._apps_col().find({"user_id": user_id, "status": {"$nin": ["passed", "cancelled"]}})
         apps = await cursor.to_list(100)
         
         return [
@@ -294,7 +294,7 @@ class MatchingService:
 
                 if total_score >= 50:
                     matched_seniors.append({
-                        "senior_id": str(sr.get("_id", sr.get("user_id"))),
+                        "senior_id": sr.get("user_id") or str(sr.get("_id")),
                         "full_name": sr.get("full_name", "Senior Guru"),
                         "locality": sr.get("locality", "Adyar"),
                         "city": sr.get("city", "Chennai"),
@@ -371,5 +371,20 @@ class MatchingService:
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         await col.update_one(filter_q, {"$set": {"status": "cancelled", "updated_at": now}})
         return {"success": True, "message": "Application / Interview cancelled successfully"}
+
+    async def delete_opportunity(self, user_payload: Dict[str, Any], opp_id: str) -> Dict[str, Any]:
+        user_id = user_payload.get("sub")
+        filter_q = self._build_id_filter(opp_id)
+        opp = await self._opps_col().find_one(filter_q)
+        if not opp:
+            raise HTTPException(status_code=404, detail="Opportunity not found")
+        
+        # Check ownership unless admin
+        if opp.get("company_id") and opp.get("company_id") != user_id and user_payload.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="You are not authorized to delete this opportunity")
+            
+        await self._opps_col().delete_one(filter_q)
+        await self._apps_col().delete_many({"opportunity_id": opp_id})
+        return {"success": True, "message": "Opportunity deleted successfully", "id": opp_id}
 
 matching_service = MatchingService()

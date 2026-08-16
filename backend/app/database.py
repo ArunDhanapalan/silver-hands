@@ -201,17 +201,50 @@ class InMemoryAsyncCollection:
                 for k, v in update_doc["$pull"].items():
                     if k in doc and isinstance(doc[k], list):
                         doc[k] = [x for x in doc[k] if x != v]
-            self._docs[found_idx] = doc
             res.matched_count = 1
             res.modified_count = 1
-            return res
         elif upsert:
             new_doc = dict(filter_doc)
             if "$set" in update_doc:
                 new_doc.update(update_doc["$set"])
             insert_res = await self.insert_one(new_doc)
             res.upserted_id = insert_res.inserted_id
-            return res
+            res.matched_count = 0
+            res.modified_count = 1
+        return res
+
+    async def update_many(self, filter_doc: Dict[str, Any], update_doc: Dict[str, Any], upsert: bool = False):
+        matched_indices = []
+        for i, d in enumerate(self._docs):
+            if self._matches_filter(d, filter_doc):
+                matched_indices.append(i)
+        
+        class UpdateResult:
+            matched_count = 0
+            modified_count = 0
+            upserted_id = None
+
+        res = UpdateResult()
+        res.matched_count = len(matched_indices)
+        
+        for idx in matched_indices:
+            doc = self._docs[idx]
+            if "$set" in update_doc:
+                doc.update(update_doc["$set"])
+            if "$inc" in update_doc:
+                for k, v in update_doc["$inc"].items():
+                    doc[k] = doc.get(k, 0) + v
+            if "$push" in update_doc:
+                for k, v in update_doc["$push"].items():
+                    if k not in doc or not isinstance(doc[k], list):
+                        doc[k] = []
+                    doc[k].append(v)
+            if "$pull" in update_doc:
+                for k, v in update_doc["$pull"].items():
+                    if k in doc and isinstance(doc[k], list):
+                        doc[k] = [x for x in doc[k] if x != v]
+            res.modified_count += 1
+            
         return res
 
     async def delete_one(self, filter_doc: Dict[str, Any]):

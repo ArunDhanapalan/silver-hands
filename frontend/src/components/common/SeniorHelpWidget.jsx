@@ -18,8 +18,8 @@ export default function SeniorHelpWidget() {
     {
       id: 1,
       sender: 'bot',
-      text: 'Namaste! Welcome to SilverHands Senior Care & Help Desk. How can our team assist you today?',
-      time: 'Just now'
+      text: 'Hello! Welcome to SilverHands Senior Care & Help Desk. How can our team assist you today?',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [inputText, setInputText] = useState('');

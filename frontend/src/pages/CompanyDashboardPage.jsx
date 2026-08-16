@@ -17,7 +17,8 @@ import {
   Send,
   Building,
   DollarSign,
-  Utensils
+  Utensils,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -38,7 +39,7 @@ const JOB_CATEGORIES = [
 
 export default function CompanyDashboardPage() {
   const { user } = useAuth();
-  const { selectedCity } = useLocation();
+  const { selectedCity, cities = [] } = useLocation();
   const { openChatWith } = useChat();
 
   const [postings, setPostings] = useState([]);
@@ -184,7 +185,7 @@ export default function CompanyDashboardPage() {
     }
   };
 
-  const handleInviteCandidate = async (candidate, opp) => {
+  const handleInviteAndMessage = async (candidate, opp) => {
     try {
       await api.post('/opportunities/invite-candidate', {
         senior_id: candidate.senior_id,
@@ -193,11 +194,35 @@ export default function CompanyDashboardPage() {
         message: `Official interview invitation from ${user?.company_name || user?.full_name || 'Employer'}`,
         interview_date: 'Upcoming Weekday (10:00 AM – 11:00 AM)'
       });
-      setToastMsg(`Interview invitation sent to ${candidate.full_name}!`);
+      setToastMsg(`Interview invite sent to ${candidate.full_name}! Opening chat...`);
       setTimeout(() => setToastMsg(''), 3500);
+
+      await openChatWith(
+        candidate.senior_id,
+        'interview_invite',
+        opp.title,
+        `Hello ${candidate.full_name}, we reviewed your profile for "${opp.title}" and would love to connect directly!`
+      );
     } catch (err) {
-      setToastMsg(`Interview invitation sent to ${candidate.full_name}!`);
+      console.error('Invite & message error:', err);
+      openChatWith(
+        candidate.senior_id,
+        'interview_invite',
+        opp.title,
+        `Hello ${candidate.full_name}, we are interested in your profile for "${opp.title}".`
+      );
+    }
+  };
+
+  const handleDeleteOpportunity = async (oppId) => {
+    if (!window.confirm('Are you sure you want to delete this opportunity posting? All candidate matches will be cleared.')) return;
+    try {
+      await api.delete(`/opportunities/${oppId}`);
+      setToastMsg('Opportunity deleted successfully.');
       setTimeout(() => setToastMsg(''), 3500);
+      setPostings(prev => prev.filter(p => p.id !== oppId));
+    } catch (err) {
+      setError(err.message || 'Failed to delete opportunity.');
     }
   };
 
@@ -326,11 +351,22 @@ export default function CompanyDashboardPage() {
                     <p className="text-xs text-base-content/70 line-clamp-2 max-w-2xl">{opp.description}</p>
                   </div>
 
-                  <div className="text-right shrink-0">
-                    <span className="text-[10px] text-base-content/60 uppercase font-bold block">Remuneration</span>
-                    <span className="text-lg font-extrabold text-success">
-                      ₹{opp.pay_amount?.toLocaleString('en-IN')}/{opp.pay_unit}
-                    </span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <span className="text-[10px] text-base-content/60 uppercase font-bold block">Remuneration</span>
+                      <span className="text-lg font-extrabold text-success">
+                        ₹{opp.pay_amount?.toLocaleString('en-IN')}/{opp.pay_unit}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteOpportunity(opp.id)}
+                      className="btn btn-ghost btn-sm text-error hover:bg-error/10 rounded-xl min-h-[38px] min-w-[38px] p-0 flex items-center justify-center"
+                      title="Delete opportunity posting"
+                      aria-label="Delete opportunity posting"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
@@ -389,25 +425,13 @@ export default function CompanyDashboardPage() {
                             ))}
                           </div>
 
-                          <div className="pt-2 border-t border-base-200 flex justify-end gap-2 flex-wrap">
+                          <div className="pt-2 border-t border-base-200 flex justify-end">
                             <button
                               type="button"
-                              onClick={() => openChatWith(
-                                cand.senior_id,
-                                'interview_invite',
-                                opp.title,
-                                `Hello ${cand.full_name}, we are reviewing your profile for "${opp.title}" and would love to connect directly!`
-                              )}
-                              className="btn btn-outline btn-primary min-h-[38px] px-3.5 rounded-xl font-bold gap-1.5 text-xs"
+                              onClick={() => handleInviteAndMessage(cand, opp)}
+                              className="btn btn-primary min-h-[44px] px-5 rounded-2xl text-white font-bold gap-2 text-xs sm:text-sm shadow-md"
                             >
-                              💬 Direct Chat
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleInviteCandidate(cand, opp)}
-                              className="btn btn-primary min-h-[38px] px-4 rounded-xl text-white font-bold gap-1.5 text-xs shadow-xs"
-                            >
-                              <Send className="w-3.5 h-3.5" /> Invite for Interview
+                              <Send className="w-4 h-4" /> Invite & Start Chat
                             </button>
                           </div>
                         </div>

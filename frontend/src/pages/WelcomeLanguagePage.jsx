@@ -26,14 +26,14 @@ export default function WelcomeLanguagePage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="card bg-base-100 border border-base-300 shadow-2xl rounded-3xl max-w-2xl w-full p-6 sm:p-10 space-y-6 animate-in fade-in zoom-in duration-200">
-        
+
         {/* Welcome Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" /> Welcome to SilverHands
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-base-content tracking-tight">
-            வணக்கம் • नमस्ते • Vanakkam
+            Welcome
           </h1>
           <p className="text-xs sm:text-sm text-base-content/70 max-w-md mx-auto">
             Choose your preferred language. SilverHands is fully localized to guide you in your mother tongue throughout your journey.
@@ -49,11 +49,10 @@ export default function WelcomeLanguagePage() {
                 key={l.code}
                 type="button"
                 onClick={() => setSelectedLang(l.code)}
-                className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between space-y-1.5 group ${
-                  isSelected
+                className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between space-y-1.5 group ${isSelected
                     ? 'border-primary bg-primary/10 shadow-md ring-2 ring-primary/20'
                     : 'border-base-300 bg-base-100 hover:border-primary/40 hover:bg-base-200/50'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="text-lg font-black text-base-content group-hover:text-primary transition-colors">

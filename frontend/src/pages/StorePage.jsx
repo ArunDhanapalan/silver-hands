@@ -247,15 +247,9 @@ export default function StorePage() {
                   </span>
                 )}
 
-                {(product.is_out_of_stock || product.total_sold >= 20 || product.stock_quantity <= 0) ? (
-                  <span className="badge badge-error badge-sm font-black text-white absolute top-3 right-3 shadow-md">
-                    OUT OF STOCK
-                  </span>
-                ) : (
-                  <span className="badge badge-neutral badge-sm font-semibold absolute bottom-3 right-3 bg-black/60 backdrop-blur text-white border-0 text-[10px]">
-                    📍 {product.locality}
-                  </span>
-                )}
+                <span className="badge badge-neutral badge-sm font-semibold absolute bottom-3 right-3 bg-black/60 backdrop-blur text-white border-0 text-[10px]">
+                  📍 {product.locality}
+                </span>
               </div>
 
               {/* Card Body */}
@@ -285,13 +279,9 @@ export default function StorePage() {
                     <span className="text-base-content/70 font-medium truncate">
                       By <strong>{product.seller_name}</strong>
                     </span>
-                    {(product.is_out_of_stock || product.total_sold >= 20 || product.stock_quantity <= 0) ? (
-                      <span className="text-[10px] font-bold text-error">Limit 20 Bought</span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-success">
-                        {Math.max(0, 20 - (product.total_sold || 0))} left
-                      </span>
-                    )}
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
+                      Max 10 / order
+                    </span>
                   </div>
 
                   {/* Price & Add to Cart */}
@@ -303,24 +293,22 @@ export default function StorePage() {
                       <span className="text-[11px] text-base-content/60 ml-1">/ {product.unit}</span>
                     </div>
 
-                    {(product.is_out_of_stock || product.total_sold >= 20 || product.stock_quantity <= 0) ? (
-                      <button
-                        type="button"
-                        disabled
-                        className="btn btn-disabled min-h-[44px] px-4 rounded-2xl text-xs font-bold"
-                      >
-                        Out of Stock
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCart(product)}
-                        className="btn btn-primary min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-xs"
-                        aria-label={`Add ${product.title} to cart`}
-                      >
-                        <ShoppingBag className="w-4 h-4" /> Add
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(product)}
+                      className="btn btn-primary min-h-[44px] px-5 rounded-2xl text-white font-bold text-xs sm:text-sm gap-2 shadow-xs"
+                      aria-label={`Add ${product.title} to cart`}
+                    >
+                      {addedId === product.id ? (
+                        <>
+                          <Check className="w-4 h-4 text-white" /> Added
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" /> Add
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
 

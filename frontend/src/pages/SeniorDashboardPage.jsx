@@ -99,11 +99,13 @@ export default function SeniorDashboardPage() {
   const handleCancelApplication = async (appId) => {
     if (!window.confirm('Withdraw this job application?')) return;
     try {
+      setActiveApps(prev => prev.filter(a => a.id !== appId && a.opportunity_id !== appId));
       await api.put(`/opportunities/applications/${appId}/cancel`);
       showToast('Application withdrawn.');
       fetchOpportunities();
     } catch (err) {
       setError(err.message || 'Failed to withdraw application');
+      fetchOpportunities();
     }
   };
 
@@ -137,8 +139,8 @@ export default function SeniorDashboardPage() {
                   <ShieldCheck className="w-3 h-3" /> Age Verified
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-base-content mt-1">
-                Vanakkam, {user?.full_name || 'Senior Guru'}!
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content tracking-tight">
+                Hello, {user?.full_name || 'Senior Guru'}!
               </h1>
               <p className="text-xs sm:text-sm text-base-content/70 mt-0.5">
                 Targeting job opportunities in <strong>{user?.locality || selectedCity?.name || 'Chennai'}</strong> within <strong>{user?.travel_radius || '5 km'}</strong> radius.
@@ -225,7 +227,7 @@ export default function SeniorDashboardPage() {
                           iv.posted_by_id || iv.company_id || 'user_techlocal_04',
                           'interview_invite',
                           iv.opportunity_title,
-                          `Namaste! I received your interview invitation for "${iv.opportunity_title}".`
+                          `Hello! I received your interview invitation for "${iv.opportunity_title}".`
                         )}
                         className="btn btn-outline btn-primary btn-xs rounded-xl font-bold gap-1 min-h-[36px] px-3"
                       >

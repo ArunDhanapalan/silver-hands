@@ -26,6 +26,7 @@ class UserLoginRequest(BaseModel):
 
 class UserResponse(BaseModel):
     id: str
+    sub: Optional[str] = None
     email: str
     full_name: str
     role: str

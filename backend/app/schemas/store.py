@@ -45,10 +45,10 @@ class ProductResponse(BaseModel):
     city: str
     is_festival_special: bool = False
     festival_tag: Optional[str] = None
-    stock_quantity: int = 20
+    stock_quantity: int = 100
     total_sold: int = 0
     is_out_of_stock: bool = False
-    max_store_limit: int = 20
+    max_order_limit: int = 10
     rating: float = 4.9
     total_reviews: int = 1
     reviews: List[ProductReviewItem] = []

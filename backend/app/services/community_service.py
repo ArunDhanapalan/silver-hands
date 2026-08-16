@@ -277,7 +277,7 @@ class CommunityService:
                 status="suggested"
             ))
 
-        return matches
+        return matches[:2]
 
     async def connect_collaboration(self, user_payload: Dict[str, Any], req: ConnectCollaborationRequest) -> Dict[str, Any]:
         user_id = user_payload.get("sub")
