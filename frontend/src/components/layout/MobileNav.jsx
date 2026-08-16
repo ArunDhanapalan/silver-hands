@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingBag, Sparkles, Users, Layers, Briefcase, User } from 'lucide-react';
+import { Home, ShoppingBag, Sparkles, Users, Layers, Briefcase, User, Package, TrendingUp, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function MobileNav() {
@@ -18,8 +18,8 @@ export default function MobileNav() {
           <>
             <Link 
               to="/senior" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
-                location.pathname === '/senior' || location.pathname === '/opportunities' ? 'text-primary' : 'text-base-content/70'
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+                location.pathname === '/senior' || location.pathname === '/opportunities' ? 'text-primary font-black' : 'text-base-content/70'
               }`}
               aria-label="Opportunities"
             >
@@ -29,29 +29,29 @@ export default function MobileNav() {
 
             <Link 
               to="/senior/storefront" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/storefront') || location.pathname.startsWith('/storefront') ? 'text-secondary font-black' : 'text-base-content/70'
               }`}
               aria-label="My Storefront"
             >
               <ShoppingBag className="w-5 h-5 mb-0.5 text-secondary" />
-              <span>Storefront</span>
+              <span>Store</span>
             </Link>
 
             <Link 
-              to="/senior/orders" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
-                location.pathname.startsWith('/senior/orders') ? 'text-primary font-black' : 'text-base-content/70'
+              to="/senior/services" 
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+                location.pathname.startsWith('/senior/services') ? 'text-accent font-black' : 'text-base-content/70'
               }`}
-              aria-label="Orders"
+              aria-label="Service Hub"
             >
-              <Package className="w-5 h-5 mb-0.5 text-primary" />
-              <span>Orders</span>
+              <BookOpen className="w-5 h-5 mb-0.5 text-accent" />
+              <span>Classes</span>
             </Link>
 
             <Link 
               to="/senior/earnings" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/senior/earnings') ? 'text-success font-black' : 'text-base-content/70'
               }`}
               aria-label="Earnings"
@@ -62,13 +62,13 @@ export default function MobileNav() {
 
             <Link 
               to="/community" 
-              className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
+              className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 text-[10px] font-bold rounded-xl ${
                 location.pathname.startsWith('/community') ? 'text-primary font-black' : 'text-base-content/70'
               }`}
               aria-label="Community"
             >
               <Users className="w-5 h-5 mb-0.5 text-primary" />
-              <span>Peers</span>
+              <span>Community</span>
             </Link>
           </>
         ) : user?.role === 'company' ? (

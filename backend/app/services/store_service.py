@@ -74,34 +74,7 @@ class StoreService:
         cursor = col.find(filter_doc)
         docs = await cursor.to_list(100)
 
-        return [
-            ProductResponse(
-                id=str(d.get("_id")),
-                seller_id=d.get("seller_id", ""),
-                seller_name=d.get("seller_name", "Senior Artisan"),
-                seller_locality=d.get("seller_locality", "Mylapore"),
-                seller_city=d.get("seller_city", "Chennai"),
-                seller_rating=d.get("seller_rating", 4.9),
-                is_age_verified=d.get("is_age_verified", True),
-                title=d["title"],
-                description=d["description"],
-                category=d["category"],
-                price=d["price"],
-                unit=d.get("unit", "piece"),
-                images=d.get("images", ["https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80"]),
-                keywords=d.get("keywords", []),
-                locality=d.get("locality", "Mylapore"),
-                city=d.get("city", "Chennai"),
-                is_festival_special=d.get("is_festival_special", False),
-                festival_tag=d.get("festival_tag"),
-                stock_quantity=d.get("stock_quantity", 20),
-                rating=d.get("rating", 4.9),
-                total_reviews=d.get("total_reviews", 1),
-                reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in d.get("reviews", [])],
-                created_at=d.get("created_at", "")
-            )
-            for d in docs
-        ]
+        return [self._format_product(d) for d in docs]
 
     async def get_product_by_id(self, product_id: str) -> ProductResponse:
         col = self._products_col()
@@ -112,6 +85,10 @@ class StoreService:
         return self._format_product(doc)
 
     def _format_product(self, doc: Dict[str, Any]) -> ProductResponse:
+        total_sold = doc.get("total_sold", 0)
+        stock_quantity = doc.get("stock_quantity", max(0, 20 - total_sold))
+        is_out_of_stock = total_sold >= 20 or stock_quantity <= 0 or doc.get("is_out_of_stock", False)
+
         return ProductResponse(
             id=str(doc.get("_id")),
             seller_id=doc.get("seller_id", ""),
@@ -131,7 +108,10 @@ class StoreService:
             city=doc.get("city", "Chennai"),
             is_festival_special=doc.get("is_festival_special", False),
             festival_tag=doc.get("festival_tag"),
-            stock_quantity=doc.get("stock_quantity", 20),
+            stock_quantity=stock_quantity,
+            total_sold=total_sold,
+            is_out_of_stock=is_out_of_stock,
+            max_store_limit=20,
             rating=doc.get("rating", 4.9),
             total_reviews=doc.get("total_reviews", 1),
             reviews=[ProductReviewItem(**r) if isinstance(r, dict) else r for r in doc.get("reviews", [])],
@@ -143,6 +123,7 @@ class StoreService:
         col = self._products_col()
         cursor = col.find({"seller_id": user_id}).sort("created_at", -1)
         docs = await cursor.to_list(100)
+        return [self._format_product(d) for d in docs]
         return [self._format_product(d) for d in docs]
 
     async def delete_product(self, user_payload: Dict[str, Any], product_id: str) -> Dict[str, Any]:
@@ -249,6 +230,18 @@ class StoreService:
 
         total_amount = sum(item.price_per_unit * item.quantity for item in req.items)
 
+        # Check 20-item store limit per product
+        prod_col = self._products_col()
+        for item in req.items:
+            prod_doc = await prod_col.find_one(self._build_id_filter(item.product_id))
+            if prod_doc:
+                current_sold = prod_doc.get("total_sold", 0)
+                if current_sold + item.quantity > 20:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"'{item.product_title}' has reached the maximum store capacity limit of 20 units and is now Out of Stock."
+                    )
+
         order_doc = {
             "order_number": order_num,
             "customer_id": customer_id,
@@ -269,6 +262,20 @@ class StoreService:
 
         res = await col.insert_one(order_doc)
         order_doc["_id"] = str(res.inserted_id)
+
+        # Increment total_sold and decrement stock
+        for item in req.items:
+            prod_filter = self._build_id_filter(item.product_id)
+            prod_doc = await prod_col.find_one(prod_filter)
+            if prod_doc:
+                new_sold = prod_doc.get("total_sold", 0) + item.quantity
+                await prod_col.update_one(
+                    prod_filter,
+                    {
+                        "$inc": {"total_sold": item.quantity, "stock_quantity": -item.quantity},
+                        "$set": {"is_out_of_stock": (new_sold >= 20)}
+                    }
+                )
 
         return OrderResponse(
             id=str(order_doc["_id"]),

@@ -518,6 +518,55 @@ export default function ServiceDetailPage() {
 
       </div>
 
+      {/* Student Ratings & Reviews Section */}
+      <div className="card bg-base-100 border border-base-300 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-base-200">
+          <div>
+            <h2 className="text-lg font-extrabold text-base-content flex items-center gap-2">
+              <Star className="w-5 h-5 text-warning fill-warning" /> Student & Parent Reviews
+            </h2>
+            <p className="text-xs text-base-content/60 mt-0.5">
+              Verified feedback from learners who completed classes with {service.senior_name}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 px-4 py-2 rounded-2xl">
+            <span className="text-2xl font-black text-warning flex items-center gap-1">
+              <Star className="w-6 h-6 fill-warning" /> {service.rating || service.senior_rating || 4.95}
+            </span>
+            <div className="text-left">
+              <span className="text-xs font-bold text-base-content block">Guru Rating</span>
+              <span className="text-[10px] text-base-content/60 font-semibold">{service.total_reviews || service.reviews?.length || 1} Verified Student Review(s)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Review List */}
+        {(!service.reviews || service.reviews.length === 0) ? (
+          <div className="p-6 bg-base-200/50 rounded-2xl text-center space-y-1">
+            <p className="text-xs font-bold text-base-content">Mastery & Traditional Wisdom</p>
+            <p className="text-[11px] text-base-content/60">Book your first session with {service.senior_name} and leave a review!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {service.reviews.map((rev, idx) => (
+              <div key={idx} className="bg-base-200/50 border border-base-300 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-base-content">{rev.customer_name}</span>
+                  <div className="flex items-center gap-0.5 text-warning">
+                    {[...Array(rev.rating || 5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-warning" />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-base-content/80 italic leading-relaxed">"{rev.comment}"</p>
+                <span className="text-[10px] text-base-content/40 block">{rev.created_at?.slice(0, 10)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

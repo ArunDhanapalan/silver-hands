@@ -13,6 +13,7 @@ import {
 import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import StatusFlowBar from '../components/common/StatusFlowBar';
 
 const NEXT_STATUS_MAP = {
   pending: { next: 'accepted', label: 'Accept Order', color: 'btn-primary' },
@@ -141,6 +142,14 @@ export default function SeniorOrdersPage() {
                       {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
+                </div>
+
+                {/* Live Preparation Pipeline Status Flow Bar */}
+                <div className="bg-base-200/50 rounded-2xl p-4 border border-base-300">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-base-content/60 block mb-1">
+                    Live Preparation & Handover Flow:
+                  </span>
+                  <StatusFlowBar currentStatus={order.status} type="order" />
                 </div>
 
                 {/* Items */}

@@ -7,6 +7,7 @@ from app.schemas.service import (
     BookingResponse,
     BookingStatusUpdateRequest,
     BookingReviewRequest,
+    MarkSessionProgressRequest,
     AISuggestServiceRequest,
     AISuggestServiceResponse
 )
@@ -60,6 +61,16 @@ async def create_service(
     """
     return await service_booking_service.create_service(current_user, req)
 
+@router.delete("/{id}")
+async def delete_service(
+    id: str,
+    current_user: Dict[str, Any] = Depends(require_role(["senior"]))
+):
+    """
+    Senior removes an offered service listing.
+    """
+    return await service_booking_service.delete_service(current_user, id)
+
 @router.post("/ai-suggest", response_model=AISuggestServiceResponse)
 async def suggest_service(req: AISuggestServiceRequest):
     """
@@ -110,7 +121,7 @@ async def update_booking_status(
 @router.put("/bookings/{id}/progress", response_model=BookingResponse)
 async def mark_session_progress(
     id: str,
-    req: Any,
+    req: MarkSessionProgressRequest,
     current_user: Dict[str, Any] = Depends(require_role(["senior"]))
 ):
     """

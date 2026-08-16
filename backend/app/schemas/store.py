@@ -15,6 +15,10 @@ class ProductCreateRequest(BaseModel):
     festival_tag: Optional[str] = None
     stock_quantity: int = 20
 
+class ProductReviewRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: str = Field(..., min_length=2)
+
 class ProductReviewItem(BaseModel):
     customer_id: str
     customer_name: str
@@ -42,6 +46,9 @@ class ProductResponse(BaseModel):
     is_festival_special: bool = False
     festival_tag: Optional[str] = None
     stock_quantity: int = 20
+    total_sold: int = 0
+    is_out_of_stock: bool = False
+    max_store_limit: int = 20
     rating: float = 4.9
     total_reviews: int = 1
     reviews: List[ProductReviewItem] = []

@@ -139,7 +139,7 @@ export default function App() {
                       path="/senior/orders" 
                       element={
                         <ProtectedRoute allowedRoles={['senior']}>
-                          <SeniorOrdersPage />
+                          <SeniorStorefrontPage />
                         </ProtectedRoute>
                       } 
                     />

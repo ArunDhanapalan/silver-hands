@@ -9,6 +9,7 @@ from app.database import db_manager
 from app.schemas.service import (
     ServiceCreateRequest,
     ServiceResponse,
+    ServiceReviewItem,
     BookingCreateRequest,
     BookingResponse,
     BookingStatusUpdateRequest,
@@ -65,32 +66,7 @@ class ServiceBookingService:
 
         cursor = col.find(filter_doc)
         docs = await cursor.to_list(100)
-
-        return [
-            ServiceResponse(
-                id=str(d.get("_id")),
-                senior_id=d.get("senior_id", ""),
-                senior_name=d.get("senior_name", "Senior Guru"),
-                senior_locality=d.get("senior_locality", "Adyar"),
-                senior_city=d.get("senior_city", "Chennai"),
-                senior_rating=d.get("senior_rating", 4.95),
-                is_age_verified=d.get("is_age_verified", True),
-                title=d["title"],
-                category=d["category"],
-                subcategory=d.get("subcategory", "Language Tuition"),
-                description=d["description"],
-                mode=d.get("mode", "online"),
-                duration_mins=d.get("duration_mins", 45),
-                price_per_session=d["price_per_session"],
-                languages=d.get("languages", ["en", "ta"]),
-                target_audience=d.get("target_audience", "Beginners"),
-                locality=d.get("locality", "Adyar"),
-                city=d.get("city", "Chennai"),
-                total_sessions_conducted=d.get("total_sessions_conducted", 12),
-                created_at=d.get("created_at", "")
-            )
-            for d in docs
-        ]
+        return [self._format_service(d) for d in docs]
 
     async def get_service_by_id(self, service_id: str) -> ServiceResponse:
         col = self._services_col()
@@ -98,13 +74,20 @@ class ServiceBookingService:
         if not doc:
             raise HTTPException(status_code=404, detail="Managed service not found")
 
+        return self._format_service(doc)
+
+    def _format_service(self, doc: Dict[str, Any]) -> ServiceResponse:
+        raw_reviews = doc.get("reviews", [])
+        rating = float(doc.get("rating", doc.get("senior_rating", 4.95)))
+        total_reviews = int(doc.get("total_reviews", len(raw_reviews) if raw_reviews else 1))
+
         return ServiceResponse(
             id=str(doc.get("_id")),
-            senior_id=doc.get("senior_id", ""),
+            senior_id=doc.get("senior_id", doc.get("provider_id", "")),
             senior_name=doc.get("senior_name", "Senior Guru"),
             senior_locality=doc.get("senior_locality", "Adyar"),
             senior_city=doc.get("senior_city", "Chennai"),
-            senior_rating=doc.get("senior_rating", 4.95),
+            senior_rating=rating,
             is_age_verified=doc.get("is_age_verified", True),
             title=doc["title"],
             category=doc["category"],
@@ -118,8 +101,22 @@ class ServiceBookingService:
             locality=doc.get("locality", "Adyar"),
             city=doc.get("city", "Chennai"),
             total_sessions_conducted=doc.get("total_sessions_conducted", 12),
+            rating=rating,
+            total_reviews=total_reviews,
+            reviews=[ServiceReviewItem(**r) if isinstance(r, dict) else r for r in raw_reviews],
             created_at=doc.get("created_at", "")
         )
+
+    async def delete_service(self, user_payload: Dict[str, Any], service_id: str) -> Dict[str, Any]:
+        user_id = user_payload.get("sub")
+        col = self._services_col()
+        srv = await col.find_one(self._build_id_filter(service_id))
+        if not srv:
+            raise HTTPException(status_code=404, detail="Service offering not found")
+        if srv.get("senior_id") != user_id and srv.get("provider_id") != user_id:
+            raise HTTPException(status_code=403, detail="You are not authorized to delete this offering")
+        await col.delete_one(self._build_id_filter(service_id))
+        return {"message": "Service offering removed successfully", "id": service_id}
 
     async def create_service(self, user_payload: Dict[str, Any], req: ServiceCreateRequest) -> ServiceResponse:
         user_id = user_payload.get("sub")
@@ -321,10 +318,41 @@ class ServiceBookingService:
             raise HTTPException(status_code=404, detail="Booking not found")
 
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        customer_name = user_payload.get("full_name") or doc.get("customer_name", "Student / Client")
+        customer_id = user_payload.get("sub", "")
+
         await col.update_one(
             filter_q,
             {"$set": {"review_rating": req.rating, "review_comment": req.comment, "updated_at": now}}
         )
+
+        # Propagate review to the service offering catalog!
+        service_id = doc.get("service_id")
+        if service_id:
+            services_col = self._services_col()
+            srv_filter = self._build_id_filter(service_id)
+            srv_doc = await services_col.find_one(srv_filter)
+            if srv_doc:
+                cur_rating = float(srv_doc.get("rating", srv_doc.get("senior_rating", 4.95)))
+                cur_cnt = int(srv_doc.get("total_reviews", 1))
+                new_cnt = cur_cnt + 1
+                new_avg = round(((cur_rating * cur_cnt) + req.rating) / new_cnt, 2)
+
+                review_item = {
+                    "customer_id": customer_id,
+                    "customer_name": customer_name,
+                    "rating": req.rating,
+                    "comment": req.comment,
+                    "created_at": now
+                }
+
+                await services_col.update_one(
+                    srv_filter,
+                    {
+                        "$set": {"rating": new_avg, "total_reviews": new_cnt, "senior_rating": new_avg},
+                        "$push": {"reviews": review_item}
+                    }
+                )
 
         doc["review_rating"] = req.rating
         doc["review_comment"] = req.comment
@@ -540,30 +568,6 @@ class ServiceBookingService:
             cursor = col.find({}).sort("created_at", -1)
             docs = await cursor.to_list(50)
 
-        return [
-            ServiceResponse(
-                id=str(d.get("_id")),
-                senior_id=d.get("senior_id", user_id),
-                senior_name=d.get("senior_name", "Senior Guru"),
-                senior_locality=d.get("senior_locality", "Adyar"),
-                senior_city=d.get("senior_city", "Chennai"),
-                senior_rating=d.get("senior_rating", 4.95),
-                is_age_verified=d.get("is_age_verified", True),
-                title=d["title"],
-                category=d["category"],
-                subcategory=d.get("subcategory", "Tuition"),
-                description=d["description"],
-                mode=d["mode"],
-                duration_mins=d["duration_mins"],
-                price_per_session=d["price_per_session"],
-                languages=d.get("languages", ["en", "ta"]),
-                target_audience=d.get("target_audience", "All Ages"),
-                locality=d.get("locality", "Adyar"),
-                city=d.get("city", "Chennai"),
-                total_sessions_conducted=d.get("total_sessions_conducted", 12),
-                created_at=d.get("created_at", "")
-            )
-            for d in docs
-        ]
+        return [self._format_service(d) for d in docs]
 
 service_booking_service = ServiceBookingService()

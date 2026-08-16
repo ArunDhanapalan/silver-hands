@@ -55,7 +55,7 @@ async def reset_deck(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_opportunity(
     req: OpportunityCreateRequest,
-    current_user: Dict[str, Any] = Depends(require_role(["company", "senior"]))
+    current_user: Dict[str, Any] = Depends(require_role(["company", "senior", "customer"]))
 ):
     """
     Allows companies to post livelihood opportunities and auto-match them with qualified seniors.
@@ -103,7 +103,7 @@ async def cancel_application(
 @router.post("/parse-job")
 async def parse_job_description(
     req: JobParseRequest,
-    current_user: Dict[str, Any] = Depends(require_role(["company"]))
+    current_user: Dict[str, Any] = Depends(require_role(["company", "customer"]))
 ):
     """
     AI parser for unstructured job posts.

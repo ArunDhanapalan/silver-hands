@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from app.schemas.store import (
     ProductCreateRequest,
     ProductResponse,
+    ProductReviewRequest,
     OrderCreateRequest,
     OrderResponse,
     OrderStatusUpdateRequest,
@@ -130,7 +131,7 @@ async def cancel_order(
 @router.post("/products/{id}/review", response_model=ProductResponse)
 async def review_product(
     id: str,
-    req: Any,
+    req: ProductReviewRequest,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """

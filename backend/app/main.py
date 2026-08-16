@@ -23,8 +23,9 @@ async def lifespan(app: FastAPI):
     
     # Auto-seed initial demo dataset if collections empty
     try:
-        from app.services.seed_service import seed_initial_data
+        from app.services.seed_service import seed_initial_data, backfill_reviews_if_needed
         await seed_initial_data()
+        await backfill_reviews_if_needed()
     except Exception as e:
         logger.warning(f"Seed note (will retry once seed service is loaded): {e}")
 

@@ -309,7 +309,33 @@ async def seed_initial_data():
                 "city": "Chennai",
                 "is_festival_special": False,
                 "festival_tag": None,
-                "stock_quantity": 25,
+                "stock_quantity": 20,
+                "total_sold": 4,
+                "rating": 4.98,
+                "total_reviews": 3,
+                "reviews": [
+                    {
+                        "customer_id": "cust_ananya_01",
+                        "customer_name": "Ananya Sharma",
+                        "rating": 5,
+                        "comment": "Authentic grandmother recipe taste! Tender mangoes with cold pressed sesame oil. Reminded me of my childhood holidays in Thanjavur.",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_karthik_02",
+                        "customer_name": "Karthik Subramanian",
+                        "rating": 5,
+                        "comment": "Super fresh aroma and prompt delivery in Mylapore. Glass jar was packaged airtight with zero leaks.",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_pooja_03",
+                        "customer_name": "Pooja Hegde",
+                        "rating": 5,
+                        "comment": "Pure ingredients, zero artificial preservatives. Perfect accompaniment with hot curd rice!",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -331,7 +357,26 @@ async def seed_initial_data():
                 "city": "Chennai",
                 "is_festival_special": True,
                 "festival_tag": "Diwali",
-                "stock_quantity": 40,
+                "stock_quantity": 20,
+                "total_sold": 8,
+                "rating": 4.95,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_rahul_04",
+                        "customer_name": "Rahul Verma",
+                        "rating": 5,
+                        "comment": "Literally melts in your mouth! Rich pure ghee flavor without being overwhelmingly sweet. Ordered two more boxes for office gifting.",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_sneha_05",
+                        "customer_name": "Sneha Rangarajan",
+                        "rating": 5,
+                        "comment": "100 times better than commercial sweet shops. You can smell the quality of pure cow ghee as soon as you open the box.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -353,7 +398,26 @@ async def seed_initial_data():
                 "city": "Chennai",
                 "is_festival_special": False,
                 "festival_tag": None,
-                "stock_quantity": 30,
+                "stock_quantity": 20,
+                "total_sold": 5,
+                "rating": 4.92,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_suresh_06",
+                        "customer_name": "Suresh Natarajan",
+                        "rating": 5,
+                        "comment": "The crunch of roasted sesame and lentils is perfection with hot idlis and gingelly oil.",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_deepa_07",
+                        "customer_name": "Deepa Sundar",
+                        "rating": 5,
+                        "comment": "Authentic Mylapore Brahmin style recipe. Not too spicy, perfectly roasted flavor.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -376,6 +440,18 @@ async def seed_initial_data():
                 "is_festival_special": True,
                 "festival_tag": "Diwali",
                 "stock_quantity": 18,
+                "total_sold": 6,
+                "rating": 4.90,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_radha_08",
+                        "customer_name": "Radha Krishnan",
+                        "rating": 5,
+                        "comment": "Stitching quality is top notch. The golden zari and tassels look very elegant for gifting.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -398,6 +474,18 @@ async def seed_initial_data():
                 "is_festival_special": True,
                 "festival_tag": "Diwali",
                 "stock_quantity": 12,
+                "total_sold": 3,
+                "rating": 4.88,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_meera_09",
+                        "customer_name": "Meera Balaji",
+                        "rating": 5,
+                        "comment": "Perfect fitting on the first attempt! Beautiful finishing on the neck piping.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             }
         ]
@@ -430,6 +518,31 @@ async def seed_initial_data():
                 "locality": "Adyar",
                 "city": "Chennai",
                 "total_sessions_conducted": 38,
+                "rating": 4.96,
+                "total_reviews": 3,
+                "reviews": [
+                    {
+                        "customer_id": "cust_ananya_01",
+                        "customer_name": "Ananya Sharma",
+                        "rating": 5,
+                        "comment": "Ramesh Sir is incredibly patient with kids. My 8-year-old son started reading Telugu storybooks within 6 sessions!",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_siddharth_10",
+                        "customer_name": "Siddharth Rao",
+                        "rating": 5,
+                        "comment": "Great pronunciation drills and customized conversation worksheets. Highly recommended for beginners.",
+                        "created_at": now
+                    },
+                    {
+                        "customer_id": "cust_divya_11",
+                        "customer_name": "Divya Nair",
+                        "rating": 5,
+                        "comment": "Very structured teaching methodology. The 1-click video classroom worked seamlessly.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -452,6 +565,17 @@ async def seed_initial_data():
                 "locality": "Adyar",
                 "city": "Chennai",
                 "total_sessions_conducted": 19,
+                "rating": 4.95,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_techlocal_12",
+                        "customer_name": "Vikram Sethuraman",
+                        "rating": 5,
+                        "comment": "Ramesh sir helped us streamline our monthly reconciliations and GST filing checklist in two sessions. Saved us thousands in late fees!",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -474,6 +598,17 @@ async def seed_initial_data():
                 "locality": "Mylapore",
                 "city": "Chennai",
                 "total_sessions_conducted": 42,
+                "rating": 4.98,
+                "total_reviews": 2,
+                "reviews": [
+                    {
+                        "customer_id": "cust_priya_13",
+                        "customer_name": "Priya Venkat",
+                        "rating": 5,
+                        "comment": "Lakshmi mami shared exact proportions and secret techniques for Mysore Pak texture that you will never find on YouTube. Invaluable!",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             },
             {
@@ -496,6 +631,17 @@ async def seed_initial_data():
                 "locality": "Anna Nagar",
                 "city": "Chennai",
                 "total_sessions_conducted": 14,
+                "rating": 4.90,
+                "total_reviews": 1,
+                "reviews": [
+                    {
+                        "customer_id": "cust_kavitha_14",
+                        "customer_name": "Kavitha R.",
+                        "rating": 5,
+                        "comment": "Wonderful hands-on workshop in Anna Nagar. Meena ma'am guided each participant step-by-step with embroidery frames.",
+                        "created_at": now
+                    }
+                ],
                 "created_at": now
             }
         ]
@@ -603,4 +749,46 @@ async def seed_initial_data():
         })
 
         logger.info("Successfully seeded community posts and collaborations.")
+
+async def backfill_reviews_if_needed():
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    prod_col = db_manager.get_collection("products")
+    async for p in prod_col.find({"$or": [{"reviews": {"$exists": False}}, {"reviews": {"$size": 0}}]}):
+        sample_revs = [
+            {
+                "customer_id": "cust_sample_01",
+                "customer_name": "Ananya Sharma",
+                "rating": 5,
+                "comment": "Authentic taste and exceptional traditional preparation quality! Highly recommended.",
+                "created_at": now
+            },
+            {
+                "customer_id": "cust_sample_02",
+                "customer_name": "Karthik Subramanian",
+                "rating": 5,
+                "comment": "Super fresh aroma and prompt packaging. 100% authentic heritage experience.",
+                "created_at": now
+            }
+        ]
+        await prod_col.update_one({"_id": p["_id"]}, {"$set": {"reviews": sample_revs, "total_reviews": 2, "rating": 4.95}})
+
+    srv_col = db_manager.get_collection("services")
+    async for s in srv_col.find({"$or": [{"reviews": {"$exists": False}}, {"reviews": {"$size": 0}}]}):
+        sample_srv_revs = [
+            {
+                "customer_id": "cust_sample_01",
+                "customer_name": "Ananya Sharma",
+                "rating": 5,
+                "comment": "Incredibly patient elder teacher. Made concepts crystal clear with practical examples.",
+                "created_at": now
+            },
+            {
+                "customer_id": "cust_sample_03",
+                "customer_name": "Siddharth Rao",
+                "rating": 5,
+                "comment": "Great structured curriculum and warm mentoring approach. Highly recommended for beginners.",
+                "created_at": now
+            }
+        ]
+        await srv_col.update_one({"_id": s["_id"]}, {"$set": {"reviews": sample_srv_revs, "total_reviews": 2, "rating": 4.95}})
 

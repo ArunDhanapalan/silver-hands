@@ -191,22 +191,47 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="btn btn-outline btn-neutral min-h-[48px] rounded-2xl font-bold text-sm gap-2"
-              >
-                <ShoppingBag className="w-5 h-5" /> Add to Cart
-              </button>
+            {/* Out of stock warning / remaining stock */}
+            <div className="text-xs">
+              {(product.is_out_of_stock || product.total_sold >= 20 || product.stock_quantity <= 0) ? (
+                <div className="alert alert-error text-white font-bold text-xs rounded-2xl">
+                  <span>⛔ OUT OF STOCK — This item has reached the maximum store capacity limit of 20 units.</span>
+                </div>
+              ) : (
+                <span className="badge badge-success badge-sm text-white font-bold">
+                  {Math.max(0, 20 - (product.total_sold || 0))} units available (Store limit: 20 max)
+                </span>
+              )}
+            </div>
 
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="btn btn-primary min-h-[48px] rounded-2xl text-white font-bold text-sm gap-2 shadow-md"
-              >
-                Instant Buy (₹{(product.price * quantity).toLocaleString('en-IN')})
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(product.is_out_of_stock || product.total_sold >= 20 || product.stock_quantity <= 0) ? (
+                <button
+                  type="button"
+                  disabled
+                  className="btn btn-disabled col-span-2 min-h-[48px] rounded-2xl font-bold text-sm"
+                >
+                  Out of Stock
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="btn btn-outline btn-neutral min-h-[48px] rounded-2xl font-bold text-sm gap-2"
+                  >
+                    <ShoppingBag className="w-5 h-5" /> Add to Cart
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="btn btn-primary min-h-[48px] rounded-2xl text-white font-bold text-sm gap-2 shadow-md"
+                  >
+                    Instant Buy (₹{(product.price * quantity).toLocaleString('en-IN')})
+                  </button>
+                </>
+              )}
             </div>
 
           </div>

@@ -146,11 +146,11 @@ export default function Navbar() {
                   </Link>
 
                   <Link 
-                    to="/senior/orders" 
-                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/orders') ? 'btn-active text-primary font-extrabold bg-primary/10' : ''}`}
+                    to="/senior/services" 
+                    className={`btn btn-ghost btn-sm rounded-xl min-h-[40px] gap-1.5 ${routerLocation.pathname.startsWith('/senior/services') ? 'btn-active text-accent font-extrabold bg-accent/10' : ''}`}
                   >
-                    <Package className="w-4 h-4 text-primary" />
-                    Orders
+                    <BookOpen className="w-4 h-4 text-accent" />
+                    Service Hub
                   </Link>
 
                   <Link 
@@ -200,23 +200,9 @@ export default function Navbar() {
 
             </nav>
 
-            {/* Right Controls: Festival Context, City Selector, Language Selector, User Profile */}
+            {/* Right Controls: City Selector, Language Selector, User Profile */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               
-              {/* Festival Context Selector Modal Trigger */}
-              {!isCompany && (
-                <button
-                  type="button"
-                  onClick={() => setFestModalOpen(true)}
-                  className="btn btn-ghost btn-sm rounded-xl px-2.5 min-h-[40px] gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
-                  aria-label="Select Festival Context"
-                >
-                  <span>{activeFestival === 'Diwali' ? '🪔' : activeFestival === 'Pongal' ? '🌾' : activeFestival === 'Onam' ? '🌸' : activeFestival === 'Durga Puja' ? '🌺' : activeFestival === 'Eid' ? '🌙' : '🎄'}</span>
-                  <span className="hidden sm:inline">{activeFestival}</span>
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </button>
-              )}
-
               {/* City Selector Modal Trigger */}
               <button
                 type="button"
@@ -279,13 +265,13 @@ export default function Navbar() {
                         <li>
                           <Link to="/senior/storefront" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-secondary active:bg-secondary active:text-white">
                             <ShoppingBag className="w-4 h-4 text-secondary shrink-0" />
-                            <span>My Storefront & Catalogs</span>
+                            <span>My Storefront (Products)</span>
                           </Link>
                         </li>
                         <li>
-                          <Link to="/senior/orders" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 active:bg-primary active:text-white">
-                            <Package className="w-4 h-4 text-primary shrink-0" />
-                            <span>Orders & Teaching Sessions</span>
+                          <Link to="/senior/services" className="min-h-[44px] px-3.5 py-2.5 rounded-2xl font-bold flex items-center gap-2.5 hover:bg-base-200 text-accent active:bg-accent active:text-white">
+                            <BookOpen className="w-4 h-4 text-accent shrink-0" />
+                            <span>Service Hub (Classes)</span>
                           </Link>
                         </li>
                         <li>

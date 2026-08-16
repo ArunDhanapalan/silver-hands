@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorAlert from '../components/common/ErrorAlert';
+import StatusFlowBar from '../components/common/StatusFlowBar';
 
 export default function CustomerOrdersPage() {
   const { user } = useAuth();
@@ -151,6 +152,14 @@ export default function CustomerOrdersPage() {
                   </span>
                   <span className="text-base font-extrabold text-primary">₹{ord.total_amount?.toLocaleString('en-IN')}</span>
                 </div>
+              </div>
+
+              {/* Status Flow Progress Bar */}
+              <div className="bg-base-200/50 rounded-2xl p-4 border border-base-300">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-base-content/60 block mb-1">
+                  Live Delivery Pipeline:
+                </span>
+                <StatusFlowBar currentStatus={ord.status} type="order" />
               </div>
 
               {/* Order Items */}

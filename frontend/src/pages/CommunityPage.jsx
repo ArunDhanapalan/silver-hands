@@ -21,6 +21,7 @@ import { useLocation } from '../context/LocationContext';
 import api from '../api/client';
 import ErrorAlert from '../components/common/ErrorAlert';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import PostPersonalGigModal from '../components/modals/PostPersonalGigModal';
 
 const POST_TYPES = [
   { id: 'all', label: 'All Discussions' },
@@ -49,6 +50,7 @@ export default function CommunityPage() {
 
   // Create Post Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showGigModal, setShowGigModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [postForm, setPostForm] = useState({
     title: '',
@@ -195,12 +197,20 @@ export default function CommunityPage() {
           </p>
         </div>
 
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="btn btn-primary btn-sm rounded-xl text-white font-bold gap-1 shadow-sm text-xs self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" /> Create Community Post
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button 
+            onClick={() => setShowGigModal(true)}
+            className="btn btn-warning btn-sm min-h-[40px] rounded-xl text-white font-extrabold gap-1.5 shadow-sm text-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5" /> + Offer a Personal Gig / Hire Senior
+          </button>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="btn btn-primary btn-sm min-h-[40px] rounded-xl text-white font-bold gap-1 shadow-sm text-xs"
+          >
+            <Plus className="w-4 h-4" /> Create Discussion Post
+          </button>
+        </div>
       </div>
 
       {/* Senior-to-Senior Complementary Skill Match Section (For Seniors) */}
@@ -532,6 +542,17 @@ export default function CommunityPage() {
         </div>,
         document.body
       )}
+
+      {/* Post Personal Gig Modal */}
+      <PostPersonalGigModal
+        isOpen={showGigModal}
+        onClose={() => setShowGigModal(false)}
+        onGigPosted={() => {
+          setToastMsg('🎉 Personal gig posted successfully! Matched seniors nearby will receive alerts.');
+          setTimeout(() => setToastMsg(''), 4000);
+          fetchData();
+        }}
+      />
 
     </div>
   );

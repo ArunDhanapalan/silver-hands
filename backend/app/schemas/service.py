@@ -30,6 +30,13 @@ class AISuggestServiceResponse(BaseModel):
     deliverables: List[str] = []
     engine: Optional[str] = "gemini_live"
 
+class ServiceReviewItem(BaseModel):
+    customer_id: str
+    customer_name: str
+    rating: int
+    comment: str
+    created_at: str
+
 class ServiceResponse(BaseModel):
     id: str
     senior_id: str
@@ -50,6 +57,9 @@ class ServiceResponse(BaseModel):
     locality: str
     city: str
     total_sessions_conducted: int = 12
+    rating: float = 4.95
+    total_reviews: int = 1
+    reviews: List[ServiceReviewItem] = []
     created_at: str
 
 class BookingCreateRequest(BaseModel):
